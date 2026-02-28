@@ -1,0 +1,75 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AITS - Academic Issue Tracking System</title>
+    <!-- Link to external CSS -->
+    <link rel="stylesheet" href="{% static 'css/reason.css' %}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>Academic Issue Tracking System (AITS)</h1>
+            <p>A comprehensive solution for logging, tracking, and resolving academic record-related issues at Makerere University. Improving transparency and efficiency for students, lecturers, and administrators.</p>
+        </div>
+        
+        <!-- Purpose Selection Grid -->
+        <div class="purpose-grid">
+            <!-- Student Card -->
+            <a href="/student-dashboard/" class="purpose-card">
+                <div class="purpose-icon">S</div>
+                <h2>For Students</h2>
+                <p>Log academic issues, track status, receive notifications, and view issue history all in one place.</p>
+                <ul class="feature-list">
+                    <li>Missing Marks</li>
+                    <li>Academic Appeals</li>
+                    <li>Record Corrections</li>
+                </ul>
+                <button class="choose-btn">Continue as Student</button>
+            </a>
+            
+            <!-- Lecturer Card -->
+            <a href="/lecturer-dashboard/" class="purpose-card">
+                <div class="purpose-icon">L</div>
+                <h2>For Lecturers</h2>
+                <p>View assigned issues, resolve problems, update statuses, and communicate with students.</p>
+                <ul class="feature-list">
+                    <li>Issue Resolution</li>
+                    <li>Status Updates</li>
+                    <li>Student Feedback</li>
+                </ul>
+                <button class="choose-btn">Continue as Lecturer</button>
+            </a>
+            
+            <!-- Administrator Card -->
+            <a href="/admin-dashboard/" class="purpose-card">
+                <div class="purpose-icon">A</div>
+                <h2>For Administrators</h2>
+                <p>Manage all issues, assign to departments, monitor progress, and ensure timely resolution.</p>
+                <ul class="feature-list">
+                    <li>Issue Overview</li>
+                    <li>Department Assignment</li>
+                    <li>Progress Tracking</li>
+                </ul>
+                <button class="choose-btn">Continue as Admin</button>
+            </a>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>© 2026 Academic Issue Tracking System - Makerere University</p>
+            <p>
+                <a href="#">About</a> |
+                <a href="#">Contact</a> |
+                <a href="#">Privacy Policy</a>
+            </p>
+        </div>
+    </div>
+    
+    <!-- Link to external JavaScript -->
+    <script src="{% static 'PURPOSE.js' %}"></script>
+</body>
+</html>

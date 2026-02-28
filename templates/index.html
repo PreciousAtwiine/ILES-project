@@ -1,0 +1,130 @@
+{% load static %}
+<html>
+<head>
+    <title>Academic Issue Tracking System - AITS</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+    <!-- Navigation Menu -->
+    <div class="menu">
+        <div class="menu_logo">
+            <a href="#">AITS</a>
+        </div>
+        <div class="menu_content">
+            <ul>
+                <li><a href="#">Home</a></li>
+                <li><a href="#about">About Team</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#contact">Contact Support</a></li>
+				<li><a href="{%url 'signup'%}" class="btn-outline">Sign Up</a></li>
+				<li><a href="{#}" class="btn-filled">Log In</a></li>
+				
+            </ul>
+        </div>
+        <div class="menu_social">
+            <div class="menu_phone">
+                <i class="fa fa-phone" aria-hidden="true"></i> 0703 595969
+            </div>
+            <ul>
+                <li><a href="#"><i class="fa fa-facebook" aria-hidden="true"></i></a></li>
+                <li><a href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a></li>
+                <li><a href="#"><i class="fa fa-linkedin" aria-hidden="true"></i></a></li>
+            </ul>
+        </div>
+    </div>
+
+
+
+    <!-- Main Content -->
+    <div class="content-section" id="about">
+        <div class="purpose-card">
+            <h1 class="purpose-title">Academic Issue Tracking System (AITS)</h1>
+            <p class="purpose-text">
+                A comprehensive solution for logging, tracking, and resolving academic record-related issues 
+                at Makerere University. Improving transparency and efficiency for students, lecturers, and administrators.
+            </p>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="features-grid" id="features">
+            <div class="feature-card">
+                <i class="fa fa-graduation-cap" style="font-size: 48px; color: #667eea; margin-bottom: 20px;"></i>
+                <h3>For Students</h3>
+                <p>Log academic issues, track status, receive notifications, and view issue history all in one place.</p>
+                <ul>
+                    <li><i class="fa fa-check-circle" style="color: #667eea;"></i> Missing Marks</li>
+                    <li><i class="fa fa-check-circle" style="color: #667eea;"></i> Academic Appeals</li>
+                    <li><i class="fa fa-check-circle" style="color: #667eea;"></i> Record Corrections</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <i class="fa fa-users" style="font-size: 48px; color: #667eea; margin-bottom: 20px;"></i>
+                <h3>For Lecturers</h3>
+                <p>View assigned issues, resolve problems, update statuses, and communicate with students.</p>
+                <ul>
+                    <li><i class="fa fa-check-circle" style="color: #667eea;"></i> Issue Resolution</li>
+                    <li><i class="fa fa-check-circle" style="color: #667eea;"></i> Status Updates</li>
+                    <li><i class="fa fa-check-circle" style="color: #667eea;"></i> Student Feedback</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <i class="fa fa-university" style="font-size: 48px; color: #667eea; margin-bottom: 20px;"></i>
+                <h3>For Administrators</h3>
+                <p>Manage all issues, assign to departments, monitor progress, and ensure timely resolution.</p>
+                <ul>
+                    <li><i class="fa fa-check-circle" style="color: #667eea;"></i> Issue Overview</li>
+                    <li><i class="fa fa-check-circle" style="color: #667eea;"></i> Department Assignment</li>
+                    <li><i class="fa fa-check-circle" style="color: #667eea;"></i> Progress Tracking</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Contact Support Section -->
+        <div class="purpose-card" id="contact" style="margin-top: 50px;">
+            <h2 class="purpose-title" style="font-size: 28px;">Need Help?</h2>
+            <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 30px;">
+                <div style="text-align: center;">
+                    <i class="fa fa-envelope" style="font-size: 36px; color: #667eea;"></i>
+                    <h4 style="margin: 10px 0;">Email Support</h4>
+                    <p>support@aits.mak.ac.ug</p>
+                </div>
+                <div style="text-align: center;">
+                    <i class="fa fa-phone" style="font-size: 36px; color: #667eea;"></i>
+                    <h4 style="margin: 10px 0;">Call Us</h4>
+                    <p>+256 703 595969</p>
+                </div>
+                <div style="text-align: center;">
+                    <i class="fa fa-clock-o" style="font-size: 36px; color: #667eea;"></i>
+                    <h4 style="margin: 10px 0;">Working Hours for academic registar</h4>
+                    <p>Mon-Fri: 8am - 4pm</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Status -->
+        <div style="text-align: center; margin-top: 30px; background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px;">
+            <p style="color: white; font-size: 16px;">
+                <i class="fa fa-check-circle" aria-hidden="true"></i> 
+                System Status: Active - Tracking issues for the 2024 Academic Year
+            </p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>&copy; 2026 Academic Issue Tracking System - Makerere University. All rights reserved.</p>
+        <p style="margin-top: 10px; font-size: 14px;">
+            <a href="#" style="color: #667eea; text-decoration: none;">Privacy Policy</a> | 
+            <a href="#" style="color: #667eea; text-decoration: none;">Terms of Service</a>
+        </p>
+    </div>
+
+    <script src="{% static 'js/script.js' %}">   </script>
+</body>
+</html>

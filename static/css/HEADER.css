@@ -1,0 +1,90 @@
+/* header.css - Styles for the new AITS header */
+
+/* Menu Styles */
+.menu {
+    background: linear-gradient(to right, #ffffff, #f8f9fa);
+    border-bottom: 3px solid #667eea;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.menu_logo {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.menu_logo a {
+    font-size: 28px;
+    font-weight: 700;
+    color: #2c3e50;
+    text-decoration: none;
+    position: relative;
+}
+
+.logo-underline {
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background: #667eea;
+    border-radius: 2px;
+}
+
+.tagline {
+    margin-left: 20px;
+    color: #95a5a6;
+    font-size: 14px;
+    font-style: italic;
+}
+
+.tagline i {
+    color: #667eea;
+    font-size: 10px;
+}
+
+/* User Menu Styles */
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.welcome-text {
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.profile-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #667eea;
+}
+
+.user-avatar {
+    width: 35px;
+    height: 35px;
+    background: #667eea;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(102, 126, 234, 0.3);
+}
+
+/* Hover effects */
+.menu_logo a:hover {
+    color: #667eea;
+}
+
+.profile-icon:hover, .user-avatar:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s;
+}
