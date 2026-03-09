@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import User,InternshipPlacement,WeeklyLog,Evaluation
+from .models import User,InternshipPlacement
 # Register your models here.
 admin.site.register(User)
 admin.site.register(InternshipPlacement)
+
