@@ -37,25 +37,3 @@ class InternshipPlacementSerializer(serializers.ModelSerializer):
 
 
 
-class WeeklyLogSerializer(serializers.ModelSerializer):
-    student_name = serializers.CharField(source='placement.student.get_full_name', read_only=True)
-    reviewer_name = serializers.CharField(source='reviewed_by.get_full_name', read_only=True)
-    
-    class Meta:
-        model = WeeklyLog
-        fields = ['id', 'placement', 'student_name', 'week_number', 
-                  'activities', 'challenges', 'status', 'submission_date',
-                  'feedback', 'reviewed_by', 'reviewer_name', 'score', 'created_at']
-
-
-class EvaluationSerializer(serializers.ModelSerializer):
-    
-    student_name = serializers.CharField(source='placement.student.get_full_name', read_only=True)
-    company_name = serializers.CharField(source='placement.company_name', read_only=True)
-    
-    class Meta:
-        model = Evaluation
-        fields = ['id', 'placement', 'student_name', 'company_name',
-                  'workplace_score', 'academic_score', 
-                  'workplace_comments', 'academic_comments',
-                  'final_score', 'grade', 'created_at', 'updated_at']
