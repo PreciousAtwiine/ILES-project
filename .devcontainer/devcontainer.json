@@ -1,7 +1,0 @@
-{
-  "name": "AITS",
-  "image": "ubuntu:22.04",
-  "postCreateCommand": "apt update && apt install -y postgresql postgresql-contrib python3-pip && service postgresql start && sudo -u postgres psql -c \"ALTER USER postgres WITH PASSWORD '2006';\" && sudo -u postgres psql -c \"CREATE DATABASE AITSDATA;\"",
-  "postStartCommand": "service postgresql start",
-  "forwardPorts": [8000]
-}
