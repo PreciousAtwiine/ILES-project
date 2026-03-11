@@ -2,3 +2,5 @@ venv/
 __pychache__/
 .env
 db.sqlite3
+.env
+*.pyc
