@@ -100,7 +100,7 @@ class Evaluation(models.Model):
     def __str__(self):
         return f"{self.placement.student.username}'s evaluation"
     
-    '' this calculates the final grade based on the weighting formula
+    ''' this calculates the final grade based on the weighting formula
      formula: 40% workplace + 30% academic + 30% average of log scores as it was in our course guide'''
     def calculate_final_grade(self):
         if self.workplace_score and self.academic_score:
@@ -128,3 +128,4 @@ class Evaluation(models.Model):
                 self.grade = 'F'
             
             self.save()
+
