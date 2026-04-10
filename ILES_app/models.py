@@ -72,9 +72,10 @@ class WeeklyLog(models.Model):
     
     activities = models.TextField()
     challenges = models.TextField(blank=True)
-    
+    working_hours=models.DecimalField(decimal_places=4,max_digits=6,default=0)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     submission_date = models.DateTimeField(null=True, blank=True)
+    attachment=models.FileField(upload_to='attachments/', blank=True,null=True)
     
     feedback = models.TextField(blank=True)
     reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)

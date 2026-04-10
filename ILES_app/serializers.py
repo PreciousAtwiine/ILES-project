@@ -215,12 +215,13 @@ class SubmitLogSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = WeeklyLog
-        fields = ['placement', 'week_number', 'activities', 'challenges']
+        fields = ['placement', 'week_number','working_hours', 'attachment','activities', 'challenges']
+    
     
     def validate(self, data):
         placement = data['placement']
         week = data['week_number']
-        
+        hours=data['working_hours']
         # Check if placement is approved
         if placement.status != 'approved':
             raise serializers.ValidationError("Your placement must be approved before submitting logs")
@@ -228,7 +229,8 @@ class SubmitLogSerializer(serializers.ModelSerializer):
         # Check i   f log already exists
         if WeeklyLog.objects.filter(placement=placement, week_number=week).exists():
             raise serializers.ValidationError(f"Log for week {week} already exists")
-        
+        if hour<=0:
+            raise serializer.ValidationError('YOU CAN WORK 0 HOURS')
         return data
     
     def create(self, validated_data):
