@@ -93,9 +93,15 @@ DATABASES = {
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'OPTIONS': {
+            'max_similarity': 0.55,
+        },
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 12,
+        },
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -131,3 +137,5 @@ REST_FRAMEWORK = {
     ],
 }
 LOGIN_REDIRECT_URL = '/api/student/dashboard/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT=BASE_DIR/'media'

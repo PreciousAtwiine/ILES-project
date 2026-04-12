@@ -1,6 +1,9 @@
-from rest_framework import serializers
-from .models import User, InternshipPlacement, WeeklyLog, Evaluation
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
+from rest_framework import serializers
+
+from .models import Evaluation, InternshipPlacement, User, WeeklyLog
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -9,7 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
                   'role', 'student_id', 'staff_id', 'department']
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=8)
+    password = serializers.CharField(write_only=True, min_length=12)
     
     class Meta:
         model = User
@@ -28,7 +31,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         # Staff must have staff_id
         if role in ['workplace', 'academic', 'admin'] and not data.get('staff_id'):
             raise serializers.ValidationError(
-                {"staff_id": "pls enter student id"}
+                {"staff_id": "Please enter staff ID"}
             )
         
         # Check uniqueness
@@ -43,7 +46,22 @@ class RegisterSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {"staff_id": "Staff ID already exists"}
                 )
-        
+
+        password = data.get("password")
+        if password:
+            provisional = User(
+                username=data.get("username", ""),
+                email=data.get("email", ""),
+                first_name=data.get("first_name", ""),
+                last_name=data.get("last_name", ""),
+            )
+            try:
+                validate_password(password, user=provisional)
+            except DjangoValidationError as exc:
+                raise serializers.ValidationError(
+                    {"password": list(exc.messages)}
+                )
+
         return data
     
     def create(self, validated_data):
@@ -229,8 +247,8 @@ class SubmitLogSerializer(serializers.ModelSerializer):
         # Check i   f log already exists
         if WeeklyLog.objects.filter(placement=placement, week_number=week).exists():
             raise serializers.ValidationError(f"Log for week {week} already exists")
-        if hour<=0:
-            raise serializer.ValidationError('YOU CAN WORK 0 HOURS')
+        if hours<=0:
+            raise serializers.ValidationError("YOU CAN'T WORK 0 HOURS")
         return data
     
     def create(self, validated_data):
@@ -273,10 +291,15 @@ class EvaluationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Evaluation
         fields = ['placement', 'student_name', 'student_id', 'company_name',
-                  'workplace_score', 'academic_score', 
+                  'workplace_score', 'academic_score',
                   'workplace_comments', 'academic_comments',
+                  'workplace_submitted_at', 'academic_submitted_at',
                   'final_score', 'grade', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'final_score', 'grade', 'created_at', 'updated_at']
+        read_only_fields = [
+            'id', 'final_score', 'grade',
+            'workplace_submitted_at', 'academic_submitted_at',
+            'created_at', 'updated_at',
+        ]
 
 
 class WorkplaceEvaluationSerializer(serializers.ModelSerializer):
@@ -335,11 +358,14 @@ class StudentDashboardSerializer(serializers.ModelSerializer):
         return WeeklyLogSerializer(logs, many=True).data
     
     def get_evaluation(self, obj):
-        try:
-            evaluation = Evaluation.objects.get(placement__student=obj)
+        evaluation = (
+            Evaluation.objects.filter(placement__student=obj)
+            .order_by('-placement__created_at', '-updated_at')
+            .first()
+        )
+        if evaluation:
             return EvaluationSerializer(evaluation).data
-        except Evaluation.DoesNotExist:
-            return None
+        return None
 
 
 class SupervisorDashboardSerializer(serializers.ModelSerializer):

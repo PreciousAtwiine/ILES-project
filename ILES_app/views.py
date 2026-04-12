@@ -53,7 +53,7 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):
         return Response({
             'user': UserSerializer(request.user).data,
@@ -77,6 +77,8 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = ApproveStaffSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user, result = serializer.save()
+        if user is None:
+            return Response({"message": f"Staff registration {result}"})
         return Response({"message": f"Staff {user.username} {result}"})
 
 
@@ -207,7 +209,10 @@ class EvaluationViewSet(viewsets.ModelViewSet):
         ser.save(**{f'{role}_submitted_at': timezone.now()})
         
         evaluation.refresh_from_db()
-        if evaluation.workplace_score and evaluation.academic_score:
+        if (
+            evaluation.workplace_score is not None
+            and evaluation.academic_score is not None
+        ):
             evaluation.calculate_final()
         
         return Response({"message": f"{role.title()} evaluation submitted"})

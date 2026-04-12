@@ -80,7 +80,7 @@ class WeeklyLog(models.Model):
     feedback = models.TextField(blank=True)
     reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     score = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
-    
+    reviewed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -104,7 +104,10 @@ class Evaluation(models.Model):
     
     final_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     grade = models.CharField(max_length=2, blank=True)
-    
+
+    workplace_submitted_at = models.DateTimeField(null=True, blank=True)
+    academic_submitted_at = models.DateTimeField(null=True, blank=True)
+        
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -113,7 +116,7 @@ class Evaluation(models.Model):
     
     def calculate_final(self):
         
-        if self.workplace_score and self.academic_score:
+        if self.workplace_score is not None and self.academic_score is not None:
             # Get average log score
             logs = self.placement.logs.filter(status='approved', score__isnull=False)
             log_avg = 0
@@ -125,6 +128,7 @@ class Evaluation(models.Model):
                 (self.workplace_score * 0.4) +
                 (self.academic_score * 0.3) +
                 (log_avg * 0.3)
+                
             )
             
             
@@ -138,3 +142,4 @@ class Evaluation(models.Model):
                 self.grade = 'D'
             else:
                 self.grade = 'F'
+        self.save()
