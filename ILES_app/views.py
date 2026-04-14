@@ -1,7 +1,8 @@
-from rest_framework import viewsets, generics, status
+from rest_framework import viewsets,generics, status
 
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView 
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -11,12 +12,16 @@ from django.contrib.auth import logout
 
 
 
-class LogoutView(generics.GenericAPIView):
+class LogoutView(APIView):
+    #changed from generic to apiview
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
         logout(request)
-        return Response({'message': 'Logged out success'})
+        return Response({
+            'message': 'Logged out successfully',
+            'success': True
+        })
 
 
 class IsStudent(IsAuthenticated):
