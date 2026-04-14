@@ -1,5 +1,4 @@
 from rest_framework import viewsets,generics, status
-
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView 
@@ -9,8 +8,8 @@ from django.utils import timezone
 from .models import *
 from .serializers import *
 from django.contrib.auth import logout
-
-
+from .serializers import ApplyForPlacementSerializer, UserSerializer 
+from ILES_app.models import User
 
 class LogoutView(APIView):
     #changed from generic to apiview
