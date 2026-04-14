@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-<<<<<<< HEAD:backend/urls.py
-=======
->>>>>>> d54cab885c85894319b63c5db494e44ad232b644
+
 """
 URL configuration for backend project.
 
@@ -25,8 +22,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
 ]
-<<<<<<< HEAD
-=======
+
+
 """
 URL configuration for ILES project.
 
@@ -49,6 +46,3 @@ from django.urls import path,include
 urlpatterns = [
     path('admin/', admin.site.urls),path('',include('ILES_app.url'))
 ]
->>>>>>> origin/back-end-hj:ILES/urls.py
-=======
->>>>>>> d54cab885c85894319b63c5db494e44ad232b644
