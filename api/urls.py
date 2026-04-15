@@ -1,4 +1,3 @@
-
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import *
@@ -44,53 +43,58 @@ urlpatterns = [
 
 
 
+#AUTHENTICATION =
+# POST   /api/token/                 - Login
+# POST   /api/token/refresh/         - Refresh token
+# POST   /api/token/verify/          - Verify token
+# POST   /api/logout/                - Logout
 
+#  STUDENT ENDPOINTS 
+# GET    /api/student/dashboard/      - Student dashboard
+# GET    /api/student/placement-status/ - Check placement status
+# GET    /api/student/logs/           - View all logs
+# POST   /api/student/logs/           - Submit new log
+# POST   /api/placements/apply/       - Apply for internship
 
+# WORKPLACE SUPERVISOR
+# GET    /api/supervisor/dashboard/   - Supervisor dashboard
+# GET    /api/supervisor/assigned-students/ - View assigned students
+# GET    /api/supervisor/pending-logs/ - View pending logs
+# GET    /logs/pending/               - Pending logs (router)
+# PUT    /logs/{id}/review/           - Review log (id required)
+# POST   /api/evaluations/workplace/  - Submit workplace evaluation
 
+#ACADEMIC SUPERVISOR 
+# GET    /api/supervisor/dashboard/   - Supervisor dashboard
+# GET    /api/supervisor/assigned-students/ - View assigned students
+# GET    /api/supervisor/pending-logs/ - View pending logs
+# GET    /logs/pending/               - Pending logs (router)
+# PUT    /logs/{id}/review/           - Review log (id required)
+# POST   /api/evaluations/academic/   - Submit academic evaluation
 
+# ADMIN ENDPOINTS 
+# GET    /api/admin/dashboard/        - Admin dashboard
+# GET    /users/                      - List all users
+# GET    /users/pending_staff/        - List pending staff
+# POST   /users/approve_staff/        - Approve staff
+# GET    /placements/                 - List all placements
+# GET    /placements/pending/         - List pending placements
+# GET    /placements/{id}/assign_supervisors/ - Get available supervisors (id required)
+# POST   /placements/{id}/assign_supervisors/ - Assign supervisors (id required)
 
+#  ROUTER ENDPOINTS (NO /api/ PREFIX) 
+# GET/POST   /users/                  - User management
+# GET        /users/me/               - Current user profile
+# GET/POST   /users/register/         - Registration
+# GET        /users/pending_staff/    - Pending staff list
+# POST       /users/approve_staff/    - Approve/reject staff
+# GET/POST   /placements/             - Placement management
+# GET        /placements/pending/     - Pending placements
+# GET/POST   /placements/{id}/assign_supervisors/ - Assign supervisors
+# GET/POST   /logs/                   - Log management
+# GET        /logs/pending/           - Pending logs
+# PUT        /logs/{id}/review/       - Review log
+# GET/POST   /evaluations/            - Evaluation management
 
-
-
-
-
-
-
-
-
-
-''' AVAI URLS STUDENTS
-GET    /api/student/dashboard/
-GET    /api/student/placement-status/
-GET    /api/student/logs/
-POST   /api/student/logs/
-POST   /api/placements/apply/
-
-WORK
-GET    /api/supervisor/dashboard/
-GET    /api/supervisor/assigned-students/
-GET    /api/supervisor/pending-logs/
-GET    /api/logs/pending/
-PUT    /api/logs/{id}/review/
-POST   /api/evaluations/workplace/
-
-
-
-STAFF
-ACADEM
-GET    /api/supervisor/dashboard/
-GET    /api/supervisor/assigned-students/
-GET    /api/supervisor/pending-logs/
-GET    /api/logs/pending/
-PUT    /api/logs/{id}/review/id should be there
-POST   /api/evaluations/academic/
-ADMIN
-GET    /api/users/
-GET    /api/users/pending_staff/
-POST   /api/users/approve_staff/
-GET    /api/placements/
-GET    /api/placements/pending/
-GET    /api/placements/{id}/assign_supervisors/ ID should be there it is like sesion
-POST   /api/placements/{id}/assign_supervisors/
-GET    /api/admin/dashboard/'''
-
+# USER REGISTRATION 
+# POST   /users/register/            
