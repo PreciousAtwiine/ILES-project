@@ -11,12 +11,32 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['username', 'email', 'first_name', 'last_name', 
                   'role', 'student_id', 'staff_id', 'department']
 
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    def validate_email(self, value):
+        try:
+            user = User.objects.get(email=value)
+            return value
+        except User.DoesNotExist:
+            raise serializers.ValidationError("No user found with this email address")
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True, min_length=8)
+    confirm_password = serializers.CharField(write_only=True, min_length=8)
+    
+    def validate(self, data):
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError({"confirm_password": "Passwords do not match"})
+        return data                  
+
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=12)
     
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'first_name', 'last_name',
+        fields = ['username', 'email', 'password','first_name', 'last_name',
                   'role', 'student_id', 'staff_id', 'department']
     
     def validate(self, data):
@@ -63,6 +83,8 @@ class RegisterSerializer(serializers.ModelSerializer):
                 )
 
         return data
+       
+                   
     
     def create(self, validated_data):
         role = validated_data.get('role') 

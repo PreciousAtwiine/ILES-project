@@ -2,6 +2,12 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+import uuid
+from django.utils import timezone
+from datetime import timedelta
+
+
+
 class User(AbstractUser):
     
     ROLE_CHOICES = [
@@ -32,7 +38,13 @@ class User(AbstractUser):
         help_text='Specific permissions for this user.',
         verbose_name='user permissions',
     )
-
+class PasswordReset(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.CharField(max_length=30, unique=True, default=uuid.uuid4)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def is_valid(self):
+        return timezone.now() < self.created_at + timedelta(hours=1)
 class InternshipPlacement(models.Model):
  
     STATUS_CHOICES = [
@@ -143,3 +155,4 @@ class Evaluation(models.Model):
             else:
                 self.grade = 'F'
         self.save()
+        
