@@ -26,21 +26,21 @@ function Login() {
 
       const token = res.data.access;
 
-      // SAVE TOKENS
+      
       localStorage.setItem("access", token);
       localStorage.setItem("refresh", res.data.refresh);
 
-      // 🔥 DECODE TOKEN (GET USER INFO)
+  
       const user = jwtDecode(token);
 
       console.log("USER DATA:", user);
 
-      // 🔥 ROLE-BASED REDIRECT
+      
       if (user.role === "student") {
         window.location.href = "/student";
       } 
       else if (user.role === "workplace") {
-        window.location.href = "/supervisor";
+        window.location.href ="/workplace-supervisor";
       } 
       else if (user.role === "academic") {
         window.location.href = "/supervisor";
