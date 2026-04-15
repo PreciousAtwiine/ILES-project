@@ -3,19 +3,24 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Login from "./Login";
 import Register from "./Register";
 import StudentDashboard from "./Pages/StudentDashboard";
+import WorkplaceSupervisorDashboard from "./Pages/WorkplaceSupervisorDashboard";
 
 function App() {
   return (
     <Router>
       <Routes>
 
-        
+      
         <Route path="/" element={<Navigate to="/login" />} />
 
         
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
+        
         <Route path="/student" element={<StudentDashboard />} />
+        <Route path="/workplace-supervisor" element={<WorkplaceSupervisorDashboard />} />
+
       </Routes>
     </Router>
   );
