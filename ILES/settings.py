@@ -97,7 +97,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
 
-# Custom User Model & Auth
+
 AUTH_USER_MODEL = 'ILES_app.User'
 
 REST_FRAMEWORK = {
