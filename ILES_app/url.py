@@ -39,6 +39,10 @@ urlpatterns = [
     
     # ROUTER LAST
     path('', include(router.urls)),
+    #confirm password
+    path('api/token/forgot-password/', ForgotPasswordView.as_view()),
+    path('api/token/forgot-password/reset-password/', ResetPasswordView.as_view()),
+    
 ]
 
 
