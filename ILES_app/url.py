@@ -1,4 +1,3 @@
-
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import *
@@ -93,4 +92,3 @@ GET    /api/placements/pending/
 GET    /api/placements/{id}/assign_supervisors/ ID should be there it is like sesion
 POST   /api/placements/{id}/assign_supervisors/
 GET    /api/admin/dashboard/'''
-
