@@ -1,5 +1,5 @@
 from rest_framework import viewsets,generics, status
-
+from django.core.mail import send_mail
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView 
@@ -9,11 +9,10 @@ from django.utils import timezone
 from .models import *
 from .serializers import *
 from django.contrib.auth import logout
-
+from django.conf import settings
 
 
 class LogoutView(APIView):
-    #changed from generic to apiview
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
@@ -45,12 +44,25 @@ class IsSupervisor(IsAuthenticated):
         return super().has_permission(request, view) and request.user.role in ['workplace', 'academic']
 
 
+def send_email(to_email, subject, message):
+    """Simple email sender"""
+    try:
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[to_email],
+            fail_silently=False,
+        )
+    except:
+        pass
+
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAdmin]
-    '''I AM USING THIS TO CREATE CUSTOM URLS AND KEEP EVERY THING RELATE D TOGETHER'''
+    
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def register(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -75,17 +87,84 @@ class UserViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['post'])
     def approve_staff(self, request):
-        # Only superuser can use this
         if not request.user.is_superuser:
             return Response({"error": "Only superuser can approve staff"}, status=403)
         
         serializer = ApproveStaffSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user, result = serializer.save()
+        
         if user is None:
             return Response({"message": f"Staff registration {result}"})
+        
+        # EMAIL: Staff approved
+        if result == "approved":
+            send_email(
+                user.email,
+                'Account Approved - ILES',
+                f'Hello {user.get_full_name() or user.username},\n\nYour account has been approved.\n\nLogin: http://localhost:3000/login\n\nUsername: {user.username}\n\n- ILES Team'
+            )
+        
         return Response({"message": f"Staff {user.username} {result}"})
 
+
+class ForgotPasswordView(APIView):
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        return Response({
+            "message": "Use POST to request password reset",
+            "instructions": "Send a POST request with {'email': 'your@email.com'}"
+        })
+    
+    def post(self, request):
+        email = request.data.get('email')
+        
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"error": "No account with this email"}, status=404)
+        
+        PasswordReset.objects.filter(user=user).delete()
+        reset = PasswordReset.objects.create(user=user)
+        
+        reset_link = f"http://localhost:3000/reset-password?token={reset.token}"
+        send_mail(
+            'Reset Your Password',
+            f'Click: {reset_link}',
+            'noreply@iles.com',
+            [email],
+            fail_silently=False,
+        )
+        
+        return Response({"message": "Reset link sent to your email"})
+
+
+class ResetPasswordView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        token = request.data.get('token')
+        new_password = request.data.get('new_password')
+        confirm_password = request.data.get('confirm_password')
+        
+        if new_password != confirm_password:
+            return Response({"error": "Passwords don't match"}, status=400)
+        
+        try:
+            reset = PasswordReset.objects.get(token=token)
+        except PasswordReset.DoesNotExist:
+            return Response({"error": "Invalid token"}, status=400)
+        
+        if not reset.is_valid():
+            return Response({"error": "Token expired"}, status=400)
+        
+        user = reset.user
+        user.set_password(new_password)
+        user.save()
+        reset.delete()
+        
+        return Response({"message": "Password reset successful"})
 
 
 class InternshipPlacementViewSet(viewsets.ModelViewSet):
@@ -128,8 +207,16 @@ class InternshipPlacementViewSet(viewsets.ModelViewSet):
         
         placement.status = 'approved' if placement.status == 'pending' else placement.status
         placement.save()
+        
+        # lacement approved message
+        if placement.status == 'approved':
+            send_email(
+                placement.student.email,
+                'Placement Approved - ILES',
+                f'Hello {placement.student.get_full_name()},\n\nYour internship placement has been APPROVED!\n\nCompany: {placement.company_name}\nStart: {placement.start_date}\nEnd: {placement.end_date}\n\nYou can now submit your weekly logs.\n\n- ILES Team'
+            )
+        
         return Response({"message": "Supervisors assigned"})
-
 
 
 class WeeklyLogViewSet(viewsets.ModelViewSet):
@@ -171,17 +258,25 @@ class WeeklyLogViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['put'], permission_classes=[IsSupervisor])
     def review(self, request, pk=None):
         log = self.get_object()
+        old_status = log.status
         serializer = ReviewLogSerializer(log, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(reviewed_by=request.user, reviewed_at=timezone.now())
+        
+        # EMAIL: Log reviewed
+        if log.status in ['approved', 'rejected'] and old_status != log.status:
+            send_email(
+                log.placement.student.email,
+                f'Week {log.week_number} Log - {log.status.upper()}',
+                f'Hello {log.placement.student.get_full_name()},\n\nYour weekly log for Week {log.week_number} has been {log.status}.\n\nScore: {log.score}/100\nFeedback: {log.feedback or "No additional feedback"}\n\n- ILES Team'
+            )
+        
         return Response({"message": "Log reviewed"})
-
 
 
 class EvaluationViewSet(viewsets.ModelViewSet):
     queryset = Evaluation.objects.all()
     serializer_class = EvaluationSerializer
-    
     def get_queryset(self):
         user = self.request.user
         if user.role == 'student':
@@ -191,7 +286,6 @@ class EvaluationViewSet(viewsets.ModelViewSet):
         elif user.role == 'academic':
             return Evaluation.objects.filter(placement__academic_supervisor=user)
         return Evaluation.objects.all()
-    
     @action(detail=False, methods=['post'], permission_classes=[IsWorkplace])
     def workplace(self, request):
         return self._submit_evaluation(request, 'workplace')
@@ -214,14 +308,17 @@ class EvaluationViewSet(viewsets.ModelViewSet):
         ser.save(**{f'{role}_submitted_at': timezone.now()})
         
         evaluation.refresh_from_db()
-        if (
-            evaluation.workplace_score is not None
-            and evaluation.academic_score is not None
-        ):
+        if evaluation.workplace_score is not None and evaluation.academic_score is not None:
             evaluation.calculate_final()
+            
+            # Evaluation complete message
+            send_email(
+                placement.student.email,
+                'Internship Evaluation Complete - ILES',
+                f'Hello {placement.student.get_full_name()},\n\nYour internship evaluation is complete!\n\nResults:\n- Workplace Score (40%): {evaluation.workplace_score}\n- Academic Score (30%): {evaluation.academic_score}\n- Log Average (30%): {evaluation.log_avg_score}\n- FINAL SCORE: {evaluation.final_score}\n- GRADE: {evaluation.grade}\n\n- ILES Team'
+            )
         
         return Response({"message": f"{role.title()} evaluation submitted"})
-
 
 
 class ApplyForPlacementView(generics.CreateAPIView):
@@ -287,18 +384,19 @@ class StudentLogsListView(generics.ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-
 class StudentDashboardView(generics.RetrieveAPIView):
     serializer_class = StudentDashboardSerializer
     permission_classes = [IsStudent]
     def get_object(self):
         return self.request.user
 
+
 class SupervisorDashboardView(generics.RetrieveAPIView):
     serializer_class = SupervisorDashboardSerializer
     permission_classes = [IsSupervisor]
     def get_object(self):
         return self.request.user
+
 
 class AdminDashboardView(generics.RetrieveAPIView):
     serializer_class = AdminDashboardSerializer
@@ -311,8 +409,6 @@ class AdminDashboardView(generics.RetrieveAPIView):
         user.active_internships = InternshipPlacement.objects.filter(status='approved').count()
         return user
 
-
-
 class AssignedStudentsView(generics.ListAPIView):
     serializer_class = InternshipPlacementSerializer
     permission_classes = [IsSupervisor]
@@ -322,7 +418,6 @@ class AssignedStudentsView(generics.ListAPIView):
             **{f'{user.role}_supervisor': user},
             status='approved'
         )
-
 class PendingLogsView(generics.ListAPIView):
     serializer_class = WeeklyLogSerializer
     permission_classes = [IsSupervisor]
