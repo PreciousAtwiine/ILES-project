@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Workplace Supervisor Dashboard</title>
+  <link rel="stylesheet" href="WorkplaceSupervisorDashboard.css">
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <h2>Workplace Supervisor</h2>
+
+      <button onclick="loadDashboard()">Dashboard</button>
+      <button onclick="loadStudents()">Assigned Students</button>
+      <button onclick="loadLogs()">Pending Logs</button>
+      <button onclick="logout()">Logout</button>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main">
+
+      <h1 id="title">Dashboard</h1>
+
+      <!-- STATS CARDS -->
+      <div class="cards">
+        <div class="card">
+          <h3 id="totalStudents">0</h3>
+          <p>Assigned Students</p>
+        </div>
+
+        <div class="card">
+          <h3 id="pendingLogs">0</h3>
+          <p>Pending Logs</p>
+        </div>
+      </div>
+
+      <!-- DYNAMIC CONTENT -->
+      <div id="content"></div>
+
+    </div>
+  </div>
+
+  <script src="WorkplaceSupervisorDashboard.js"></script>
+</body>
+</html>
