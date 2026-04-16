@@ -60,8 +60,9 @@ function Login() {
   return (
     <div className="auth-container">
       <form className="auth-card" onSubmit={handleSubmit}>
-        <h2>Login</h2>
-
+        <h1>Login</h1>
+        <h2>Welcome back,please login to continue!</h2>
+       
         <input
           name="username"
           placeholder="Username"
