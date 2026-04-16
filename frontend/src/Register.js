@@ -34,7 +34,7 @@ function Register() {
       setSuccess("Registration successful! Please login.");
       setError("");
 
-      // OPTIONAL redirect after 2 seconds
+      
       setTimeout(() => {
         window.location.href = "/login";
       }, 2000);
@@ -51,14 +51,14 @@ function Register() {
   return (
     <div className="auth-container split">
 
-      {/* LEFT SIDE - BRANDING */}
+  
       <div className="auth-left">
         <h1>ILES System</h1>
         <p>Internship & Learning Evaluation System</p>
         <p>Track your progress, manage placements.</p>
       </div>
 
-      {/* RIGHT SIDE - FORM */}
+  
       <div className="auth-right">
         <form className="auth-card" onSubmit={handleSubmit}>
           <h2>Register</h2>
@@ -74,7 +74,7 @@ function Register() {
             <option value="academic">Academic Supervisor</option>
           </select>
 
-          {/* STUDENT ID */}
+
           {data.role === "student" && (
             <input
               name="student_id"
@@ -83,7 +83,7 @@ function Register() {
             />
           )}
 
-          {/* STAFF ID */}
+          
           {data.role !== "student" && (
             <input
               name="staff_id"
