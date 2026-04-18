@@ -37,7 +37,7 @@ const Dashboard = ({ user }) => {
 
         <div className="card">
           <BookOpen size={30} />
-          <h3>Daily Logbook</h3>
+          <h3>Weekly Log</h3>
           <p>Record your internship activities</p>
           <button
             className="card-btn"
