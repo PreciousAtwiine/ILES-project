@@ -6,8 +6,9 @@ import { BookOpen, ClipboardList, Calendar, LogOut } from "lucide-react";
 const Dashboard = ({ user }) => {
   const navigate = useNavigate();
 
-  const name = user?.name || "User";
-  const role = user?.role || "guest";
+ const name = user
+  ? `${user.first_name} ${user.last_name}`
+  : "User";
 
   const handleLogout = () => {
     localStorage.removeItem("token");
