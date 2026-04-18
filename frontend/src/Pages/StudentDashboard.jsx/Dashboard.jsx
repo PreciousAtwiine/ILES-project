@@ -28,7 +28,7 @@ const Dashboard = ({ user }) => {
 
       {/* Welcome Section */}
       <div className="welcome-section">
-        <h2>Welcome, {studentName}</h2>
+        <h2>Welcome, {name}</h2>
         <p>Manage your internship activities below</p>
       </div>
 
