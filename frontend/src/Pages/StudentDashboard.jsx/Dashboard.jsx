@@ -60,14 +60,14 @@ const Dashboard = ({ user }) => {
         </div>
 
         <div className="card">
-          <Calendar size={30} />
-          <h3>Attendance</h3>
-          <p>Track your attendance</p>
+          <ClipboardList size={30} />
+          <h3>Weekly Report</h3>
+          <p>Submit and view your weekly internship report</p>
           <button
             className="card-btn"
-            onClick={() => navigate("/attendance")}
+            onClick={() => navigate("/weekly-report")}
           >
-            Check Attendance
+            View Weekly Report
           </button>
         </div>
 
