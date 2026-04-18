@@ -74,14 +74,7 @@ const Dashboard = ({ user }) => {
       </div>
 
       {/* Recent Activity */}
-      <div className="activity-section">
-        <h2>Recent Activity</h2>
-        <ul>
-          <li>✔ Logged activity for April 10</li>
-          <li>✔ Submitted weekly report</li>
-          <li>✔ Supervisor reviewed your logbook</li>
-        </ul>
-      </div>
+     recent_logs = WeeklyLog.objects...
 
     </div>
   );
