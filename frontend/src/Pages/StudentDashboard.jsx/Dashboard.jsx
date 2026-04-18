@@ -76,8 +76,9 @@ const Dashboard = ({ user }) => {
       {/* Recent Activity */}
      recent_logs = WeeklyLog.objects...
 
-    </div>
+    
+   </div>
   );
 };
 
-export default StudentDashboard;
+export default Dashboard;
