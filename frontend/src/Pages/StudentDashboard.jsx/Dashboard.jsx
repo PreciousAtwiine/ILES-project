@@ -5,13 +5,15 @@ import { BookOpen, ClipboardList, Calendar, LogOut } from "lucide-react";
 
 const Dashboard = ({ user }) => {
   const navigate = useNavigate();
-  const AdminName = user?.name || "Admin";
- const SupervisorName = user?.name || "Supervisor";
- const studentName = user?.name || "Student";
+
+  const name = user?.name || "User";
+  const role = user?.role || "guest";
+
   const handleLogout = () => {
-    localStorage.removeItem("token"); // or auth data
+    localStorage.removeItem("token");
     navigate("/login");
   };
+
   return (
     <div className="dashboard-container">
 
