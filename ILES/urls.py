@@ -3,6 +3,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('ILES_app.url')),  # Your app URLs
+    path('', include('ILES_app.url')),  # Your app URLs
     path('api-auth/', include('rest_framework.urls')),  # DRF auth
 ]
