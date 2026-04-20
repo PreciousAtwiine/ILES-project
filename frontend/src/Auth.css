@@ -101,3 +101,7 @@ body {
   text-align: center;
   margin-top: 10px;
 }
+.forgot-password {
+  text-align: right;
+  margin-bottom: 15px;
+}
