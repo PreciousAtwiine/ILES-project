@@ -75,6 +75,10 @@ function Login() {
           placeholder="Password"
           onChange={handleChange}
         />
+        <div class-name='forgot-password'>
+          <a href='/forgot-password'>Forgot Password?</a>
+          
+        </div>
 
         <button type="submit">Login</button>
 
