@@ -14,8 +14,9 @@ export default function Login() {
     e.preventDefault();
 
     try {
+      //  Correct login endpoint
       const res = await axios.post(
-        "http://127.0.0.1:8000/api/auth/token/",
+        "http://127.0.0.1:8000/api/token/",
         data
       );
 
@@ -23,14 +24,16 @@ export default function Login() {
       localStorage.setItem("access", token);
       localStorage.setItem("refresh", res.data.refresh);
 
+      //added: Get user info for me
       const userRes = await axios.get(
-        "http://127.0.0.1:8000/api/me/",
+        "http://127.0.0.1:8000/users/me/",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      const role = userRes.data.role;
+      //add: role is inside 'user' object
+      const role = userRes.data.user.role;
 
       if (role === "student") window.location.href = "/student";
       else if (role === "workplace") window.location.href = "/workplace-supervisor";
@@ -44,7 +47,6 @@ export default function Login() {
 
   return (
     <div className="login-wrapper">
-      {/* LEFT SIDE */}
       <div className="login-left">
         <div className="overlay" />
         <div className="welcome-text">
@@ -55,7 +57,6 @@ export default function Login() {
         </div>
       </div>
 
-    
       <div className="login-right">
         <form className="login-card" onSubmit={handleSubmit}>
           <h2>Welcome Back</h2>
@@ -80,12 +81,10 @@ export default function Login() {
 
           <button type="submit">Login</button>
 
-<p className="signup-text">
-  Don’t have an account?{" "}
-  <a href="/register">Register here</a>
-</p>
-
-{error && <p className="error">{error}</p>}
+          <p className="signup-text">
+            Don't have an account?{" "}
+            <a href="/register">Register here</a>
+          </p>
 
           {error && <p className="error">{error}</p>}
         </form>
