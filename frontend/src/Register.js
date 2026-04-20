@@ -55,7 +55,7 @@ function Register() {
       <div className="auth-left">
         <h1>Welcome to ILES</h1>
         <p>Internship & Logging Evaluation System</p>
-        <p>Learn. Grow. Succeed.</p>
+        <p>Please register to continue</p>
       </div>
 
   

@@ -80,6 +80,13 @@ export default function Login() {
 
           <button type="submit">Login</button>
 
+<p className="signup-text">
+  Don’t have an account?{" "}
+  <a href="/register">Register here</a>
+</p>
+
+{error && <p className="error">{error}</p>}
+
           {error && <p className="error">{error}</p>}
         </form>
       </div>
