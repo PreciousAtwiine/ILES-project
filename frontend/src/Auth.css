@@ -105,3 +105,8 @@ body {
   text-align: right;
   margin-bottom: 15px;
 }
+.forgot-password a {
+  text-decoration: none;
+  color: #007bff;
+  font-size: 14px;
+}
