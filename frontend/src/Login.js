@@ -24,7 +24,7 @@ export default function Login() {
       localStorage.setItem("refresh", res.data.refresh);
 
       const userRes = await axios.get(
-        "http://127.0.0.1:8000/api/auth/me/",
+        "http://127.0.0.1:8000/api/me/",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
