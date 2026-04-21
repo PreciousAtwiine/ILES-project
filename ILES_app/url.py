@@ -52,7 +52,6 @@ urlpatterns = [
 # POST   /api/token/refresh/         - Refresh token
 # POST   /api/token/verify/          - Verify token
 # POST   /api/logout/                - Logout
-
 #  STUDENT ENDPOINTS 
 # GET    /api/student/dashboard/      - Student dashboard
 # GET    /api/student/placement-status/ - Check placement status

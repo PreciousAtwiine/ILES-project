@@ -87,8 +87,8 @@ class UserViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['post'])
     def approve_staff(self, request):
-        if not request.user.is_superuser:
-            return Response({"error": "Only superuser can approve staff"}, status=403)
+        if not (request.user.is_superuser or request.user.role == 'admin'):
+            return Response({"error": "Only superuser or admin can approve staff"}, status=403)
         
         serializer = ApproveStaffSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

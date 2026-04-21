@@ -14,7 +14,7 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      //  Correct login endpoint
+      
       const res = await axios.post(
         "http://127.0.0.1:8000/api/token/",
         data
@@ -32,7 +32,7 @@ export default function Login() {
         }
       );
 
-      //add: role is inside 'user' object
+      
       const role = userRes.data.user.role;
 
       if (role === "student") window.location.href = "/student";
