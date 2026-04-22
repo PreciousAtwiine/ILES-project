@@ -364,11 +364,11 @@ class EvaluationViewSet(viewsets.ModelViewSet):
         
         if role == 'academic':
             total_days = (placement.end_date - placement.start_date).days
-            # ========== FIXED: Same logic as SubmitLogSerializer ==========
+           
             total_weeks = (total_days // 7) + 1 if total_days % 7 != 0 else (total_days // 7)
             if total_weeks < 1:
-                total_weeks = 1
-            # =============================================================
+                total_weeks = 1#same 8 days =2wks
+
             
             final_week_log = WeeklyLog.objects.filter(
                 placement=placement,
@@ -421,11 +421,10 @@ class RequestLogExceptionView(APIView):
             return Response({"error": "You have already requested an exception"}, status=400)
         
         total_days = (placement.end_date - placement.start_date).days
-        # ========== FIXED: Same logic ==========
+        
         total_weeks = (total_days // 7) + 1 if total_days % 7 != 0 else (total_days // 7)
         if total_weeks < 1:
-            total_weeks = 1
-        # =======================================
+            total_weeks = 1#8 days =2weeks upto 14ds        
         
         has_final_week = WeeklyLog.objects.filter(
             placement=placement, week_number=total_weeks
@@ -456,7 +455,7 @@ class RequestLogExceptionView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-# ==================== ADMIN EXCEPTION VIEWS ====================
+
 
 class PendingExceptionsView(generics.ListAPIView):
     serializer_class = InternshipPlacementSerializer
@@ -534,7 +533,7 @@ class RejectExceptionView(APIView):
         return Response({"message": "Exception rejected"})
 
 
-# ==================== STUDENT VIEWS ====================
+
 
 class ApplyForPlacementView(generics.CreateAPIView):
     queryset = InternshipPlacement.objects.all()
@@ -672,7 +671,7 @@ class PendingLogsView(generics.ListAPIView):
         )
 
 
-# ==================== COMPANY APPROVAL VIEWS ====================
+
 
 class PendingCompaniesView(generics.ListAPIView):
     serializer_class = CompanySerializer
