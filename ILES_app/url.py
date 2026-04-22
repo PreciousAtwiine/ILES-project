@@ -7,6 +7,12 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView,
 )
+from .views import (
+    PartnerCompaniesView,
+    PendingCompaniesView,
+    ApproveCompanyView,
+    RejectCompanyView,
+)
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
@@ -29,6 +35,13 @@ urlpatterns = [
     path('api/supervisor/assigned-students/', AssignedStudentsView.as_view(), name='assigned-students'),
     path('api/supervisor/pending-logs/', PendingLogsView.as_view(), name='pending-logs'),
     
+    path('api/departments/', DepartmentListView.as_view(), name='departments'),
+    path('api/companies/', CompanyListView.as_view(), name='companies'),
+     # Company URLs
+    path('api/companies/approved/', PartnerCompaniesView.as_view(), name='partner-companies'),
+    path('api/admin/pending-companies/', PendingCompaniesView.as_view(), name='pending-companies'),
+    path('api/admin/approve-company/<int:pk>/', ApproveCompanyView.as_view(), name='approve-company'),
+    path('api/admin/reject-company/<int:pk>/', RejectCompanyView.as_view(), name='reject-company'),
     # AUTH
     path('api/logout/', LogoutView.as_view(), name='logout'),
     
@@ -42,8 +55,14 @@ urlpatterns = [
     #confirm password
     path('api/token/forgot-password/', ForgotPasswordView.as_view()),
     path('api/token/forgot-password/reset-password/', ResetPasswordView.as_view()),
-    
+    # Exception Request URLs
+    path('api/student/request-exception/', RequestLogExceptionView.as_view(), name='request-exception'),
+    path('api/admin/pending-exceptions/', PendingExceptionsView.as_view(), name='pending-exceptions'),
+    path('api/admin/approve-exception/<int:pk>/', ApproveExceptionView.as_view(), name='approve-exception'),
+    path('api/admin/reject-exception/<int:pk>/', RejectExceptionView.as_view(), name='reject-exception'),
 ]
+    
+
 
 
 
@@ -52,6 +71,7 @@ urlpatterns = [
 # POST   /api/token/refresh/         - Refresh token
 # POST   /api/token/verify/          - Verify token
 # POST   /api/logout/                - Logout
+
 #  STUDENT ENDPOINTS 
 # GET    /api/student/dashboard/      - Student dashboard
 # GET    /api/student/placement-status/ - Check placement status
