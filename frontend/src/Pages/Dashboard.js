@@ -35,7 +35,7 @@ function StudentDashboard() {
   return (
     <div style={styles.container}>
       
-      {/* HEADER */}
+      
       <div style={styles.card}>
         <h2>🎓 Student Dashboard</h2>
         <h3>
@@ -46,7 +46,7 @@ function StudentDashboard() {
         <p><b>Department:</b> {data.department}</p>
       </div>
 
-      {/* PLACEMENT */}
+
       <div style={styles.card}>
         <h3>🏢 Internship Placement</h3>
 
@@ -62,7 +62,7 @@ function StudentDashboard() {
         )}
       </div>
 
-      {/* LOGS */}
+      
       <div style={styles.card}>
         <h3>📘 Recent Weekly Logs</h3>
 

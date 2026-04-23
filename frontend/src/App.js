@@ -4,7 +4,8 @@ import Login from "./Login";
 import Register from "./Register";
 import StudentDashboard from "./Pages/StudentDashboard";
 import WorkplaceSupervisorDashboard from "./Pages/WorkplaceSupervisorDashboard";
-
+import AcademicDashboard from "./Pages/AcademicDashboard";
+import PendingLogs from "./Pages/PendingLogs";
 function App() {
   return (
     <Router>
@@ -20,7 +21,9 @@ function App() {
         
         <Route path="/student" element={<StudentDashboard />} />
         <Route path="/workplace-supervisor" element={<WorkplaceSupervisorDashboard />} />
-
+        <Route path="/supervisor" element={<AcademicDashboard />} />
+        <Route path="/pending-logs" element={<PendingLogs />} />
+        <Route path="/workplace-supervisor-dashboard" element={<WorkplaceSupervisorDashboard />} />
       </Routes>
     </Router>
   );

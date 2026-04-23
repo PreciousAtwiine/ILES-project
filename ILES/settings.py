@@ -42,10 +42,12 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt', 
     'django_filters',
-    
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -102,7 +104,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
         'OPTIONS': {
-            'min_length': 12,
+            'min_length': 8,
         },
     },
     {
@@ -155,6 +157,7 @@ FRONTEND_URL = 'http://localhost:3000'
 # EMAIL_USE_TLS = True
 # EMAIL_HOST_USER = 'your-email@gmail.com'
 # EMAIL_HOST_PASSWORD = 'your-app-password'  # Use App Password, not regular password
+<<<<<<< HEAD
 # DEFAULT_FROM_EMAIL = 'ILES System <noreply@iles.com>'
 =======
 """
@@ -281,3 +284,32 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 >>>>>>> de6b20eb50da6ea541dc1a6b81bbf856227a6508:backend/settings.py
+=======
+# DEFAULT_FROM_EMAIL = 'ILES System <noreply@iles.com>'
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    ]
+>>>>>>> 7da562bdc78cfcda5e2523abd29f9464b5f9c6b7
