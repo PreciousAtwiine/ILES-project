@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import "./WorkplaceSupervisorDashboard.css";
+import { useNavigate } from "react-router-dom";
 
 export default function WorkplaceSupervisorDashboard() {
   const [data, setData] = useState(null);
@@ -8,7 +9,7 @@ export default function WorkplaceSupervisorDashboard() {
   const [logs, setLogs] = useState([]);
   const [view, setView] = useState("dashboard");
   const [loading, setLoading] = useState(false);
-
+  const navigate = useNavigate();
   const BASE_URL = "http://127.0.0.1:8000";
 
   const getToken = () => localStorage.getItem("access");
@@ -80,10 +81,10 @@ export default function WorkplaceSupervisorDashboard() {
     <div style={{ display: "flex" }}>
       {/* Sidebar */}
       <div className="sidebar">
-        <h2>Supervisor</h2>
+        <h2>Academic supervisor</h2>
         <button onClick={loadDashboard}>Dashboard</button>
         <button onClick={loadStudents}>Students</button>
-        <button onClick={loadLogs}>Pending Logs</button>
+        <button onClick={() => navigate("/pending-logs")}>Pending Logs</button>
         <button onClick={logout}> Logout</button>
       </div>
 
