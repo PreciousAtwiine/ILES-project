@@ -4,8 +4,12 @@ import Login from "./Login";
 import Register from "./Register";
 import StudentDashboard from "./Pages/StudentDashboard";
 import WorkplaceSupervisorDashboard from "./Pages/WorkplaceSupervisorDashboard";
+
+
+
 import AcademicDashboard from "./Pages/AcademicDashboard";
 import PendingLogs from "./Pages/PendingLogs";
+
 function App() {
   return (
     <Router>
