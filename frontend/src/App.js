@@ -5,6 +5,7 @@ import Register from "./Register";
 import StudentDashboard from "./Pages/StudentDashboard";
 import WorkplaceSupervisorDashboard from "./Pages/WorkplaceSupervisorDashboard";
 
+
 function App() {
   return (
     <Router>
