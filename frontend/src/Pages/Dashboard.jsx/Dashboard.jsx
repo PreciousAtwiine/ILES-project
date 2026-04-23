@@ -70,7 +70,7 @@ const Dashboard = ({ user }) => {
             View Weekly Report
           </button>
         </div>
-
+  
       </div>
 
       {/* Recent Activity */}

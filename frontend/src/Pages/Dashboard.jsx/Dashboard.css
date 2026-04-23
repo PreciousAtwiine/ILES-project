@@ -1,11 +1,11 @@
 .dashboard-container {
   padding: 20px;
-  background-color: #f4f6f8;
+  background-color: #d2ebc2;
   min-height: 100vh;
   font-family: Arial, sans-serif;
 }
 
-/* Header */
+
 .dashboard-header {
   display: flex;
   justify-content: space-between;
@@ -13,14 +13,14 @@
 }
 
 .logout-btn {
-  background-color: rgb(0, 55, 255);
+  background-color: rgb(0, 255, 132);
   color: white;
   border: none;
   padding: 8px 12px;
   cursor: pointer;
 }
 
-/* Welcome */
+
 .welcome-section {
   margin: 20px 0;
 }
@@ -33,7 +33,7 @@
 }
 
 .card {
-  background-color: white;
+  background-color: rgb(240, 146, 146);
   padding: 20px;
   border-radius: 10px;
   width: 250px;
@@ -53,7 +53,6 @@
   cursor: pointer;
 }
 
-/* Activity */
 .activity-section {
   margin-top: 30px;
 }
