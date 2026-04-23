@@ -35,10 +35,9 @@ body {
   background:black;
 }
 
-
 .main {
   flex: 1;
-  padding: 20px;
+  padding: 20px
 }
 
 
@@ -48,7 +47,7 @@ body {
 }
 
 .card {
-  background: white;
+  background: rgb(255, 255, 255);
   padding: 20px;
   border-radius: 10px;
   width: 200px;
