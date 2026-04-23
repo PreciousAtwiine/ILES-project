@@ -5,7 +5,7 @@
   font-family: Arial, sans-serif;
 }
 
-/* Header */
+
 .dashboard-header {
   display: flex;
   justify-content: space-between;
@@ -20,7 +20,7 @@
   cursor: pointer;
 }
 
-/* Welcome */
+
 .welcome-section {
   margin: 20px 0;
 }
@@ -53,7 +53,6 @@
   cursor: pointer;
 }
 
-/* Activity */
 .activity-section {
   margin-top: 30px;
 }
