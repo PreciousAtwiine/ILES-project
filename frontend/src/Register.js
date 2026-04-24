@@ -45,7 +45,7 @@ function Register() {
     fetchData();
   }, []);
 
-  // Filter companies based on search
+  
   const filteredCompanies = companies.filter(company =>
     company.name.toLowerCase().includes(companySearch.toLowerCase())
   );
@@ -209,7 +209,7 @@ function Register() {
             {fieldErrors.role && <p className="field-error">{fieldErrors.role[0]}</p>}
           </div>
 
-          {/* Student Fields */}
+          
           {data.role === "student" && (
             <>
               <div className="form-group">
