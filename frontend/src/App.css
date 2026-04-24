@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 .App {
   text-align: center;
 }
@@ -29,8 +28,16 @@
   color: #61dafb;
 }
 
+/* Fixed: Added missing keyframe steps for App-logo-spin */
 @keyframes App-logo-spin {
-=======
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -44,15 +51,17 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
+/* Fixed: Added missing keyframe steps for logo-spin */
 @keyframes logo-spin {
->>>>>>> 5483c4ddb6cbde2f2a1e83caa31a92a897377268
   from {
     transform: rotate(0deg);
   }
@@ -60,8 +69,7 @@
     transform: rotate(360deg);
   }
 }
-<<<<<<< HEAD
-=======
+
 
 @media (prefers-reduced-motion: no-preference) {
   a:nth-of-type(2) .logo {
@@ -76,4 +84,3 @@
 .read-the-docs {
   color: #888;
 }
->>>>>>> 5483c4ddb6cbde2f2a1e83caa31a92a897377268
