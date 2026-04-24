@@ -364,11 +364,19 @@ class EvaluationViewSet(viewsets.ModelViewSet):
         
         if role == 'academic':
             total_days = (placement.end_date - placement.start_date).days
+<<<<<<< HEAD
            
             total_weeks = (total_days // 7) + 1 if total_days % 7 != 0 else (total_days // 7)
             if total_weeks < 1:
                 total_weeks = 1#same 8 days =2wks
 
+=======
+           #DAYS LOGIC
+            total_weeks = (total_days // 7) + 1 if total_days % 7 != 0 else (total_days // 7)
+            if total_weeks < 1:
+                total_weeks = 1
+            
+>>>>>>> c9af755a7d6b8f853f785a90053293574fc65fd3
             
             final_week_log = WeeklyLog.objects.filter(
                 placement=placement,
@@ -424,7 +432,12 @@ class RequestLogExceptionView(APIView):
         
         total_weeks = (total_days // 7) + 1 if total_days % 7 != 0 else (total_days // 7)
         if total_weeks < 1:
+<<<<<<< HEAD
             total_weeks = 1#8 days =2weeks upto 14ds        
+=======
+            total_weeks = 1
+    
+>>>>>>> c9af755a7d6b8f853f785a90053293574fc65fd3
         
         has_final_week = WeeklyLog.objects.filter(
             placement=placement, week_number=total_weeks
