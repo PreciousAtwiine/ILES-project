@@ -364,11 +364,11 @@ class EvaluationViewSet(viewsets.ModelViewSet):
         
         if role == 'academic':
             total_days = (placement.end_date - placement.start_date).days
-            # ========== FIXED: Same logic as SubmitLogSerializer ==========
+           #DAYS LOGIC
             total_weeks = (total_days // 7) + 1 if total_days % 7 != 0 else (total_days // 7)
             if total_weeks < 1:
                 total_weeks = 1
-            # =============================================================
+            
             
             final_week_log = WeeklyLog.objects.filter(
                 placement=placement,
