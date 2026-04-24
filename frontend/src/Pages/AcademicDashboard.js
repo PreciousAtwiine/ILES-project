@@ -1,166 +1,280 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
-import "./Dashboard.css";
+import { useNavigate } from "react-router-dom";
+import "./AcademicDashboard.css";
 
 export default function AcademicDashboard() {
   const [data, setData] = useState(null);
+  const [view, setView] = useState("dashboard");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const BASE_URL = "http://127.0.0.1:8000";
+  const getToken = () => localStorage.getItem("access");
 
-  const token = localStorage.getItem("access");
-
-  useEffect(() => {
-    fetchDashboard();
-  }, []);
-
-  const fetchDashboard = async () => {
+  const loadDashboard = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await axios.get(
-        "http://127.0.0.1:8000/api/supervisor/academic/dashboard/",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        `${BASE_URL}/api/supervisor/academic/dashboard/`,
+        { headers: { Authorization: `Bearer ${getToken()}` } }
       );
-
       setData(res.data);
-      setLoading(false);
     } catch (err) {
-      console.log("Error:", err.response?.status, err.response?.data);
-      setError(`Failed to load dashboard: ${err.response?.status} - ${JSON.stringify(err.response?.data)}`);
+      setError("Failed to load dashboard");
+    } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => { loadDashboard(); }, [loadDashboard]);
 
   const reviewLog = async (logId, status) => {
     try {
       await axios.put(
-        `http://127.0.0.1:8000/logs/${logId}/review/`,
-        {
-          status: status,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        `${BASE_URL}/logs/${logId}/review/`,
+        { status },
+        { headers: { Authorization: `Bearer ${getToken()}` } }
       );
-
-      fetchDashboard(); // refresh
+      loadDashboard();
     } catch (err) {
       alert("Failed to review log");
     }
   };
 
-  if (loading) return <p>Loading dashboard...</p>;
-  if (error) return <p>{error}</p>;
+  const logout = () => {
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    window.location.href = "/login";
+  };
+
+  const initials = data
+    ? `${data.first_name?.[0] || ""}${data.last_name?.[0] || ""}`.toUpperCase()
+    : "AS";
+
+  if (loading) return <div className="ac-loading">Loading...</div>;
+  if (error) return <div className="ac-loading">{error}</div>;
 
   return (
-    <div className="dashboard-container">
+    <div className="ac-shell">
 
-      {/* HEADER */}
-      <div className="dashboard-header">
-        <h2>Academic Supervisor Dashboard</h2>
-        <p>
-          Welcome {data.first_name} {data.last_name}
-        </p>
-        <p>Department: {data.department}</p>
-        <p>Staff ID: {data.staff_id}</p>
+      {/* SIDEBAR */}
+      <div className="ac-sidebar">
+        <div className="ac-brand">
+          <h2>Academic Supervisor</h2>
+          <p>ILES Platform</p>
+        </div>
+        <nav className="ac-nav">
+          <button className={view === "dashboard" ? "ac-nav-item active" : "ac-nav-item"} onClick={() => setView("dashboard")}>Dashboard</button>
+          <button className={view === "students" ? "ac-nav-item active" : "ac-nav-item"} onClick={() => setView("students")}>Students</button>
+          <button className={view === "pending" ? "ac-nav-item active" : "ac-nav-item"} onClick={() => setView("pending")}>Pending Logs</button>
+          <button className={view === "reviewed" ? "ac-nav-item active" : "ac-nav-item"} onClick={() => setView("reviewed")}>Reviewed Logs</button>
+          <button className="ac-nav-item" onClick={() => navigate("/academic/evaluate")}>Evaluate Student</button>
+        </nav>
+        <div className="ac-sidebar-footer">
+          <button className="ac-logout" onClick={logout}>Logout</button>
+        </div>
       </div>
 
-      {/* ASSIGNED STUDENTS */}
-      <section>
-        <h3>🎓 Assigned Students</h3>
+      {/* MAIN */}
+      <div className="ac-main">
 
-        {data.assigned_students?.length === 0 ? (
-          <p>No students assigned</p>
-        ) : (
-          data.assigned_students.map((p) => (
-            <div key={p.id} className="card">
-              <p><strong>Student:</strong> {p.student_name}</p>
-              <p><strong>Student ID:</strong> {p.student_id}</p>
-              <p><strong>Company:</strong> {p.company_name}</p>
-              <p><strong>Status:</strong> {p.status}</p>
-              <p><strong>Duration:</strong> {p.start_date} → {p.end_date}</p>
-            </div>
-          ))
-        )}
-      </section>
+        {/* TOPBAR */}
+        <div className="ac-topbar">
+          <span className="ac-topbar-title">
+            Dashboard <span>/ {view.charAt(0).toUpperCase() + view.slice(1)}</span>
+          </span>
+          <div className="ac-user">
+            <div className="ac-avatar">{initials}</div>
+            <span>{data.first_name} {data.last_name}</span>
+          </div>
+        </div>
 
-      
-      <section>
-        <h3>⏳ Pending Logs (Review Required)</h3>
+        <div className="ac-content">
 
-        {data.pending_logs?.length === 0 ? (
-          <p>No pending logs</p>
-        ) : (
-          data.pending_logs.map((log) => (
-            <div key={log.id} className="card pending">
-
-              <p><strong>Student:</strong> {log.student_name}</p>
-              <p><strong>Week:</strong> {log.week_number}</p>
-
-              <p><strong>Activities:</strong> {log.activities}</p>
-              <p><strong>Challenges:</strong> {log.challenges || "None"}</p>
-              <p><strong>Working Hours:</strong> {log.working_hours}</p>
-
-              {log.attachment && (
-                <p>
-                  <strong>Attachment:</strong>{" "}
-                  <a href={log.attachment} target="_blank" rel="noreferrer">
-                    View File
-                  </a>
-                </p>
-              )}
-
-              <p><strong>Status:</strong> {log.status}</p>
-              <p><strong>Submitted:</strong> {log.submission_date}</p>
-
-              {/* ACTION BUTTONS */}
-              <div className="actions">
-                <button
-                  className="approve-btn"
-                  onClick={() => reviewLog(log.id, "approved")}
-                >
-                  Approve
-                </button>
-
-                <button
-                  className="reject-btn"
-                  onClick={() => reviewLog(log.id, "rejected")}
-                >
-                  Reject
-                </button>
+          {/* DASHBOARD VIEW */}
+          {view === "dashboard" && (
+            <>
+              <div className="ac-stats">
+                <div className="ac-stat blue">
+                  <div className="ac-stat-label">Assigned Students</div>
+                  <div className="ac-stat-value">{data.assigned_students?.length || 0}</div>
+                  <div className="ac-stat-sub">Active placements</div>
+                </div>
+                <div className="ac-stat amber">
+                  <div className="ac-stat-label">Pending Reviews</div>
+                  <div className="ac-stat-value">{data.pending_logs?.length || 0}</div>
+                  <div className="ac-stat-sub">Awaiting your review</div>
+                </div>
+                <div className="ac-stat green">
+                  <div className="ac-stat-label">Reviewed Logs</div>
+                  <div className="ac-stat-value">{data.reviewed_logs?.length || 0}</div>
+                  <div className="ac-stat-sub">Completed reviews</div>
+                </div>
               </div>
-            </div>
-          ))
-        )}
-      </section>
 
-      {/* REVIEWED LOGS */}
-      <section>
-        <h3>✅ Reviewed Logs</h3>
+              <div className="ac-section-header">
+                <span className="ac-section-title">Pending log reviews</span>
+                <span className="ac-badge">{data.pending_logs?.length || 0} pending</span>
+              </div>
+              <div className="ac-table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Student</th><th>Week</th><th>Activities</th><th>Hours</th><th>Submitted</th><th>Status</th><th>Actions</th></tr>
+                  </thead>
+                  <tbody>
+                    {data.pending_logs?.length === 0 ? (
+                      <tr><td colSpan="7"><div className="ac-empty">No pending logs to review</div></td></tr>
+                    ) : (
+                      data.pending_logs.map((log) => (
+                        <tr key={log.id}>
+                          <td>{log.student_name}</td>
+                          <td>Week {log.week_number}</td>
+                          <td>{log.activities?.substring(0, 50)}...</td>
+                          <td>{log.working_hours}h</td>
+                          <td>{new Date(log.submission_date).toLocaleDateString()}</td>
+                          <td><span className="ac-pill submitted">Submitted</span></td>
+                          <td>
+                            <button className="ac-btn approve" onClick={() => reviewLog(log.id, "approved")}>Approve</button>
+                            <button className="ac-btn reject" onClick={() => reviewLog(log.id, "rejected")}>Reject</button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-        {data.reviewed_logs?.length === 0 ? (
-          <p>No reviewed logs</p>
-        ) : (
-          data.reviewed_logs.map((log) => (
-            <div key={log.id} className="card reviewed">
+              <div className="ac-section-header">
+                <span className="ac-section-title">Assigned students</span>
+              </div>
+              <div className="ac-table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Student</th><th>Student ID</th><th>Company</th><th>Duration</th><th>Status</th></tr>
+                  </thead>
+                  <tbody>
+                    {data.assigned_students?.length === 0 ? (
+                      <tr><td colSpan="5"><div className="ac-empty">No students assigned yet</div></td></tr>
+                    ) : (
+                      data.assigned_students.map((s) => (
+                        <tr key={s.id}>
+                          <td>{s.student_name}</td>
+                          <td>{s.student_id}</td>
+                          <td>{s.company_name}</td>
+                          <td>{s.start_date} → {s.end_date}</td>
+                          <td><span className={`ac-pill ${s.status}`}>{s.status}</span></td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
 
-              <p><strong>Student:</strong> {log.student_name}</p>
-              <p><strong>Week:</strong> {log.week_number}</p>
+          {/* STUDENTS VIEW */}
+          {view === "students" && (
+            <>
+              <div className="ac-section-header">
+                <span className="ac-section-title">Assigned students</span>
+              </div>
+              <div className="ac-table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Student</th><th>Student ID</th><th>Company</th><th>Duration</th><th>Status</th></tr>
+                  </thead>
+                  <tbody>
+                    {data.assigned_students?.length === 0 ? (
+                      <tr><td colSpan="5"><div className="ac-empty">No students assigned yet</div></td></tr>
+                    ) : (
+                      data.assigned_students.map((s) => (
+                        <tr key={s.id}>
+                          <td>{s.student_name}</td>
+                          <td>{s.student_id}</td>
+                          <td>{s.company_name}</td>
+                          <td>{s.start_date} → {s.end_date}</td>
+                          <td><span className={`ac-pill ${s.status}`}>{s.status}</span></td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
 
-              <p><strong>Status:</strong> {log.status}</p>
-              <p><strong>Score:</strong> {log.score}/100</p>
-              <p><strong>Feedback:</strong> {log.feedback}</p>
+          {/* PENDING LOGS VIEW */}
+          {view === "pending" && (
+            <>
+              <div className="ac-section-header">
+                <span className="ac-section-title">Pending log reviews</span>
+                <span className="ac-badge">{data.pending_logs?.length || 0} pending</span>
+              </div>
+              <div className="ac-table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Student</th><th>Week</th><th>Activities</th><th>Challenges</th><th>Hours</th><th>Submitted</th><th>Actions</th></tr>
+                  </thead>
+                  <tbody>
+                    {data.pending_logs?.length === 0 ? (
+                      <tr><td colSpan="7"><div className="ac-empty">No pending logs</div></td></tr>
+                    ) : (
+                      data.pending_logs.map((log) => (
+                        <tr key={log.id}>
+                          <td>{log.student_name}</td>
+                          <td>Week {log.week_number}</td>
+                          <td>{log.activities?.substring(0, 50)}...</td>
+                          <td>{log.challenges || "None"}</td>
+                          <td>{log.working_hours}h</td>
+                          <td>{new Date(log.submission_date).toLocaleDateString()}</td>
+                          <td>
+                            <button className="ac-btn approve" onClick={() => reviewLog(log.id, "approved")}>Approve</button>
+                            <button className="ac-btn reject" onClick={() => reviewLog(log.id, "rejected")}>Reject</button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
 
-              <p><strong>Reviewed At:</strong> {log.reviewed_at}</p>
-            </div>
-          ))
-        )}
-      </section>
+          {/* REVIEWED LOGS VIEW */}
+          {view === "reviewed" && (
+            <>
+              <div className="ac-section-header">
+                <span className="ac-section-title">Reviewed logs</span>
+              </div>
+              <div className="ac-table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Student</th><th>Week</th><th>Status</th><th>Score</th><th>Feedback</th><th>Reviewed At</th></tr>
+                  </thead>
+                  <tbody>
+                    {data.reviewed_logs?.length === 0 ? (
+                      <tr><td colSpan="6"><div className="ac-empty">No reviewed logs yet</div></td></tr>
+                    ) : (
+                      data.reviewed_logs.map((log) => (
+                        <tr key={log.id}>
+                          <td>{log.student_name}</td>
+                          <td>Week {log.week_number}</td>
+                          <td><span className={`ac-pill ${log.status}`}>{log.status}</span></td>
+                          <td>{log.score ?? "—"}/100</td>
+                          <td>{log.feedback || "—"}</td>
+                          <td>{log.reviewed_at ? new Date(log.reviewed_at).toLocaleDateString() : "—"}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
 
+        </div>
+      </div>
     </div>
   );
 }
