@@ -51,7 +51,6 @@ function Register() {
   );
 
   const handleChange = (e) => {
-
     const { name, value } = e.target;
     
     if (name === "company") {
@@ -76,11 +75,6 @@ function Register() {
     
     if (fieldErrors[name]) {
       setFieldErrors({ ...fieldErrors, [name]: null });
-
-    setData({ ...data, [e.target.name]: e.target.value });
-    
-    if (fieldErrors[e.target.name]) {
-      setFieldErrors({ ...fieldErrors, [e.target.name]: null });
     }
   };
 
@@ -95,18 +89,6 @@ function Register() {
     setLoading(false);
     return;
   }
-
-   if (data.password !== data.confirm_password) {
-      setError("Passwords are not matching");
-      setLoading(false);
-      return;
-    }
-    try {
-      await axios.post(
-        "http://127.0.0.1:8000/users/register/",
-        data
-      );
-
 
   const submitData = {
     username: data.username,
@@ -410,10 +392,8 @@ function Register() {
               onChange={handleChange}
               required
             />
-
             {fieldErrors.password && <p className="field-error">{fieldErrors.password[0]}</p>}
           </div>
-
           
           <div className="form-group">
            <input
@@ -425,19 +405,6 @@ function Register() {
            />
           </div>
 
-           
-
-
-          
-          <div className="form-group">
-            <input
-              name="confirm_password"
-              type="password"
-              placeholder="Confirm Password"
-              onChange={handleChange}
-              required
-            />
-          </div>
           <button type="submit" disabled={loading}>
             {loading ? "Registering..." : "Register"}
           </button>
