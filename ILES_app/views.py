@@ -1,3 +1,5 @@
+from logging import log
+
 from rest_framework import viewsets,generics, status
 from django.core.mail import send_mail
 from rest_framework.decorators import action
@@ -427,3 +429,58 @@ class PendingLogsView(generics.ListAPIView):
             status='submitted',
             **{f'placement__{user.role}_supervisor': user}
         )
+        
+#Academic supervisor
+class AcademicDashboardView(generics.RetrievAPIView):
+    permission_classes = [isAcademic]
+    def get(self, request):
+        user = request.user
+        #Getting assigned students
+        placements = InternshipPlacement.objects.fliter(
+            academic_supervisor = user
+            status = 'approved'
+        )
+        #Getting pending lgs
+        pending_logs = WeeklyLog.objects.filter(
+            placement__academic_supervisor = user,
+            status = 'submitted'
+        )
+        #Getting reviewd logs
+        reviewed_logs = WeeklyLog.objects.filter(
+            placement__academic_supervisor = user,
+            status__in = ['approved', 'rejected']
+        )
+        return Response({
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'department': user.department,
+            'staff_id': user.staff_id,
+            'assigned_students': [
+                {
+                    'id': p.id,
+                    'student_name': f"{p.student.first_name} {p.student.last_name}",
+                    'student_id': p.student.student_id,
+                    'company_name': p.company_name,
+                    'status': p.status,
+                    'start_date': str(p.start_date),
+                    'end_date': str(p.end_date),
+                }
+                for p in placements
+            ],
+            'pending_logs': [
+                {
+                    'id': log.id,
+                    'student_name': f"{log.placement.student.first_name} {log.placement.student.last_name}",
+                    'week_number': log.week_number,
+                    'activities': log.activities,
+                    'challenges': log.challenges,
+                    'working_hours': str(log.wokring_hours),
+                    'status': log.status,
+                    'submission_date': str(log.submission_date),
+                    'attachment': log.attachment.url if log.attachment else None,
+                    
+                }
+                for log in pending_logs
+            ],
+            'reviewed_logs
+        })
