@@ -431,25 +431,30 @@ class PendingLogsView(generics.ListAPIView):
         )
         
 #Academic supervisor
-class AcademicDashboardView(generics.RetrievAPIView):
-    permission_classes = [isAcademic]
+class AcademicDashboardView(generics.RetrieveAPIView):
+    permission_classes = [IsAcademic]
+    
     def get(self, request):
         user = request.user
-        #Getting assigned students
-        placements = InternshipPlacement.objects.fliter(
-            academic_supervisor = user
-            status = 'approved'
+        
+        # Getting assigned students
+        placements = InternshipPlacement.objects.filter(
+            academic_supervisor=user,
+            status='approved'
         )
-        #Getting pending lgs
+        
+        # Getting pending logs
         pending_logs = WeeklyLog.objects.filter(
-            placement__academic_supervisor = user,
-            status = 'submitted'
+            placement__academic_supervisor=user,
+            status='submitted'
         )
-        #Getting reviewd logs
+        
+        # Getting reviewed logs
         reviewed_logs = WeeklyLog.objects.filter(
-            placement__academic_supervisor = user,
-            status__in = ['approved', 'rejected']
+            placement__academic_supervisor=user,
+            status__in=['approved', 'rejected']
         )
+        
         return Response({
             'first_name': user.first_name,
             'last_name': user.last_name,
@@ -474,13 +479,23 @@ class AcademicDashboardView(generics.RetrievAPIView):
                     'week_number': log.week_number,
                     'activities': log.activities,
                     'challenges': log.challenges,
-                    'working_hours': str(log.wokring_hours),
+                    'working_hours': str(log.working_hours),
                     'status': log.status,
                     'submission_date': str(log.submission_date),
                     'attachment': log.attachment.url if log.attachment else None,
-                    
                 }
                 for log in pending_logs
             ],
-            'reviewed_logs
+            'reviewed_logs': [
+                {
+                    'id': log.id,
+                    'student_name': f"{log.placement.student.first_name} {log.placement.student.last_name}",
+                    'week_number': log.week_number,
+                    'status': log.status,
+                    'score': log.score,
+                    'feedback': log.feedback,
+                    'reviewed_at': str(log.reviewed_at),
+                }
+                for log in reviewed_logs
+            ]
         })

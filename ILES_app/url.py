@@ -24,7 +24,7 @@ urlpatterns = [
     path('api/student/dashboard/', StudentDashboardView.as_view(), name='student-dashboard'),
     path('api/supervisor/dashboard/', SupervisorDashboardView.as_view(), name='supervisor-dashboard'),
     path('api/admin/dashboard/', AdminDashboardView.as_view(), name='admin-dashboard'),
-    
+    path('api/supervisor/academic/dashboard/', AcademicDashboardView.as_view(), name='academic-dashboard'),
     # SUPERVISOR HELPERS
     path('api/supervisor/assigned-students/', AssignedStudentsView.as_view(), name='assigned-students'),
     path('api/supervisor/pending-logs/', PendingLogsView.as_view(), name='pending-logs'),
