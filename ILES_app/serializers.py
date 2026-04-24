@@ -7,6 +7,10 @@ from datetime import timedelta
 from .models import Evaluation, InternshipPlacement, User, WeeklyLog, Department, Company
 
 
+from .models import Evaluation, InternshipPlacement, User, WeeklyLog, Department, Company
+
+# ==================== USER SERIALIZERS ====================
+
 class UserSerializer(serializers.ModelSerializer):
     department_name = serializers.SerializerMethodField()
     
@@ -184,6 +188,7 @@ class ApproveStaffSerializer(serializers.Serializer):
             return None, "rejected"
 
 
+# ==================== PLACEMENT SERIALIZERS ====================
 
 class ApplyForPlacementSerializer(serializers.ModelSerializer):
     """
@@ -443,6 +448,7 @@ class ReviewLogSerializer(serializers.ModelSerializer):
         return value
 
 
+# ==================== EVALUATION SERIALIZERS ====================
 
 class EvaluationSerializer(serializers.ModelSerializer):
     """
@@ -494,6 +500,7 @@ class AcademicEvaluationSerializer(serializers.ModelSerializer):
         return value
 
 
+# ==================== DASHBOARD SERIALIZERS ====================
 
 class StudentDashboardSerializer(serializers.ModelSerializer):
     placement = serializers.SerializerMethodField()

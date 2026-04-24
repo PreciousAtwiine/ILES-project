@@ -369,6 +369,11 @@ class EvaluationViewSet(viewsets.ModelViewSet):
             if total_weeks < 1:
                 total_weeks = 1#same 8 days =2wks
 
+           #DAYS LOGIC
+            total_weeks = (total_days // 7) + 1 if total_days % 7 != 0 else (total_days // 7)
+            if total_weeks < 1:
+                total_weeks = 1
+            
             
             final_week_log = WeeklyLog.objects.filter(
                 placement=placement,
@@ -425,6 +430,8 @@ class RequestLogExceptionView(APIView):
         total_weeks = (total_days // 7) + 1 if total_days % 7 != 0 else (total_days // 7)
         if total_weeks < 1:
             total_weeks = 1#8 days =2weeks upto 14ds        
+            total_weeks = 1
+    
         
         has_final_week = WeeklyLog.objects.filter(
             placement=placement, week_number=total_weeks
