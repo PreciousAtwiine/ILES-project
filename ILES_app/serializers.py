@@ -6,6 +6,9 @@ from datetime import timedelta
 
 from .models import Evaluation, InternshipPlacement, User, WeeklyLog, Department, Company
 
+
+from .models import Evaluation, InternshipPlacement, User, WeeklyLog, Department, Company
+
 # ==================== USER SERIALIZERS ====================
 
 class UserSerializer(serializers.ModelSerializer):
@@ -417,7 +420,7 @@ class SubmitLogSerializer(serializers.ModelSerializer):
             from django.core.mail import send_mail
             from django.conf import settings
             send_mail(
-                subject=f'⚠️ Late Log Submission - Week {week}',
+                subject=f' Late Log Submission - Week {week}',
                 message=f'Student: {placement.student.get_full_name()}\nCompany: {placement.company_name}\nWeek: {week}\nExpected by: {week_end}\nSubmitted on: {timezone.now().date()}\n\nPlease review at your earliest convenience.',
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[placement.workplace_supervisor.email],

@@ -37,7 +37,7 @@ export default function Login() {
 
       if (role === "student") window.location.href = "/student";
       else if (role === "workplace") window.location.href = "/workplace-supervisor";
-      else if (role === "academic") window.location.href = "/supervisor";
+      else if (role === "academic") window.location.href = "/academic";
       else if (role === "admin") window.location.href = "/admin";
       else setError("Unknown role");
     } catch (err) {

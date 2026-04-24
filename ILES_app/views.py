@@ -364,6 +364,11 @@ class EvaluationViewSet(viewsets.ModelViewSet):
         
         if role == 'academic':
             total_days = (placement.end_date - placement.start_date).days
+           
+            total_weeks = (total_days // 7) + 1 if total_days % 7 != 0 else (total_days // 7)
+            if total_weeks < 1:
+                total_weeks = 1#same 8 days =2wks
+
            #DAYS LOGIC
             total_weeks = (total_days // 7) + 1 if total_days % 7 != 0 else (total_days // 7)
             if total_weeks < 1:
@@ -424,6 +429,7 @@ class RequestLogExceptionView(APIView):
         
         total_weeks = (total_days // 7) + 1 if total_days % 7 != 0 else (total_days // 7)
         if total_weeks < 1:
+            total_weeks = 1#8 days =2weeks upto 14ds        
             total_weeks = 1
     
         
@@ -761,3 +767,72 @@ class RejectCompanyView(APIView):
         company.delete()
         
         return Response({"message": "Company rejected and removed"})
+
+class AcademicDashboardView(generics.RetrieveAPIView):
+    permission_classes = [IsAcademic]
+    
+    def get(self, request):
+        user = request.user
+        
+        # Get assigned students
+        placements = InternshipPlacement.objects.filter(
+            academic_supervisor=user,
+            status='approved'
+        )
+        
+        # Get pending logs
+        pending_logs = WeeklyLog.objects.filter(
+            placement__academic_supervisor=user,
+            status='submitted'
+        )
+        
+        # Get reviewed logs
+        reviewed_logs = WeeklyLog.objects.filter(
+            placement__academic_supervisor=user,
+            status__in=['approved', 'rejected']
+        )
+        
+        return Response({
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'department': user.department,
+            'staff_id': user.staff_id,
+            'assigned_students': [
+                {
+                    'id': p.id,
+                    'student_name': f"{p.student.first_name} {p.student.last_name}",
+                    'student_id': p.student.student_id,
+                    'company_name': p.company_name,
+                    'status': p.status,
+                    'start_date': str(p.start_date),
+                    'end_date': str(p.end_date),
+                }
+                for p in placements
+            ],
+            'pending_logs': [
+                {
+                    'id': log.id,
+                    'student_name': f"{log.placement.student.first_name} {log.placement.student.last_name}",
+                    'week_number': log.week_number,
+                    'activities': log.activities,
+                    'challenges': log.challenges,
+                    'working_hours': str(log.working_hours),
+                    'status': log.status,
+                    'submission_date': str(log.submission_date),
+                    'attachment': log.attachment.url if log.attachment else None,
+                }
+                for log in pending_logs
+            ],
+            'reviewed_logs': [
+                {
+                    'id': log.id,
+                    'student_name': f"{log.placement.student.first_name} {log.placement.student.last_name}",
+                    'week_number': log.week_number,
+                    'status': log.status,
+                    'score': log.score,
+                    'feedback': log.feedback,
+                    'reviewed_at': str(log.reviewed_at),
+                }
+                for log in reviewed_logs
+            ]
+        })
