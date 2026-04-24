@@ -3,16 +3,13 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from rest_framework import serializers
 from datetime import timedelta
-<<<<<<< HEAD
 
 from .models import Evaluation, InternshipPlacement, User, WeeklyLog, Department, Company
 
-=======
 
 from .models import Evaluation, InternshipPlacement, User, WeeklyLog, Department, Company
 
 # ==================== USER SERIALIZERS ====================
->>>>>>> c9af755a7d6b8f853f785a90053293574fc65fd3
 
 class UserSerializer(serializers.ModelSerializer):
     department_name = serializers.SerializerMethodField()
@@ -423,11 +420,7 @@ class SubmitLogSerializer(serializers.ModelSerializer):
             from django.core.mail import send_mail
             from django.conf import settings
             send_mail(
-<<<<<<< HEAD
                 subject=f' Late Log Submission - Week {week}',
-=======
-                subject=f'⚠️ Late Log Submission - Week {week}',
->>>>>>> c9af755a7d6b8f853f785a90053293574fc65fd3
                 message=f'Student: {placement.student.get_full_name()}\nCompany: {placement.company_name}\nWeek: {week}\nExpected by: {week_end}\nSubmitted on: {timezone.now().date()}\n\nPlease review at your earliest convenience.',
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[placement.workplace_supervisor.email],
@@ -722,8 +715,4 @@ class AdminDashboardSerializer(serializers.ModelSerializer):
             exceptions = exceptions.filter(student__department_fk=admin_dept)
         
         exceptions = exceptions.order_by('-created_at')[:10]
-<<<<<<< HEAD
         return InternshipPlacementSerializer(exceptions, many=True).data
-=======
-        return InternshipPlacementSerializer(exceptions, many=True).data
->>>>>>> c9af755a7d6b8f853f785a90053293574fc65fd3
