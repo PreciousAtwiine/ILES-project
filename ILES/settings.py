@@ -1,4 +1,3 @@
-<<<<<<< HEAD:ILES/settings.py
 """
 Django settings for ILES project.
 
@@ -158,8 +157,6 @@ FRONTEND_URL = 'http://localhost:3000'
 # EMAIL_USE_TLS = True
 # EMAIL_HOST_USER = 'your-email@gmail.com'
 # EMAIL_HOST_PASSWORD = 'your-app-password'  # Use App Password, not regular password
-<<<<<<< HEAD
-<<<<<<< HEAD
 # DEFAULT_FROM_EMAIL = 'ILES System <noreply@iles.com>'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
@@ -187,11 +184,6 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
     ]
-=======
-=======
->>>>>>> mervyn
-# DEFAULT_FROM_EMAIL = 'ILES System <noreply@iles.com>'
-=======
 """
 Django settings for backend project.
 
@@ -315,11 +307,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
->>>>>>> de6b20eb50da6ea541dc1a6b81bbf856227a6508:backend/settings.py
-<<<<<<< HEAD
->>>>>>> mervyn
-=======
-=======
 # DEFAULT_FROM_EMAIL = 'ILES System <noreply@iles.com>'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
@@ -347,5 +334,4 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
     ]
->>>>>>> 7da562bdc78cfcda5e2523abd29f9464b5f9c6b7
->>>>>>> mervyn
+
