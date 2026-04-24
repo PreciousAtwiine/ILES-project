@@ -3,6 +3,11 @@ import Login from "./Login";
 import Register from "./Register";
 import StudentDashboard from "./Pages/Dashboard";
 import WorkplaceSupervisorDashboard from "./Pages/WorkplaceSupervisorDashboard";
+
+
+
+
+
 import AcademicDashboard from "./Pages/AcademicDashboard";
 import AcademicEvaluation from "./Pages/AcademicEvaluation";
 import PendingLogs from "./Pages/PendingLogs";
