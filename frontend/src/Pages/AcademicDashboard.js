@@ -27,7 +27,8 @@ export default function AcademicDashboard() {
       setData(res.data);
       setLoading(false);
     } catch (err) {
-      setError("Failed to load dashboard");
+      console.log("Error:", err.response?.status, err.response?.data);
+      setError(`Failed to load dashboard: ${err.response?.status} - ${JSON.stringify(err.response?.data)}`);
       setLoading(false);
     }
   };
