@@ -60,3 +60,17 @@
 .ac-btn.approve:hover { background: #bbf7d0; }
 .ac-btn.reject { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
 .ac-btn.reject:hover { background: #fecaca; }
+
+/* FORM */
+.ac-form-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 28px; max-width: 600px; }
+.ac-form-group { margin-bottom: 20px; }
+.ac-form-group label { display: block; font-size: 12px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+.ac-form-group input, .ac-form-group select, .ac-form-group textarea { width: 100%; padding: 9px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; color: #1e293b; background: #f8fafc; outline: none; }
+.ac-form-group input:focus, .ac-form-group select:focus, .ac-form-group textarea:focus { border-color: #3b82f6; background: #fff; }
+.ac-form-group textarea { resize: vertical; }
+.ac-form-hint { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+.ac-submit-btn { padding: 10px 24px; background: #1d4ed8; color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.ac-submit-btn:hover { background: #1e40af; }
+.ac-submit-btn:disabled { background: #93c5fd; cursor: not-allowed; }
+.ac-success-msg { background: #dcfce7; color: #15803d; border: 1px solid #86efac; border-radius: 6px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; }
+.ac-error-msg { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; border-radius: 6px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; }

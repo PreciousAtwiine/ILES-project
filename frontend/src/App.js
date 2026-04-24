@@ -5,6 +5,7 @@ import StudentDashboard from "./Pages/StudentDashboard";
 import WorkplaceSupervisorDashboard from "./Pages/WorkplaceSupervisorDashboard";
 import AcademicDashboard from "./Pages/AcademicDashboard";
 import PendingLogs from "./Pages/PendingLogs";
+import AcademicEvaluation from "./Pages/AcademicEvaluation";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         {/* Academic Supervisor*/}
         <Route path="/academic" element={<AcademicDashboard />} />
         <Route path="/pending-logs" element={<PendingLogs />} />
+        <Route path="/academic/evaluate" element={<AcademicEvaluation/>} />
 
         {/* Workplace Supervisor */}
         <Route path="/workplace-supervisor" element={<WorkplaceSupervisorDashboard />} />
