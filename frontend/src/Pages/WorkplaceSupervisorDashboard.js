@@ -81,7 +81,7 @@ export default function WorkplaceSupervisorDashboard() {
     <div style={{ display: "flex" }}>
       {/* Sidebar */}
       <div className="sidebar">
-        <h2>Academic supervisor</h2>
+        <h2>Workplace Supervisor</h2>
         <button onClick={loadDashboard}>Dashboard</button>
         <button onClick={loadStudents}>Students</button>
         <button onClick={() => navigate("/pending-logs")}>Pending Logs</button>
