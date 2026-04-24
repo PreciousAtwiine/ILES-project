@@ -22,7 +22,7 @@ function Register() {
 
   const handleChange = (e) => {
     setData({ ...data, [e.target.name]: e.target.value });
-    // Clear field error when user starts typing
+    
     if (fieldErrors[e.target.name]) {
       setFieldErrors({ ...fieldErrors, [e.target.name]: null });
     }
@@ -34,6 +34,11 @@ function Register() {
     setFieldErrors({});
     setLoading(true);
 
+   if (data.password !== data.confirm_password) {
+      setError("Passwords are not matching");
+      setLoading(false);
+      return;
+    }
     try {
       await axios.post(
         "http://127.0.0.1:8000/users/register/",
@@ -184,9 +189,21 @@ function Register() {
               onChange={handleChange}
               required
             />
+
             {fieldErrors.password && <p className="field-error">{fieldErrors.password[0]}</p>}
           </div>
+           
 
+          
+          <div className="form-group">
+            <input
+              name="confirm_password"
+              type="password"
+              placeholder="Confirm Password"
+              onChange={handleChange}
+              required
+            />
+          </div>
           <button type="submit" disabled={loading}>
             {loading ? "Registering..." : "Register"}
           </button>
