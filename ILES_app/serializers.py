@@ -253,12 +253,12 @@ class InternshipPlacementSerializer(serializers.ModelSerializer):
         fields = ['id', 'student', 'student_id', 'student_name', 'company_name', 
                   'workplace_supervisor', 'workplace_supervisor_name',
                   'academic_supervisor', 'academic_supervisor_name',
-                  'academic_supervisor_student_count',  # ADD THIS
+                  'academic_supervisor_student_count',  # ADDED THIS FOR COUNT ALSO ADD IT IN FRONT EVEN BELOW 
                   'start_date', 'end_date', 'status', 'created_at',
                   'exception_status', 'exception_reason', 'log_exception_requested']
         read_only_fields = ['id', 'student', 'status', 'created_at',
                            'exception_status', 'exception_reason', 'log_exception_requested',
-                           'academic_supervisor_student_count']  # ADD THIS
+                           'academic_supervisor_student_count']  # ADDED THIS TO R.O
     
     def get_exception_status(self, obj):
         return obj.exception_status
