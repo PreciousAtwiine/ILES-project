@@ -76,7 +76,6 @@
 .ac-error-msg { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; border-radius: 6px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; }
 
 /* Log model */
-/* MODAL */
 .ac-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
 .ac-modal { background: #fff; border-radius: 12px; width: 560px; max-width: 90vw; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
 .ac-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid #e2e8f0; }
@@ -94,15 +93,15 @@
 .ac-btn-cancel { padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; font-weight: 500; }
 .ac-btn-cancel:hover { background: #e2e8f0; }
 
-/* Evaluation layout */
-.ac-eval-layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
-.ac-eval-form-side { display: flex; flex-direction: column; gap: 16px; }
-.ac-eval-info-side { display: flex; flex-direction: column; gap: 16px; }
-.ac-info-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px 20px; }
-.ac-info-card h3 { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 14px; }
+/* EVALUATION CARD */
+.ac-eval-card { display: flex; flex-direction: row; gap: 0; padding: 0; overflow: hidden; }
+.ac-eval-left { flex: 1; padding: 28px; }
+.ac-eval-divider { width: 1px; background: #e2e8f0; flex-shrink: 0; }
+.ac-eval-right { width: 280px; padding: 28px; background: #f8fafc; flex-shrink: 0; }
+.ac-eval-section h3 { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
 .ac-grade-item { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 0.5px solid #f1f5f9; font-size: 13px; color: #334155; }
 .ac-grade-item:last-child { border-bottom: none; }
 .ac-grade-item.total { font-weight: 600; color: #1e293b; }
-.ac-grade-pct { font-weight: 600; color: #64748b; }
+.ac-grade-pct { font-weight: 600; color: #94a3b8; }
 .ac-grade-pct.highlight { color: #1d4ed8; }
 .ac-grade-divider { border-top: 1px solid #e2e8f0; margin: 8px 0; }
