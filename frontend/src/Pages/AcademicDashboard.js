@@ -24,7 +24,7 @@ export default function AcademicDashboard() {
       setData(res.data);
     } catch (err) {
       if (err.response?.status === 401) {
-        loacalStorage.removeItem("access");
+        localStorage.removeItem("access");
         localStorage.removeItem("refresh");
         window.location.href = "/login";
       } else {
