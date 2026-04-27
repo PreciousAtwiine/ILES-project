@@ -23,7 +23,13 @@ export default function AcademicDashboard() {
       );
       setData(res.data);
     } catch (err) {
-      setError("Failed to load dashboard");
+      if (err.response?.status === 401) {
+        loacalStorage.removeItem("access");
+        localStorage.removeItem("refresh");
+        window.location.href = "/login";
+      } else {
+        setError("Failed to load dashboard");
+      }
     } finally {
       setLoading(false);
     }
