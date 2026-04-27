@@ -28,7 +28,13 @@ export default function AcademicEvaluation() {
       );
       setStudents(res.data.assigned_students || []);
     } catch (err) {
-      setError("Failed to load students");
+      if (err.response?.status === 401) {
+        localStorage.removeItem("access");
+        localStorage.removeItem("refresh");
+        window.location.href = "/login";
+      } else {
+        setError("Failed to load students");
+      }
     } finally {
       setLoading(false);
     }
