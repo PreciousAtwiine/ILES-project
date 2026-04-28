@@ -35,3 +35,17 @@ export default function StudentPlacement({
               className="search-input"
             />
           </div>
+           <div className="form-group">
+            <label>Select existing company (approved):</label>
+            <select value={selectedCompanyId} onChange={onCompanyChange} size="5">
+              <option value="">-- Select Company --</option>
+              {filteredCompanies.map((company) => (
+                <option key={company.id} value={company.id}>
+                  {company.name}
+                </option>
+              ))}
+            </select>
+            {filteredCompanies.length === 0 && searchTerm && (
+              <small className="hint-text">No companies found. You can add a new one below.</small>
+            )}
+          </div>
