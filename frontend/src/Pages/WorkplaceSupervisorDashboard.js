@@ -1,144 +1,51 @@
-import { useEffect, useState, useCallback } from "react";
+// WorkplaceSupervisorDashboard.jsx
+import { useEffect, useState } from "react";
 import axios from "axios";
-import "./WorkplaceSupervisorDashboard.css";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import "./SupervisorDashboard.css";
 
 export default function WorkplaceSupervisorDashboard() {
-  const [data, setData] = useState(null);
+  const [pendingLogs, setPendingLogs] = useState([]);
   const [students, setStudents] = useState([]);
-  const [logs, setLogs] = useState([]);
-  const [view, setView] = useState("dashboard");
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const BASE_URL = "http://127.0.0.1:8000";
-
-  const getToken = () => localStorage.getItem("access");
-
-  const loadDashboard = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${BASE_URL}/api/supervisor/dashboard/`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
-      });
-      setData(res.data);
-      setView("dashboard");
-    } catch (err) {
-      console.error("Error loading dashboard:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const loadStudents = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${BASE_URL}/api/supervisor/assigned-students/`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
-      });
-      setStudents(res.data);
-      setView("students");
-    } catch (err) {
-      console.error("Error loading students:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadLogs = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${BASE_URL}/api/supervisor/pending-logs/`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
-      });
-      setLogs(res.data);
-      setView("logs");
-    } catch (err) {
-      console.error("Error loading logs:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
-    window.location.href = "/login";
-  };
 
   useEffect(() => {
-    loadDashboard();
-  }, [loadDashboard]);
+    axios.get("http://127.0.0.1:8000/logs/pending/")
+      .then(res => setPendingLogs(res.data))
+      .catch(err => console.log(err));
 
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <p>Loading...</p>
-      </div>
-    );
-  }
+    axios.get("http://127.0.0.1:8000/supervisor/students/")
+      .then(res => setStudents(res.data))
+      .catch(err => console.log(err));
+  }, []);
 
   return (
-    <div style={{ display: "flex" }}>
-      {/* Sidebar */}
-      <div className="sidebar">
-        <h2>Workplace Supervisor</h2>
-        <button onClick={loadDashboard}>Dashboard</button>
-        <button onClick={loadStudents}>Students</button>
-        <button onClick={() => navigate("/pending-logs")}>Pending Logs</button>
-        <button onClick={logout}> Logout</button>
-      </div>
+    <div className="supervisor-dashboard">
+      <aside className="sidebar">
+        <h2>Supervisor Panel</h2>
+        <nav>
+          <Link to="/supervisor/dashboard">Dashboard</Link>
+          <Link to="/supervisor/students">Students</Link>
+          <Link to="/supervisor/pending-logs">Pending Logs</Link>
+          <Link to="/supervisor/evaluations">Evaluations</Link>
+          <Link to="/supervisor/reports">Reports</Link>
+        </nav>
+      </aside>
 
-      {/* Main Content */}
-      <div className="main-content">
-        {view === "dashboard" && data && (
-          <div>
-            <h1 className="page-header">Dashboard</h1>
-            <div className="dashboard-cards">
-              <div className="card">
-                <h3>Assigned Students</h3>
-                <p>{data.assigned_students?.length || 0}</p>
-              </div>
-              <div className="card">
-                <h3>Pending Reviews</h3>
-                <p>{data.pending_reviews?.length || 0}</p>
-              </div>
-            </div>
-          </div>
-        )}
+      <main className="main-content">
+        <h1>Workplace Supervisor Dashboard</h1>
 
-        {view === "students" && (
-          <div>
-            <h1 className="page-header">Assigned Students</h1>
-            {students.length === 0 ? (
-              <p className="empty-state">No students assigned yet.</p>
-            ) : (
-              students.map((s) => (
-                <div key={s.id} className="student-card">
-                  <strong>{s.student_name}</strong>
-                  <p>{s.company_name}</p>
-                </div>
-              ))
-            )}
+        <div className="summary-cards">
+          <div className="card">
+            <h3>Assigned Students</h3>
+            <p>{students.length}</p>
           </div>
-        )}
 
-        {view === "logs" && (
-          <div>
-            <h1 className="page-header">Pending Logs</h1>
-            {logs.length === 0 ? (
-              <p className="empty-state">No pending logs to review.</p>
-            ) : (
-              logs.map((l) => (
-                <div key={l.id} className="log-card">
-                  <strong>Week {l.week_number}</strong>
-                  <p>{l.activities}</p>
-                  <small>Student: {l.student_name}</small>
-                </div>
-              ))
-            )}
+          <div className="card">
+            <h3>Pending Logs</h3>
+            <p>{pendingLogs.length}</p>
           </div>
-        )}
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
