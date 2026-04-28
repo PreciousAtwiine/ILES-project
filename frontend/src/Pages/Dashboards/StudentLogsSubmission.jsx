@@ -6,15 +6,15 @@ export default function StudentLogs({ recentLogs, onSubmit }) {
       <h1>Weekly Logs</h1>
       
       <div className="form-card">
-        <h3>Submit Weekly Log</h3>
+        <h3>Submit Weekly <Logs></Logs></h3>
         <form onSubmit={onSubmit}>
         <div className="form-group">
             <label>Week Number *</label>
-            <input type="number" id="week_number" placeholder="Week number" min="1" required />
+            <input type="number" id="week_number" placeholder="Week" min="1" required />
           </div>
           <div className="form-group">
             <label>Activities Performed *</label>
-            <textarea id="activities" rows="4" placeholder="Describe your activities this week" required></textarea>
+            <textarea id="activities" rows="4" placeholder="Input activities to be done this week" required></textarea>
           </div>
           <div className="form-group">
             <label>Challenges Faced</label>
@@ -28,7 +28,7 @@ export default function StudentLogs({ recentLogs, onSubmit }) {
             <label>Attachment (Optional)</label>
             <input type="file" id="attachment" />
           </div>
-          <button type="submit" className="submit-btn">Submit Log</button>
+          <button type="submit" className="submit-button">Submit Log</button>
         </form>
       </div>
 
