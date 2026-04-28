@@ -79,7 +79,7 @@ body {
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
-  background-color: lightgray;
+  background-color: none;
   border: 2px solid black;
 }
 
@@ -98,9 +98,10 @@ body {
 }
 
 .error {
-  color: rgba(255, 0, 0, 0.941);
+  color: blue;
   text-align: center;
   margin-top: 10px;
+  font-size: 20px;
 }
 .forgot-password {
   text-align: right;
