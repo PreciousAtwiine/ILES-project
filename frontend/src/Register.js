@@ -427,5 +427,5 @@ try {
     </div>
   );
 }
-}
+
 export default Register;
