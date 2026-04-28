@@ -51,7 +51,6 @@ function Register() {
   );
 
   const handleChange = (e) => {
-
     const { name, value } = e.target;
     
     if (name === "company") {
@@ -76,11 +75,6 @@ function Register() {
     
     if (fieldErrors[name]) {
       setFieldErrors({ ...fieldErrors, [name]: null });
-
-    setData({ ...data, [e.target.name]: e.target.value });
-    
-    if (fieldErrors[e.target.name]) {
-      setFieldErrors({ ...fieldErrors, [e.target.name]: null });
     }
   };
 
@@ -409,10 +403,8 @@ try {
               onChange={handleChange}
               required
             />
-
             {fieldErrors.password && <p className="field-error">{fieldErrors.password[0]}</p>}
           </div>
-
           
           <div className="form-group">
            <input
@@ -424,19 +416,6 @@ try {
            />
           </div>
 
-           
-
-
-          
-          <div className="form-group">
-            <input
-              name="confirm_password"
-              type="password"
-              placeholder="Confirm Password"
-              onChange={handleChange}
-              required
-            />
-          </div>
           <button type="submit" disabled={loading}>
             {loading ? "Registering..." : "Register"}
           </button>
@@ -448,5 +427,5 @@ try {
     </div>
   );
 }
-}
+
 export default Register;
