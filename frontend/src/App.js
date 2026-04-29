@@ -10,7 +10,7 @@ import StudentsPage from "./Pages/StudentsPage";
 import PendingLogsPage from "./Pages/PendingLogsPage";
 import ReviewLogPage from "./Pages/ReviewLogPage";
 import EvaluationPage from "./Pages/EvaluationPage";
-
+import AdminDashboard from "./Pages/AdminDashboard";
 
 
 function App() {
@@ -24,8 +24,12 @@ function App() {
         
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+         <Route
+          path="/admin-dashboard"
+          element={ <AdminDashboard />} />
+       
+       
 
-        
         <Route path="/student" element={<StudentDashboard />} />
         <Route path="/workplace-supervisor" element={<WorkplaceSupervisorDashboard />} />
         <Route path="/supervisor" element={<AcademicDashboard />} />
