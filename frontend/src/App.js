@@ -3,7 +3,7 @@ import Login from "./Login";
 import Register from "./Register";
 import StudentDashboard from "./Pages/Dashboard";
 import WorkplaceSupervisorDashboard from "./Pages/WorkplaceSupervisorDashboard";
-
+import AcademicEvaluation from "./Pages/AcademicEvaluation";
 
 
 
@@ -30,7 +30,7 @@ function App() {
 
         {/* Academic Supervisor*/}
         <Route path="/academic" element={<AcademicDashboard />} />
-        <Route path="/pending-logs" element={<PendingLogs />} />
+  
         <Route path="/academic/evaluate" element={<AcademicEvaluation/>} />
 
         {/* Workplace Supervisor */}
