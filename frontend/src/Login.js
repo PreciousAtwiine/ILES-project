@@ -5,6 +5,7 @@ import "./Login.css";
 export default function Login() {
   const [data, setData] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setData({ ...data, [e.target.name]: e.target.value });
@@ -12,6 +13,8 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
 
     try {
       
@@ -37,11 +40,13 @@ export default function Login() {
 
       if (role === "student") window.location.href = "/student";
       else if (role === "workplace") window.location.href = "/workplace-supervisor";
-      else if (role === "academic") window.location.href = "/supervisor";
+      else if (role === "academic") window.location.href = "/academic";
       else if (role === "admin") window.location.href = "/admin";
       else setError("Unknown role");
     } catch (err) {
       setError("Invalid username or password");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -80,7 +85,7 @@ export default function Login() {
             <a href="/forgot-password">Forgot Password?</a>
           </div>
 
-          <button type="submit">Login</button>
+          <button type="submit" disabled= {loading}> {loading ? "Logging in..." : "Login"}</button>
 
           <p className="signup-text">
             Don't have an account?{" "}

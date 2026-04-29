@@ -85,21 +85,32 @@ function Register() {
   setLoading(true);
 
   if (data.password !== data.confirm_password) {
-    setError("Passwords are not matching");
-    setLoading(false);
-    return;
-  }
+  setError("Passwords are not matching");
+  setLoading(false);
+  return;
+}
 
-  const submitData = {
-    username: data.username,
-    email: data.email,
-    password: data.password,
-    confirm_password: data.confirm_password,
-    first_name: data.first_name,
-    last_name: data.last_name,
-    role: data.role,
-  };
+const submitData = {
+  username: data.username,
+  email: data.email,
+  password: data.password,
+  confirm_password: data.confirm_password,
+  first_name: data.first_name,
+  last_name: data.last_name,
+  role: data.role,
+};
 
+try {
+  await axios.post(
+    "http://127.0.0.1:8000/users/register/",
+    submitData
+  );
+  setSuccess("Registration successful! Please wait for approval.");
+  setLoading(false);
+} catch (err) {
+  setError("Registration failed. Please try again.");
+  setLoading(false);
+}
   if (data.role === "student") {
     submitData.student_id = data.student_id;
     submitData.department_fk = data.department_fk;

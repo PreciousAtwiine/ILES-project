@@ -6,7 +6,16 @@ import uuid
 from django.utils import timezone
 from datetime import timedelta
 
-
+class Department(models.Model):
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=20, unique=True)
+    college = models.CharField(max_length=100, blank=True)
+    
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+    
+    class Meta:
+        ordering = ['name']
 
 class User(AbstractUser):
     
@@ -21,8 +30,34 @@ class User(AbstractUser):
     student_id = models.CharField(max_length=50, blank=True, null=True)
     staff_id = models.CharField(max_length=50, blank=True, null=True)
     department = models.CharField(max_length=100, blank=True)
+    ACADEMIC_RANK_CHOICES = [
+        ('assistant_lecturer', 'Assistant Lecturer'),
+        ('lecturer', 'Lecturer'),
+        ('senior_lecturer', 'Senior Lecturer'),
+        ('associate_professor', 'Associate Professor'),
+        ('professor', 'Professor'),
+    ]
     
-    
+    department_fk = models.ForeignKey(
+        Department, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='users'
+    )
+    academic_rank = models.CharField(
+        max_length=30, 
+        choices=ACADEMIC_RANK_CHOICES, 
+        blank=True, 
+        null=True
+    )
+    company = models.ForeignKey(
+        'Company', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='supervisors'
+    )
     groups = models.ManyToManyField(
         'auth.Group',
         related_name='iles_app_user_set',  # Unique related_name
@@ -38,6 +73,31 @@ class User(AbstractUser):
         help_text='Specific permissions for this user.',
         verbose_name='user permissions',
     )
+class Company(models.Model):
+    name = models.CharField(max_length=200, unique=True)
+    address = models.TextField(blank=True)
+    phone = models.CharField(max_length=50, blank=True)
+    email = models.CharField(max_length=200, blank=True)
+    is_approved = models.BooleanField(default=False)
+    created_by = models.ForeignKey(
+        'User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_companies'
+    )
+    approved_by = models.ForeignKey(
+        'User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_companies'
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.name} {'✓' if self.is_approved else '⏳'}"
 class PasswordReset(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     token = models.CharField(max_length=30, unique=True, default=uuid.uuid4)
@@ -64,13 +124,38 @@ class InternshipPlacement(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     
     created_at = models.DateTimeField(auto_now_add=True)
-    
+    log_exception_requested = models.BooleanField(default=False)
+    exception_reason = models.TextField(blank=True)
+    exception_status = models.CharField(
+        max_length=20,
+        choices=[('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected')],
+        default='pending'
+    )
+    exception_approved_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_exceptions'
+    )
+    exception_approved_at = models.DateTimeField(null=True, blank=True)
+    def get_academic_supervisor_student_count(self):
+        if self.academic_supervisor:
+            return InternshipPlacement.objects.filter(
+                academic_supervisor=self.academic_supervisor,
+                status='approved'
+            ).count()
+        return 0
+
+    def can_assign_academic_supervisor(self, supervisor):
+        if not supervisor:
+            return False
+        current_count = InternshipPlacement.objects.filter(
+            academic_supervisor=supervisor,
+            status='approved'
+        ).count()
+        return current_count < 10
     def __str__(self):
         return f"{self.student.username} @ {self.company_name}"
 
 
 class WeeklyLog(models.Model):
-   
     STATUS_CHOICES = [
         ('draft', 'Draft'),
         ('submitted', 'Submitted'),
@@ -84,10 +169,14 @@ class WeeklyLog(models.Model):
     
     activities = models.TextField()
     challenges = models.TextField(blank=True)
-    working_hours=models.DecimalField(decimal_places=4,max_digits=6,default=0)
+    working_hours = models.DecimalField(decimal_places=4, max_digits=6, default=0)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     submission_date = models.DateTimeField(null=True, blank=True)
-    attachment=models.FileField(upload_to='attachments/', blank=True,null=True)
+    attachment = models.FileField(upload_to='attachments/', blank=True, null=True)
+    
+    # addes this
+    is_late = models.BooleanField(default=False)
+    late_reason = models.TextField(blank=True)
     
     feedback = models.TextField(blank=True)
     reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
@@ -100,8 +189,6 @@ class WeeklyLog(models.Model):
     
     def __str__(self):
         return f"Week {self.week_number} - {self.placement.student.username}"
-
-
 
 
 class Evaluation(models.Model):
@@ -127,32 +214,67 @@ class Evaluation(models.Model):
         return f"Evaluation - {self.placement}"
     
     def calculate_final(self):
-        
+    
         if self.workplace_score is not None and self.academic_score is not None:
-            # Get average log score
-            logs = self.placement.logs.filter(status='approved', score__isnull=False)
-            log_avg = 0
-            if logs.exists():
-                total = sum([log.score for log in logs])
-                log_avg = total / logs.count()
+            placement = self.placement
             
+            # Calculate total weeks required for this internship
+            total_days = (placement.end_date - placement.start_date).days
+            total_weeks = (total_days // 7) + 1 if total_days % 7 > 0 else (total_days // 7)
+            if total_weeks < 1:
+                total_weeks = 1
+            
+            # Get all submitted logs with scores
+            submitted_logs = placement.logs.filter(score__isnull=False)
+            submitted_weeks = set(submitted_logs.values_list('week_number', flat=True))
+            
+            # Calculate log average based on exception status
+            if placement.exception_status == 'approved':
+                # AFTER EXCEPTION APPROVED =====
+                # Missing weeks are ignore completely
+                # Only count weeks that i submited
+                if submitted_logs.exists():
+                    total_score = sum([log.score for log in submitted_logs])
+                    log_avg = total_score / submitted_logs.count()
+                else:
+                    log_avg = 0
+            else:
+                # BEFORE EXCEPTION (Normal) ===
+                # Missing weeks count as ZERO
+                #like icane i miss a week we steal use total weeks to get average
+                total_score = 0
+                for week in range(1, total_weeks + 1):
+                    if week in submitted_weeks:
+                        log = placement.logs.get(week_number=week)
+                        total_score += log.score if log.score else 0
+                    else:
+                        total_score += 0  # Missing week = 0
+                log_avg = total_score / total_weeks if total_weeks > 0 else 0
+            
+            # Calculate final score
             self.final_score = (
-                (self.workplace_score * 0.4) +
-                (self.academic_score * 0.3) +
-                (log_avg * 0.3)
-                
+                (self.workplace_score * 0.4) +      # 40% workplace
+                (self.academic_score * 0.3) +       # 30% academic
+                (log_avg * 0.3)                     # 30% log average
             )
             
             
+            self.final_score = round(self.final_score, 2)
+            
+            # Determining grade
             if self.final_score >= 80:
                 self.grade = 'A'
+            elif self.final_score >= 75:
+                self.grade = 'B+'
             elif self.final_score >= 70:
                 self.grade = 'B'
+            elif self.final_score >= 65:
+                self.grade = 'C+'
             elif self.final_score >= 60:
                 self.grade = 'C'
             elif self.final_score >= 50:
                 self.grade = 'D'
             else:
                 self.grade = 'F'
-        self.save()
-        
+            
+            self.save()
