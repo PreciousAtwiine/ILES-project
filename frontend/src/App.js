@@ -3,7 +3,7 @@ import Login from "./Login";
 import Register from "./Register";
 import StudentDashboard from "./Pages/Dashboard";
 import WorkplaceSupervisorDashboard from "./Pages/WorkplaceSupervisorDashboard";
-import AcademicEvaluation from "./Pages/AcademicEvaluation";
+
 
 
 
@@ -15,6 +15,14 @@ import PendingLogsPage from "./Pages/PendingLogsPage";
 import ReviewLogPage from "./Pages/ReviewLogPage";
 import EvaluationPage from "./Pages/EvaluationPage";
 import AdminDashboard from "./Pages/AdminDashboard";
+import AcademicEvaluation from "./Pages/AcademicEvaluation";    
+import StudentPlacement from "./Pages/Dashboards/StudentPlacementStatus";
+import studentapplications from "./Pages/Dashboards/StudentApplications";
+import ViewLogs from "./Pages/Dashboards/ViewLogs";
+import SubmitLog from "./Pages/Dashboards/SubmitLog";
+import Attendance from "./Pages/Dashboards/Attendance";
+import studentlogsubmission from "./Pages/Dashboards/StudentLogSubmission";
+
 
 
 function App() {
@@ -24,13 +32,26 @@ function App() {
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/admin" element={<AdminDashboard />} />
+
         {/* Student */}
         <Route path="/student" element={<StudentDashboard />} />
+        <Route path="/student/placement-status" element={<StudentPlacement />} />
+        <Route path="/student/view-logs" element={<ViewLogs />} />
+        <Route path="/student/log-submission" element={<SubmitLog />} />
+        <Route path="/student/applications" element={<Attendance />} />
+
+
+
+         {/* Admin */}
+        <Route path="/admin" element={<AdminDashboard />} />
+
+
+
+        
 
         {/* Academic Supervisor*/}
         <Route path="/academic" element={<AcademicDashboard />} />
-  
+        <Route path="/pending-logs" element={<PendingLogs />} />
         <Route path="/academic/evaluate" element={<AcademicEvaluation/>} />
 
         {/* Workplace Supervisor */}
