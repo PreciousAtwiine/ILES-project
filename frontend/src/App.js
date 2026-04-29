@@ -20,7 +20,7 @@ function App() {
 
         {/* Academic Supervisor*/}
         <Route path="/academic" element={<AcademicDashboard />} />
-        <Route path="/pending-logs" element={<PendingLogs />} />
+        {/* <Route path="/pending-logs" element={<PendingLogs />} /> */}
         <Route path="/academic/evaluate" element={<AcademicEvaluation/>} />
 
         {/* Workplace Supervisor */}
