@@ -7,7 +7,6 @@ function Register() {
     username: "",
     email: "",
     password: "",
-	confirm_password:"",
     first_name: "",
     last_name: "",
     role: "student",
@@ -45,7 +44,7 @@ function Register() {
     fetchData();
   }, []);
 
-  
+  // Filter companies based on search
   const filteredCompanies = companies.filter(company =>
     company.name.toLowerCase().includes(companySearch.toLowerCase())
   );
@@ -79,86 +78,82 @@ function Register() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-  setFieldErrors({});
-  setLoading(true);
-
-  if (data.password !== data.confirm_password) {
-  setError("Passwords are not matching");
-  setLoading(false);
-  return;
-}
-
-const submitData = {
-  username: data.username,
-  email: data.email,
-  password: data.password,
-  confirm_password: data.confirm_password,
-  first_name: data.first_name,
-  last_name: data.last_name,
-  role: data.role,
-};
-
-try {
-  await axios.post(
-    "http://127.0.0.1:8000/users/register/",
-    submitData
-  );
-  setSuccess("Registration successful! Please wait for approval.");
-  setLoading(false);
-} catch (err) {
-  setError("Registration failed. Please try again.");
-  setLoading(false);
-}
-  if (data.role === "student") {
-    submitData.student_id = data.student_id;
-    submitData.department_fk = data.department_fk;
-  } else if (data.role === "academic") {
-    submitData.staff_id = data.staff_id;
-    submitData.department_fk = data.department_fk;
-  } else if (data.role === "workplace") {
-    submitData.staff_id = data.staff_id;
-    if (data.company) {
-      submitData.company = parseInt(data.company);
-    } else if (data.company_name) {
-      submitData.company_name = data.company_name;
-    }
-  } else if (data.role === "admin") {
-    submitData.staff_id = data.staff_id;
-    submitData.department_fk = data.department_fk;
-  }
-
-  try {
-    await axios.post(`${BASE_URL}/users/register/`, submitData);
-    setSuccess("Registration successful! Please login.");
+    e.preventDefault();
     setError("");
+    setFieldErrors({});
+    setLoading(true);
 
-    setTimeout(() => {
-      window.location.href = "/login";
-    }, 2000);
-  } catch (err) {
-    if (err.response?.data) {
-      const backendError = err.response.data;
+    const submitData = {
+      username: data.username,
+      email: data.email,
+      password: data.password,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      role: data.role,
+    };
 
-      if (typeof backendError === "object") {
-        setFieldErrors(backendError);
-
-        const firstErrorField = Object.keys(backendError)[0];
-        const firstError = backendError[firstErrorField];
-        setError(Array.isArray(firstError) ? firstError[0] : firstError);
-      } else {
-        setError("Registration failed.");
+    if (data.role === "student") {
+      submitData.student_id = data.student_id;
+      submitData.department_fk = data.department_fk;
+    } 
+    else if (data.role === "academic") {
+      submitData.staff_id = data.staff_id;
+      submitData.department_fk = data.department_fk;
+    } 
+    else if (data.role === "workplace") {
+      submitData.staff_id = data.staff_id;
+      if (data.company) {
+        submitData.company = parseInt(data.company);
+      } else if (data.company_name) {
+        submitData.company_name = data.company_name;
       }
-    } else {
-      setError("Network error. Please make sure the server is running.");
+    } 
+    else if (data.role === "admin") {
+      submitData.staff_id = data.staff_id;
+      submitData.department_fk = data.department_fk;
     }
 
-    setSuccess("");
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      await axios.post(`${BASE_URL}/users/register/`, submitData);
+      setSuccess("Registration successful! Please login.");
+      setError("");
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 2000);
+    } catch (err) {
+      if (err.response?.data) {
+        const backendError = err.response.data;
+        
+        if (typeof backendError === 'object') {
+          if (backendError.student_id || backendError.staff_id || 
+              backendError.username || backendError.email || 
+              backendError.password || backendError.role ||
+              backendError.department_fk || backendError.company) {
+            setFieldErrors(backendError);
+            const firstErrorField = Object.keys(backendError)[0];
+            const firstError = backendError[firstErrorField];
+            setError(Array.isArray(firstError) ? firstError[0] : firstError);
+          } 
+          else if (backendError.detail) {
+            setError(backendError.detail);
+          }
+          else {
+            const allErrors = Object.values(backendError).flat();
+            setError(allErrors.join(', '));
+          }
+        } else if (typeof backendError === 'string') {
+          setError(backendError);
+        } else {
+          setError("Registration failed. Please check your inputs.");
+        }
+      } else {
+        setError("Network error. Please make sure the server is running.");
+      }
+      setSuccess("");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="auth-container split">
@@ -220,7 +215,7 @@ try {
             {fieldErrors.role && <p className="field-error">{fieldErrors.role[0]}</p>}
           </div>
 
-          
+          {/* Student Fields */}
           {data.role === "student" && (
             <>
               <div className="form-group">
@@ -397,23 +392,11 @@ try {
             <input
               name="password"
               type="password"
-              
               placeholder="Password (min 12 characters)"
-
               onChange={handleChange}
               required
             />
             {fieldErrors.password && <p className="field-error">{fieldErrors.password[0]}</p>}
-          </div>
-          
-          <div className="form-group">
-           <input
-             name="confirm_password"
-             type="password"
-             placeholder="Confirm Password"
-             onChange={handleChange}
-             required
-           />
           </div>
 
           <button type="submit" disabled={loading}>
