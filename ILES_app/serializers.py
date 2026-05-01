@@ -68,6 +68,14 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, data):
         role = data.get('role')
         
+        # FIX: Convert company object to ID
+        if role == 'workplace':
+            company = data.get('company')
+            if company and hasattr(company, 'id'):
+                data['company'] = company.id
+            elif company and isinstance(company, dict) and 'id' in company:
+                data['company'] = company['id']
+        
         # Students must have student_id
         if role == 'student' and not data.get('student_id'):
             raise serializers.ValidationError({"student_id": "Please enter student ID"})
@@ -119,6 +127,12 @@ class RegisterSerializer(serializers.ModelSerializer):
         company_id = validated_data.pop('company', None)
         company_name = validated_data.pop('company_name', None)
         
+        
+        if company_id and hasattr(company_id, 'id'):
+            company_id = company_id.id
+        elif company_id and isinstance(company_id, dict) and 'id' in company_id:
+            company_id = company_id['id']
+        
         user = User.objects.create_user(**validated_data)
         
         # Handle company for workplace supervisor
@@ -142,7 +156,6 @@ class RegisterSerializer(serializers.ModelSerializer):
                 user.company = company
             
             # Workplace supervisors ALWAYS start inactive
-            # They need admin approval regardless of company status
             user.is_active = False
         
         # Student: active immediately
