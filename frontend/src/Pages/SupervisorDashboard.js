@@ -4,7 +4,7 @@ import SupervisorStudents from "./SupervisorStudents";
 import SupervisorPendingLogs from "./SupervisorPendingLogs";
 import ReviewLogModal from "./ReviewLogModal";
 import EvaluationModal from "./EvaluationModal";
-import "./Dashboard.css";
+import "./SupervisorDashboard.css";
 
 export default function SupervisorDashboard() {
   const [user, setUser] = useState(null);
