@@ -3,7 +3,7 @@ import Login from "./Login";
 import Register from "./Register";
 import StudentDashboard from "./Pages/StudentDashboard";
 
-import WorkplaceSupervisorDashboard from "./Pages/WorkplaceSupervisorDashboard";
+import SupervisorDashboard from "./Pages/SupervisorDashboard";
 import AcademicEvaluation from "./Pages/AcademicEvaluation";
 
 
@@ -35,16 +35,9 @@ function App() {
         <Route path="/academic/evaluate" element={<AcademicEvaluation/>} />
 
         {/* Workplace Supervisor */}
-        <Route path="/workplace-supervisor" element={<WorkplaceSupervisorDashboard />} />
-        <Route path="/workplace-supervisor" element={<WorkplaceSupervisorDashboard />} />
-        <Route path="/supervisor" element={<AcademicDashboard />} />
-        <Route path="/supervisor/dashboard" element={<WorkplaceSupervisorDashboard />} />
-        <Route path="/supervisor/students" element={<StudentsPage />} />
-        <Route path="/supervisor/pending-logs" element={<PendingLogsPage />} />
-        <Route path="/supervisor/review/:id" element={<ReviewLogPage />} />
-        <Route path="/supervisor/evaluations" element={<EvaluationPage />} />
+         <Route path="/dashboard" element={<SupervisorDashboard />} />
         
-        <Route path="/workplace-supervisor-dashboard" element={<WorkplaceSupervisorDashboard />} />
+        
 
       </Routes>
     </Router>
