@@ -44,7 +44,6 @@ function Register() {
     fetchData();
   }, []);
 
-  // Filter companies based on search
   const filteredCompanies = companies.filter(company =>
     company.name.toLowerCase().includes(companySearch.toLowerCase())
   );
@@ -103,7 +102,13 @@ function Register() {
     else if (data.role === "workplace") {
       submitData.staff_id = data.staff_id;
       if (data.company) {
-        submitData.company = parseInt(data.company);
+        let companyId;
+        if (typeof data.company === 'object' && data.company !== null) {
+          companyId = data.company.id;
+        } else {
+          companyId = parseInt(data.company);
+        }
+        submitData.company = companyId;
       } else if (data.company_name) {
         submitData.company_name = data.company_name;
       }
@@ -215,7 +220,6 @@ function Register() {
             {fieldErrors.role && <p className="field-error">{fieldErrors.role[0]}</p>}
           </div>
 
-          {/* Student Fields */}
           {data.role === "student" && (
             <>
               <div className="form-group">
@@ -246,7 +250,6 @@ function Register() {
             </>
           )}
 
-          {/* Academic Supervisor Fields */}
           {data.role === "academic" && (
             <>
               <div className="form-group">
@@ -277,87 +280,85 @@ function Register() {
             </>
           )}
 
-          
-		{/* Workplace Supervisor Fields */}
-		{data.role === "workplace" && (
-		  <>
-			<div className="form-group">
-			  <input
-				name="staff_id"
-				placeholder="Staff ID (e.g., STAFF001)"
-				onChange={handleChange}
-				required
-			  />
-			  {fieldErrors.staff_id && <p className="field-error">{fieldErrors.staff_id[0]}</p>}
-			</div>
-			
-			<div className="form-group">
-			  <label>Company Name *</label>
-			  <input
-				type="text"
-				name="company_search"
-				placeholder="Start typing company name..."
-				value={companySearch}
-				onChange={(e) => setCompanySearch(e.target.value)}
-				autoComplete="off"
-				className="company-search-input"
-			  />
-			</div>
+          {data.role === "workplace" && (
+            <>
+              <div className="form-group">
+                <input
+                  name="staff_id"
+                  placeholder="Staff ID (e.g., STAFF001)"
+                  onChange={handleChange}
+                  required
+                />
+                {fieldErrors.staff_id && <p className="field-error">{fieldErrors.staff_id[0]}</p>}
+              </div>
+              
+              <div className="form-group">
+                <label>Company Name *</label>
+                <input
+                  type="text"
+                  name="company_search"
+                  placeholder="Start typing company name..."
+                  value={companySearch}
+                  onChange={(e) => setCompanySearch(e.target.value)}
+                  autoComplete="off"
+                  className="company-search-input"
+                />
+              </div>
 
-			{companySearch && filteredCompanies.length > 0 && (
-			  <div className="company-suggestions">
-				{filteredCompanies.slice(0, 8).map((company) => (
-				  <div
-					key={company.id}
-					className="company-suggestion-item"
-					onClick={() => {
-					  setData({ ...data, company: company.id, company_name: "" });
-					  setCompanySearch("");
-					}}
-				  >
-					<span className="company-name">{company.name}</span>
-					<span className="company-check">✓</span>
-				  </div>
-				))}
-				{filteredCompanies.length > 8 && (
-				  <div className="company-more">+ {filteredCompanies.length - 8} more companies...</div>
-				)}
-			  </div>
-			)}
+              {companySearch && filteredCompanies.length > 0 && (
+                <div className="company-suggestions">
+                  {filteredCompanies.slice(0, 8).map((company) => (
+                    <div
+                      key={company.id}
+                      className="company-suggestion-item"
+                      onClick={() => {
+                        setData({ ...data, company: String(company.id), company_name: "" });
+                        setCompanySearch("");
+                      }}
+                    >
+                      <span className="company-name">{company.name}</span>
+                      <span className="company-check">✓</span>
+                    </div>
+                  ))}
+                  {filteredCompanies.length > 8 && (
+                    <div className="company-more">+ {filteredCompanies.length - 8} more companies...</div>
+                  )}
+                </div>
+              )}
 
-			{data.company && (
-			  <div className="selected-company">
-				<span>✓ Selected: {companies.find(c => c.id === parseInt(data.company))?.name}</span>
-				<button 
-				  type="button" 
-				  className="clear-company"
-				  onClick={() => setData({ ...data, company: "" })}
-				>
-				  ✕ Change
-				</button>
-			  </div>
-			)}
+              {data.company && (
+                <div className="selected-company">
+                  <span>✓ Selected: {companies.find(c => c.id === parseInt(data.company))?.name}</span>
+                  <button 
+                    type="button" 
+                    className="clear-company"
+                    onClick={() => setData({ ...data, company: "" })}
+                  >
+                    ✕ Change
+                  </button>
+                </div>
+              )}
 
-			<div className="form-group">
-			  <label>Or enter new company name:</label>
-			  <input
-				name="company_name"
-				placeholder="New Company Name"
-				onChange={handleChange}
-				value={data.company_name}
-				disabled={data.company}
-			  />
-			  <small className="hint-text">
-				{data.company 
-				  ? "You have selected an existing company. Clear selection to enter a new one." 
-				  : "Leave blank if you selected a company above"}
-			  </small>
-			</div>
-			
-			{fieldErrors.company && <p className="field-error">{fieldErrors.company}</p>}
-		  </>
-		)}
-          {/* Admin Fields */}
+              <div className="form-group">
+                <label>Or enter new company name:</label>
+                <input
+                  name="company_name"
+                  placeholder="New Company Name"
+                  onChange={handleChange}
+                  value={data.company_name}
+                  disabled={data.company}
+                />
+                <small className="hint-text">
+                  {data.company 
+                    ? "You have selected an existing company. Clear selection to enter a new one." 
+                    : "Leave blank if you selected a company above"}
+                </small>
+              </div>
+              
+              {fieldErrors.company && <p className="field-error">{fieldErrors.company}</p>}
+            </>
+          )}
+
           {data.role === "admin" && (
             <>
               <div className="form-group">
