@@ -9,7 +9,7 @@ export default function EvaluationPage() {
   const submitEvaluation = (e) => {
     e.preventDefault();
 
-    axios.post("http://127.0.0.1:8000/api/evaluations/workplace/", {
+    axios.post("http://127.0.0.1:8000/evaluations/workplace/", {
       score,
       comments
     })

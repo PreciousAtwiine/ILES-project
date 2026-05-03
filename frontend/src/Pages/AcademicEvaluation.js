@@ -51,7 +51,7 @@ export default function AcademicEvaluation() {
 
     try {
       await axios.post(
-        `${BASE_URL}/api/evaluations/academic/`,
+        `${BASE_URL}/evaluations/academic/`,
         {
           placement_id: selectedPlacement,
           academic_score: parseInt(score),
