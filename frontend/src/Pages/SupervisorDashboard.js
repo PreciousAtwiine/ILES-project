@@ -25,10 +25,9 @@ export default function SupervisorDashboard() {
   const BASE_URL = "http://127.0.0.1:8000";
   const getToken = () => localStorage.getItem("access");
 
-  // ✅ LOGOUT FUNCTION
   const handleLogout = () => {
     localStorage.removeItem("access");
-    localStorage.removeItem("refresh"); // if you store refresh token
+    localStorage.removeItem("refresh");
     window.location.href = "/login";
   };
 
@@ -59,6 +58,20 @@ export default function SupervisorDashboard() {
       setStudentLogs([]);
     } finally {
       setLoadingLogs(false);
+    }
+  };
+
+  // Refresh dashboard data function
+  const refreshDashboard = async () => {
+    try {
+      const token = getToken();
+      const dashboardRes = await axios.get(
+        `${BASE_URL}/api/supervisor/dashboard/`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setDashboardData(dashboardRes.data);
+    } catch (err) {
+      console.error("Error refreshing dashboard:", err);
     }
   };
 
@@ -98,16 +111,17 @@ export default function SupervisorDashboard() {
 
       {/* Sidebar */}
       <div className="sidebar">
-        <h2>Supervisor Panel</h2>
+        <h2>Workplace Supervisor Panel</h2>
         <p>
           {user?.first_name} {user?.last_name}
         </p>
+        <p className="role-badge">Workplace Supervisor</p>
 
         <button onClick={() => setActiveTab("dashboard")}>Dashboard</button>
         <button onClick={() => setActiveTab("students")}>Students</button>
         <button onClick={() => setActiveTab("pending")}>Pending Logs</button>
 
-        {/* ✅ LOGOUT BUTTON */}
+        {/* Logout Button */}
         <button className="logout-btn" onClick={handleLogout}>
           Logout
         </button>
@@ -119,7 +133,7 @@ export default function SupervisorDashboard() {
         {/* DASHBOARD */}
         {activeTab === "dashboard" && (
           <div>
-            <h1>Supervisor Dashboard</h1>
+            <h1>Workplace Supervisor Dashboard</h1>
 
             <div className="dashboard-cards">
               <div className="card">
@@ -132,6 +146,23 @@ export default function SupervisorDashboard() {
                 <p>{dashboardData?.pending_reviews?.length || 0}</p>
               </div>
             </div>
+
+            {/* Recent Activity */}
+            {dashboardData?.assigned_students?.length > 0 && (
+              <div className="recent-activity">
+                <h3>Assigned Students Overview</h3>
+                <div className="student-list">
+                  {dashboardData.assigned_students.slice(0, 5).map((student) => (
+                    <div key={student.id} className="student-item">
+                      <strong>{student.student_name}</strong> - {student.company_name}
+                      <span className={`status-badge ${student.status}`}>
+                        {student.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -139,6 +170,7 @@ export default function SupervisorDashboard() {
         {activeTab === "students" && (
           <SupervisorStudents
             assignedStudents={dashboardData?.assigned_students || []}
+            role="workplace"
             onViewLogs={viewStudentLogs}
             onEvaluate={openEvaluationModal}
           />
@@ -155,29 +187,69 @@ export default function SupervisorDashboard() {
         {/* VIEW STUDENT LOGS */}
         {activeTab === "viewLogs" && viewLogsStudent && (
           <div>
-            <h1>Logs - {viewLogsStudent.name}</h1>
+            <h1>Weekly Logs - {viewLogsStudent.name}</h1>
 
             <button
+              className="back-btn"
               onClick={() => {
                 setActiveTab("students");
                 setViewLogsStudent(null);
               }}
             >
-              Back
+              ← Back to Students
             </button>
 
             {loadingLogs ? (
-              <p>Loading...</p>
+              <p>Loading logs...</p>
             ) : studentLogs.length > 0 ? (
-              studentLogs.map((log) => (
-                <div key={log.id} className="log-item">
-                  <h4>Week {log.week_number}</h4>
-                  <p>{log.activities}</p>
-                  <p>Status: {log.status}</p>
-                </div>
-              ))
+              <div className="logs-list">
+                {studentLogs.map((log) => (
+                  <div key={log.id} className="log-item">
+                    <div className="log-header">
+                      <strong>Week {log.week_number}</strong>
+                      <span className={`status-badge ${log.status}`}>
+                        {log.status}
+                      </span>
+                      {log.is_late && <span className="status-badge late">Late</span>}
+                      <span className="log-date">
+                        Submitted: {new Date(log.submission_date).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="log-activities">
+                      <strong>Activities:</strong> {log.activities}
+                    </p>
+                    {log.challenges && (
+                      <p><strong>Challenges:</strong> {log.challenges}</p>
+                    )}
+                    {log.working_hours && (
+                      <p><strong>Hours:</strong> {log.working_hours}h</p>
+                    )}
+                    {log.attachment && (
+                      <p>
+                        <strong>Attachment:</strong>{" "}
+                        <a href={log.attachment} target="_blank" rel="noopener noreferrer">
+                          Download
+                        </a>
+                      </p>
+                    )}
+                    {log.feedback && (
+                      <div className="log-feedback">
+                        <strong>Feedback:</strong> {log.feedback}
+                      </div>
+                    )}
+                    {log.score && (
+                      <div className="log-score">
+                        <strong>Score:</strong> {log.score}/100
+                      </div>
+                    )}
+                    {log.late_reason && (
+                      <div className="late-reason">{log.late_reason}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
             ) : (
-              <p>No logs found</p>
+              <p>No logs submitted yet.</p>
             )}
           </div>
         )}
@@ -187,14 +259,22 @@ export default function SupervisorDashboard() {
       {showReviewModal && selectedLog && (
         <ReviewLogModal
           log={selectedLog}
-          onClose={() => setShowReviewModal(false)}
+          onClose={() => {
+            setShowReviewModal(false);
+            refreshDashboard();
+          }}
         />
       )}
 
       {showEvaluationModal && selectedStudent && (
         <EvaluationModal
           student={selectedStudent}
+          role="workplace"
           onClose={() => setShowEvaluationModal(false)}
+          onComplete={() => {
+            refreshDashboard();
+            setShowEvaluationModal(false);
+          }}
         />
       )}
     </div>

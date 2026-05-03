@@ -13,6 +13,7 @@ export default function EvaluationModal({ student, role, onClose, onComplete }) 
 
   const isWorkplace = role === "workplace";
   
+  
   const endpoint = isWorkplace ? "/evaluations/workplace/" : "/evaluations/academic/";
 
   const handleSubmit = async (e) => {
