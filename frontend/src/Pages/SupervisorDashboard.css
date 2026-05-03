@@ -6,6 +6,15 @@
   background-color: #f5f7fb;
 }
 
+.logout-btn {
+  margin-top: 20px;
+  background: #e74c3c;
+  color: white;
+}
+
+.logout-btn:hover {
+  background: #c0392b;
+}
 
 .sidebar {
   width: 250px;

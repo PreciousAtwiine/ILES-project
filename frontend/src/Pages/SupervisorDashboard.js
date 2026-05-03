@@ -25,6 +25,13 @@ export default function SupervisorDashboard() {
   const BASE_URL = "http://127.0.0.1:8000";
   const getToken = () => localStorage.getItem("access");
 
+  // ✅ LOGOUT FUNCTION
+  const handleLogout = () => {
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh"); // if you store refresh token
+    window.location.href = "/login";
+  };
+
   const openReviewModal = (log) => {
     setSelectedLog(log);
     setShowReviewModal(true);
@@ -67,7 +74,7 @@ export default function SupervisorDashboard() {
         const userRes = await axios.get(`${BASE_URL}/users/me/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setUser(userRes.data.user);
+        setUser(userRes.data.user || userRes.data);
 
         const dashboardRes = await axios.get(
           `${BASE_URL}/api/supervisor/dashboard/`,
@@ -88,28 +95,38 @@ export default function SupervisorDashboard() {
 
   return (
     <div className="dashboard-container">
+
       {/* Sidebar */}
       <div className="sidebar">
         <h2>Supervisor Panel</h2>
-        <p>{user?.first_name} {user?.last_name}</p>
+        <p>
+          {user?.first_name} {user?.last_name}
+        </p>
 
         <button onClick={() => setActiveTab("dashboard")}>Dashboard</button>
         <button onClick={() => setActiveTab("students")}>Students</button>
         <button onClick={() => setActiveTab("pending")}>Pending Logs</button>
+
+        {/* ✅ LOGOUT BUTTON */}
+        <button className="logout-btn" onClick={handleLogout}>
+          Logout
+        </button>
       </div>
 
       {/* Main Content */}
       <div className="main-content">
-        
+
         {/* DASHBOARD */}
         {activeTab === "dashboard" && (
           <div>
             <h1>Supervisor Dashboard</h1>
+
             <div className="dashboard-cards">
               <div className="card">
                 <h3>Assigned Students</h3>
                 <p>{dashboardData?.assigned_students?.length || 0}</p>
               </div>
+
               <div className="card">
                 <h3>Pending Reviews</h3>
                 <p>{dashboardData?.pending_reviews?.length || 0}</p>
@@ -121,7 +138,7 @@ export default function SupervisorDashboard() {
         {/* STUDENTS */}
         {activeTab === "students" && (
           <SupervisorStudents
-            assignedStudents={dashboardData?.assigned_students}
+            assignedStudents={dashboardData?.assigned_students || []}
             onViewLogs={viewStudentLogs}
             onEvaluate={openEvaluationModal}
           />
@@ -130,7 +147,7 @@ export default function SupervisorDashboard() {
         {/* PENDING LOGS */}
         {activeTab === "pending" && (
           <SupervisorPendingLogs
-            pendingReviews={dashboardData?.pending_reviews}
+            pendingReviews={dashboardData?.pending_reviews || []}
             onReview={openReviewModal}
           />
         )}
@@ -139,7 +156,15 @@ export default function SupervisorDashboard() {
         {activeTab === "viewLogs" && viewLogsStudent && (
           <div>
             <h1>Logs - {viewLogsStudent.name}</h1>
-            <button onClick={() => setActiveTab("students")}>Back</button>
+
+            <button
+              onClick={() => {
+                setActiveTab("students");
+                setViewLogsStudent(null);
+              }}
+            >
+              Back
+            </button>
 
             {loadingLogs ? (
               <p>Loading...</p>
@@ -159,14 +184,14 @@ export default function SupervisorDashboard() {
       </div>
 
       {/* MODALS */}
-      {showReviewModal && (
+      {showReviewModal && selectedLog && (
         <ReviewLogModal
           log={selectedLog}
           onClose={() => setShowReviewModal(false)}
         />
       )}
 
-      {showEvaluationModal && (
+      {showEvaluationModal && selectedStudent && (
         <EvaluationModal
           student={selectedStudent}
           onClose={() => setShowEvaluationModal(false)}
