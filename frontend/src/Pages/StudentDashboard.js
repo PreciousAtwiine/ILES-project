@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import "./StudentDashboard.css"
+import "./StudentDashboard.css";
 import StudentPlacement from "./StudentPlacement";
 import StudentLogs from "./StudentLogs";
 import ExceptionRequestModal from "./ExceptionRequestModal";
@@ -50,7 +50,7 @@ export default function StudentDashboard() {
         setApprovedCompanies(companiesRes.data);
 
       } catch (error) {
-        console.error("Error fetching student dashboard:", error);
+        console.error("Error fetching student dashboard:", error.response?.data);
       } finally {
         setLoading(false);
       }
@@ -59,6 +59,7 @@ export default function StudentDashboard() {
     fetchStudentData();
   }, []);
 
+  
   const applyForPlacement = async (e) => {
     e.preventDefault();
 
@@ -68,7 +69,9 @@ export default function StudentDashboard() {
 
     let company_name = "";
     if (selectedCompanyId) {
-      const selectedCompany = approvedCompanies.find(c => c.id === parseInt(selectedCompanyId));
+      const selectedCompany = approvedCompanies.find(
+        c => c.id === parseInt(selectedCompanyId)
+      );
       company_name = selectedCompany?.name || "";
     } else {
       company_name = newCompanyName;
@@ -96,19 +99,41 @@ export default function StudentDashboard() {
       setActiveTab("dashboard");
 
     } catch (error) {
-      console.error("Error applying for placement:", error);
+      console.error("Placement error:", error.response?.data);
       alert("Application failed");
     }
   };
 
+  
   const submitWeeklyLog = async (e) => {
     e.preventDefault();
 
+    // ✅ VALIDATION
+    if (!dashboardData?.placement?.id) {
+      alert("You must have a placement before submitting logs.");
+      return;
+    }
+
+    
+    if (dashboardData?.placement?.status !== "approved") {
+      alert("Your placement must be approved first.");
+      return;
+    }
+
     const formData = new FormData();
-    formData.append("placement", dashboardData?.placement?.id);
+
+    formData.append("placement", dashboardData.placement.id);
     formData.append("week_number", document.getElementById("week_number").value);
     formData.append("activities", document.getElementById("activities").value);
     formData.append("challenges", document.getElementById("challenges").value);
+
+    
+    formData.append("working_hours", document.getElementById("working_hours").value);
+
+    const fileInput = document.getElementById("attachment");
+    if (fileInput && fileInput.files.length > 0) {
+      formData.append("attachment", fileInput.files[0]);
+    }
 
     try {
       const token = getToken();
@@ -122,6 +147,7 @@ export default function StudentDashboard() {
 
       alert("Weekly log submitted successfully!");
 
+      
       const dashboardRes = await axios.get(`${BASE_URL}/api/student/dashboard/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -129,11 +155,12 @@ export default function StudentDashboard() {
       setDashboardData(dashboardRes.data);
 
     } catch (error) {
-      console.error("Error submitting log:", error);
+      console.error("LOG ERROR:", error.response?.data); // 🔥 shows real backend error
       alert("Failed to submit log");
     }
   };
 
+  
   if (loading) {
     return <div className="loading-container">Loading dashboard...</div>;
   }
