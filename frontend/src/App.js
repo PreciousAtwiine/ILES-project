@@ -1,7 +1,14 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./Login";
 import Register from "./Register";
-import Dashboard from "./Pages/Dashboard";  // ← Fixed: ./Pages/Dashboard (capital P)
+import Dashboard from "./Pages/Dashboard";  
+import AdminDashboard from './Pages/AdminDashboard';
+import StudentDashboard from './Pages/StudentDashboard'; 
+import AcademicDashboard from './Pages/AcademicDashboard';
+
+
+import AcademicEvaluation from './Pages/AcademicEvaluation';
+import SupervisorDashboard from './Pages/SupervisorDashboard';
 
 function App() {
   return (
@@ -23,11 +30,9 @@ function App() {
         {/* Workplace Supervisor */}
          <Route path="/workplace-supervisor" element={<SupervisorDashboard />} />
         
-        
 
 
         <Route path="/dashboard" element={<Dashboard />} />
-		
 
       </Routes>
     </Router>
