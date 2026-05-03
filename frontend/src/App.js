@@ -1,16 +1,14 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./Login";
 import Register from "./Register";
-import StudentDashboard from "./Pages/Dashboard";
-import WorkplaceSupervisorDashboard from "./Pages/WorkplaceSupervisorDashboard";
+import Dashboard from "./Pages/Dashboard";  
+import AdminDashboard from './Pages/AdminDashboard';
+import StudentDashboard from './Pages/StudentDashboard'; 
+import AcademicDashboard from './Pages/AcademicDashboard';
 
 
-
-
-
-import AcademicDashboard from "./Pages/AcademicDashboard";
-import AcademicEvaluation from "./Pages/AcademicEvaluation";
-import PendingLogs from "./Pages/PendingLogs";
+import AcademicEvaluation from './Pages/AcademicEvaluation';
+import SupervisorDashboard from './Pages/SupervisorDashboard';
 
 function App() {
   return (
@@ -20,20 +18,22 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
+        <Route path="/admin" element={<AdminDashboard />} />
         {/* Student */}
         <Route path="/student" element={<StudentDashboard />} />
 
         {/* Academic Supervisor*/}
         <Route path="/academic" element={<AcademicDashboard />} />
-        <Route path="/pending-logs" element={<PendingLogs />} />
+  
         <Route path="/academic/evaluate" element={<AcademicEvaluation/>} />
 
         {/* Workplace Supervisor */}
-        <Route path="/workplace-supervisor" element={<WorkplaceSupervisorDashboard />} />
-        <Route path="/workplace-supervisor" element={<WorkplaceSupervisorDashboard />} />
-        <Route path="/supervisor" element={<AcademicDashboard />} />
-        <Route path="/pending-logs" element={<PendingLogs />} />
-        <Route path="/workplace-supervisor-dashboard" element={<WorkplaceSupervisorDashboard />} />
+         <Route path="/workplace-supervisor" element={<SupervisorDashboard />} />
+        
+
+
+        <Route path="/dashboard" element={<Dashboard />} />
+
       </Routes>
     </Router>
   );

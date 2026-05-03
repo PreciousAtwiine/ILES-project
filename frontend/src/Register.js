@@ -7,7 +7,6 @@ function Register() {
     username: "",
     email: "",
     password: "",
-	confirm_password:"",
     first_name: "",
     last_name: "",
     role: "student",
@@ -45,13 +44,11 @@ function Register() {
     fetchData();
   }, []);
 
-  
   const filteredCompanies = companies.filter(company =>
     company.name.toLowerCase().includes(companySearch.toLowerCase())
   );
 
   const handleChange = (e) => {
-
     const { name, value } = e.target;
     
     if (name === "company") {
@@ -76,95 +73,92 @@ function Register() {
     
     if (fieldErrors[name]) {
       setFieldErrors({ ...fieldErrors, [name]: null });
-
-    setData({ ...data, [e.target.name]: e.target.value });
-    
-    if (fieldErrors[e.target.name]) {
-      setFieldErrors({ ...fieldErrors, [e.target.name]: null });
     }
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-  setFieldErrors({});
-  setLoading(true);
-
-  if (data.password !== data.confirm_password) {
-  setError("Passwords are not matching");
-  setLoading(false);
-  return;
-}
-
-const submitData = {
-  username: data.username,
-  email: data.email,
-  password: data.password,
-  confirm_password: data.confirm_password,
-  first_name: data.first_name,
-  last_name: data.last_name,
-  role: data.role,
-};
-
-try {
-  await axios.post(
-    "http://127.0.0.1:8000/users/register/",
-    submitData
-  );
-  setSuccess("Registration successful! Please wait for approval.");
-  setLoading(false);
-} catch (err) {
-  setError("Registration failed. Please try again.");
-  setLoading(false);
-}
-  if (data.role === "student") {
-    submitData.student_id = data.student_id;
-    submitData.department_fk = data.department_fk;
-  } else if (data.role === "academic") {
-    submitData.staff_id = data.staff_id;
-    submitData.department_fk = data.department_fk;
-  } else if (data.role === "workplace") {
-    submitData.staff_id = data.staff_id;
-    if (data.company) {
-      submitData.company = parseInt(data.company);
-    } else if (data.company_name) {
-      submitData.company_name = data.company_name;
-    }
-  } else if (data.role === "admin") {
-    submitData.staff_id = data.staff_id;
-    submitData.department_fk = data.department_fk;
-  }
-
-  try {
-    await axios.post(`${BASE_URL}/users/register/`, submitData);
-    setSuccess("Registration successful! Please login.");
+    e.preventDefault();
     setError("");
+    setFieldErrors({});
+    setLoading(true);
 
-    setTimeout(() => {
-      window.location.href = "/login";
-    }, 2000);
-  } catch (err) {
-    if (err.response?.data) {
-      const backendError = err.response.data;
+    const submitData = {
+      username: data.username,
+      email: data.email,
+      password: data.password,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      role: data.role,
+    };
 
-      if (typeof backendError === "object") {
-        setFieldErrors(backendError);
-
-        const firstErrorField = Object.keys(backendError)[0];
-        const firstError = backendError[firstErrorField];
-        setError(Array.isArray(firstError) ? firstError[0] : firstError);
-      } else {
-        setError("Registration failed.");
+    if (data.role === "student") {
+      submitData.student_id = data.student_id;
+      submitData.department_fk = data.department_fk;
+    } 
+    else if (data.role === "academic") {
+      submitData.staff_id = data.staff_id;
+      submitData.department_fk = data.department_fk;
+    } 
+    else if (data.role === "workplace") {
+      submitData.staff_id = data.staff_id;
+      if (data.company) {
+        let companyId;
+        if (typeof data.company === 'object' && data.company !== null) {
+          companyId = data.company.id;
+        } else {
+          companyId = parseInt(data.company);
+        }
+        submitData.company = companyId;
+      } else if (data.company_name) {
+        submitData.company_name = data.company_name;
       }
-    } else {
-      setError("Network error. Please make sure the server is running.");
+    } 
+    else if (data.role === "admin") {
+      submitData.staff_id = data.staff_id;
+      submitData.department_fk = data.department_fk;
     }
 
-    setSuccess("");
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      await axios.post(`${BASE_URL}/users/register/`, submitData);
+      setSuccess("Registration successful! Please login.");
+      setError("");
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 2000);
+    } catch (err) {
+      if (err.response?.data) {
+        const backendError = err.response.data;
+        
+        if (typeof backendError === 'object') {
+          if (backendError.student_id || backendError.staff_id || 
+              backendError.username || backendError.email || 
+              backendError.password || backendError.role ||
+              backendError.department_fk || backendError.company) {
+            setFieldErrors(backendError);
+            const firstErrorField = Object.keys(backendError)[0];
+            const firstError = backendError[firstErrorField];
+            setError(Array.isArray(firstError) ? firstError[0] : firstError);
+          } 
+          else if (backendError.detail) {
+            setError(backendError.detail);
+          }
+          else {
+            const allErrors = Object.values(backendError).flat();
+            setError(allErrors.join(', '));
+          }
+        } else if (typeof backendError === 'string') {
+          setError(backendError);
+        } else {
+          setError("Registration failed. Please check your inputs.");
+        }
+      } else {
+        setError("Network error. Please make sure the server is running.");
+      }
+      setSuccess("");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="auth-container split">
@@ -226,7 +220,6 @@ try {
             {fieldErrors.role && <p className="field-error">{fieldErrors.role[0]}</p>}
           </div>
 
-          
           {data.role === "student" && (
             <>
               <div className="form-group">
@@ -257,7 +250,6 @@ try {
             </>
           )}
 
-          {/* Academic Supervisor Fields */}
           {data.role === "academic" && (
             <>
               <div className="form-group">
@@ -288,87 +280,85 @@ try {
             </>
           )}
 
-          
-		{/* Workplace Supervisor Fields */}
-		{data.role === "workplace" && (
-		  <>
-			<div className="form-group">
-			  <input
-				name="staff_id"
-				placeholder="Staff ID (e.g., STAFF001)"
-				onChange={handleChange}
-				required
-			  />
-			  {fieldErrors.staff_id && <p className="field-error">{fieldErrors.staff_id[0]}</p>}
-			</div>
-			
-			<div className="form-group">
-			  <label>Company Name *</label>
-			  <input
-				type="text"
-				name="company_search"
-				placeholder="Start typing company name..."
-				value={companySearch}
-				onChange={(e) => setCompanySearch(e.target.value)}
-				autoComplete="off"
-				className="company-search-input"
-			  />
-			</div>
+          {data.role === "workplace" && (
+            <>
+              <div className="form-group">
+                <input
+                  name="staff_id"
+                  placeholder="Staff ID (e.g., STAFF001)"
+                  onChange={handleChange}
+                  required
+                />
+                {fieldErrors.staff_id && <p className="field-error">{fieldErrors.staff_id[0]}</p>}
+              </div>
+              
+              <div className="form-group">
+                <label>Company Name *</label>
+                <input
+                  type="text"
+                  name="company_search"
+                  placeholder="Start typing company name..."
+                  value={companySearch}
+                  onChange={(e) => setCompanySearch(e.target.value)}
+                  autoComplete="off"
+                  className="company-search-input"
+                />
+              </div>
 
-			{companySearch && filteredCompanies.length > 0 && (
-			  <div className="company-suggestions">
-				{filteredCompanies.slice(0, 8).map((company) => (
-				  <div
-					key={company.id}
-					className="company-suggestion-item"
-					onClick={() => {
-					  setData({ ...data, company: company.id, company_name: "" });
-					  setCompanySearch("");
-					}}
-				  >
-					<span className="company-name">{company.name}</span>
-					<span className="company-check">✓</span>
-				  </div>
-				))}
-				{filteredCompanies.length > 8 && (
-				  <div className="company-more">+ {filteredCompanies.length - 8} more companies...</div>
-				)}
-			  </div>
-			)}
+              {companySearch && filteredCompanies.length > 0 && (
+                <div className="company-suggestions">
+                  {filteredCompanies.slice(0, 8).map((company) => (
+                    <div
+                      key={company.id}
+                      className="company-suggestion-item"
+                      onClick={() => {
+                        setData({ ...data, company: String(company.id), company_name: "" });
+                        setCompanySearch("");
+                      }}
+                    >
+                      <span className="company-name">{company.name}</span>
+                      <span className="company-check">✓</span>
+                    </div>
+                  ))}
+                  {filteredCompanies.length > 8 && (
+                    <div className="company-more">+ {filteredCompanies.length - 8} more companies...</div>
+                  )}
+                </div>
+              )}
 
-			{data.company && (
-			  <div className="selected-company">
-				<span>✓ Selected: {companies.find(c => c.id === parseInt(data.company))?.name}</span>
-				<button 
-				  type="button" 
-				  className="clear-company"
-				  onClick={() => setData({ ...data, company: "" })}
-				>
-				  ✕ Change
-				</button>
-			  </div>
-			)}
+              {data.company && (
+                <div className="selected-company">
+                  <span>✓ Selected: {companies.find(c => c.id === parseInt(data.company))?.name}</span>
+                  <button 
+                    type="button" 
+                    className="clear-company"
+                    onClick={() => setData({ ...data, company: "" })}
+                  >
+                    ✕ Change
+                  </button>
+                </div>
+              )}
 
-			<div className="form-group">
-			  <label>Or enter new company name:</label>
-			  <input
-				name="company_name"
-				placeholder="New Company Name"
-				onChange={handleChange}
-				value={data.company_name}
-				disabled={data.company}
-			  />
-			  <small className="hint-text">
-				{data.company 
-				  ? "You have selected an existing company. Clear selection to enter a new one." 
-				  : "Leave blank if you selected a company above"}
-			  </small>
-			</div>
-			
-			{fieldErrors.company && <p className="field-error">{fieldErrors.company}</p>}
-		  </>
-		)}
-          {/* Admin Fields */}
+              <div className="form-group">
+                <label>Or enter new company name:</label>
+                <input
+                  name="company_name"
+                  placeholder="New Company Name"
+                  onChange={handleChange}
+                  value={data.company_name}
+                  disabled={data.company}
+                />
+                <small className="hint-text">
+                  {data.company 
+                    ? "You have selected an existing company. Clear selection to enter a new one." 
+                    : "Leave blank if you selected a company above"}
+                </small>
+              </div>
+              
+              {fieldErrors.company && <p className="field-error">{fieldErrors.company}</p>}
+            </>
+          )}
+
           {data.role === "admin" && (
             <>
               <div className="form-group">
@@ -403,40 +393,13 @@ try {
             <input
               name="password"
               type="password"
-              
               placeholder="Password (min 12 characters)"
-
               onChange={handleChange}
               required
             />
-
             {fieldErrors.password && <p className="field-error">{fieldErrors.password[0]}</p>}
           </div>
 
-          
-          <div className="form-group">
-           <input
-             name="confirm_password"
-             type="password"
-             placeholder="Confirm Password"
-             onChange={handleChange}
-             required
-           />
-          </div>
-
-           
-
-
-          
-          <div className="form-group">
-            <input
-              name="confirm_password"
-              type="password"
-              placeholder="Confirm Password"
-              onChange={handleChange}
-              required
-            />
-          </div>
           <button type="submit" disabled={loading}>
             {loading ? "Registering..." : "Register"}
           </button>
@@ -448,5 +411,5 @@ try {
     </div>
   );
 }
-}
+
 export default Register;
