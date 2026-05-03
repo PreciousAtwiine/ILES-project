@@ -1,22 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./Login";
 import Register from "./Register";
-import StudentDashboard from "./Pages/StudentDashboard";
-
-import SupervisorDashboard from "./Pages/SupervisorDashboard";
-import AcademicEvaluation from "./Pages/AcademicEvaluation";
-
-
-
-
-import AcademicDashboard from "./Pages/AcademicDashboard";
-
-import StudentsPage from "./Pages/StudentsPage";
-import PendingLogsPage from "./Pages/PendingLogsPage";
-import ReviewLogPage from "./Pages/ReviewLogPage";
-import EvaluationPage from "./Pages/EvaluationPage";
-import AdminDashboard from "./Pages/AdminDashboard";
-
+import Dashboard from "./Pages/Dashboard";  // ← Fixed: ./Pages/Dashboard (capital P)
 
 function App() {
   return (
@@ -25,6 +10,7 @@ function App() {
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+<<<<<<< HEAD
         <Route path="/admin" element={<AdminDashboard />} />
         {/* Student */}
         <Route path="/student" element={<StudentDashboard />} />
@@ -39,6 +25,10 @@ function App() {
         
         
 
+=======
+        <Route path="/dashboard" element={<Dashboard />} />
+		
+>>>>>>> joel-frontend
       </Routes>
     </Router>
   );
