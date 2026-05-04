@@ -5,6 +5,7 @@ import SupervisorPendingLogs from "./SupervisorPendingLogs";
 import ReviewLogModal from "./ReviewLogModal";
 import EvaluationModal from "./EvaluationModal";
 import "./SupervisorDashboard.css";
+import { notifySuccess, notifyError, notifyInfo } from "../utils/notifications"; // ✅ added
 
 export default function SupervisorDashboard() {
   const [user, setUser] = useState(null);
@@ -28,7 +29,8 @@ export default function SupervisorDashboard() {
   // ✅ LOGOUT FUNCTION
   const handleLogout = () => {
     localStorage.removeItem("access");
-    localStorage.removeItem("refresh"); // if you store refresh token
+    localStorage.removeItem("refresh");
+    notifyInfo("Logged out successfully"); // ✅ added
     window.location.href = "/login";
   };
 
@@ -54,9 +56,12 @@ export default function SupervisorDashboard() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setStudentLogs(res.data);
+
+      notifySuccess(`Loaded logs for ${studentName}`); // ✅ added
     } catch (err) {
       console.error(err);
       setStudentLogs([]);
+      notifyError("Failed to load student logs"); // ✅ added
     } finally {
       setLoadingLogs(false);
     }
@@ -81,8 +86,17 @@ export default function SupervisorDashboard() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setDashboardData(dashboardRes.data);
+
+        // ✅ Smart notification
+        if (dashboardRes.data?.pending_reviews?.length > 0) {
+          notifyInfo(
+            `You have ${dashboardRes.data.pending_reviews.length} pending logs to review`
+          );
+        }
+
       } catch (err) {
         console.error(err);
+        notifyError("Failed to load dashboard data"); // ✅ added
       } finally {
         setLoading(false);
       }
@@ -107,7 +121,6 @@ export default function SupervisorDashboard() {
         <button onClick={() => setActiveTab("students")}>Students</button>
         <button onClick={() => setActiveTab("pending")}>Pending Logs</button>
 
-        {/* ✅ LOGOUT BUTTON */}
         <button className="logout-btn" onClick={handleLogout}>
           Logout
         </button>

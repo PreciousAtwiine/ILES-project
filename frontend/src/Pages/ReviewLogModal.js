@@ -2,6 +2,7 @@
 import { useState } from "react";
 import axios from "axios";
 import "./ReviewLogModal.css";
+import { notifySuccess, notifyError } from "../utils/notifications"; // ✅ added
 
 export default function ReviewLogModal({ log, onClose, onReviewComplete }) {
   const [score, setScore] = useState("");
@@ -22,15 +23,23 @@ export default function ReviewLogModal({ log, onClose, onReviewComplete }) {
       await axios.put(
         `${BASE_URL}/logs/${log.id}/review/`,
         { status, score: parseInt(score), feedback },
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`, 
+            'Content-Type': 'application/json' 
+          } 
+        }
       );
 
-      alert("Log reviewed successfully!");
+      notifySuccess("Log reviewed successfully!");
       onReviewComplete();
       onClose();
+
     } catch (error) {
       console.error("Error reviewing log:", error);
-      alert("Failed to review log");
+      notifyError(
+        error.response?.data?.error || "Failed to review log"
+      ); 
     } finally {
       setLoading(false);
     }
@@ -48,6 +57,7 @@ export default function ReviewLogModal({ log, onClose, onReviewComplete }) {
           <div className="activities-box">
             {log.activities}
           </div>
+
           {log.challenges && (
             <>
               <p><strong>Challenges:</strong></p>
@@ -56,8 +66,14 @@ export default function ReviewLogModal({ log, onClose, onReviewComplete }) {
               </div>
             </>
           )}
+
           {log.attachment && (
-            <p><strong>Attachment:</strong> <a href={log.attachment} target="_blank" rel="noopener noreferrer">Download</a></p>
+            <p>
+              <strong>Attachment:</strong>{" "}
+              <a href={log.attachment} target="_blank" rel="noopener noreferrer">
+                Download
+              </a>
+            </p>
           )}
         </div>
 
@@ -86,7 +102,10 @@ export default function ReviewLogModal({ log, onClose, onReviewComplete }) {
 
           <div className="form-group">
             <label>Decision:</label>
-            <select value={status} onChange={(e) => setStatus(e.target.value)}>
+            <select 
+              value={status} 
+              onChange={(e) => setStatus(e.target.value)}
+            >
               <option value="approved">Approve</option>
               <option value="rejected">Reject</option>
             </select>
@@ -96,7 +115,9 @@ export default function ReviewLogModal({ log, onClose, onReviewComplete }) {
             <button type="submit" disabled={loading}>
               {loading ? "Submitting..." : "Submit Review"}
             </button>
-            <button type="button" onClick={onClose}>Cancel</button>
+            <button type="button" onClick={onClose}>
+              Cancel
+            </button>
           </div>
         </form>
       </div>
