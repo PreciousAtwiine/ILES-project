@@ -4,7 +4,8 @@ import "./StudentDashboard.css";
 import StudentPlacement from "./StudentPlacement";
 import StudentLogs from "./StudentLogs";
 import ExceptionRequestModal from "./ExceptionRequestModal";
-import notifications from "../utils/notifications"; // ✅ added
+import notifications from "../utils/notifications";
+import Notifications from "./Notifications";
 
 export default function StudentDashboard() {
   const [user, setUser] = useState(null);
@@ -178,6 +179,18 @@ export default function StudentDashboard() {
       </div>
 
       <div className="main-content">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+          <Notifications 
+            role="student"
+            getToken={getToken}
+            BASE_URL={BASE_URL}
+            onNotificationClick={(notification) => {
+              if (notification.type === 'placement') setActiveTab('placement');
+              else if (notification.type === 'review') setActiveTab('logs');
+            }}
+          />
+        </div>
+
         {activeTab === "dashboard" && (
           <div>
             <h1>Student Dashboard</h1>

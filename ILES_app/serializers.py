@@ -17,7 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 
-                  'role', 'student_id', 'staff_id', 'department', 'department_name']
+                  'role', 'student_id', 'staff_id', 'department', 'department_name','is_approved',]
     
     def get_department_name(self, obj):
         if obj.department_fk:
@@ -127,7 +127,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         company_id = validated_data.pop('company', None)
         company_name = validated_data.pop('company_name', None)
         
-        
         if company_id and hasattr(company_id, 'id'):
             company_id = company_id.id
         elif company_id and isinstance(company_id, dict) and 'id' in company_id:
@@ -139,7 +138,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         if role == 'workplace':
             company = None
             
-            # Check if selected existing company
             if company_id:
                 try:
                     company = Company.objects.get(id=company_id)
@@ -147,7 +145,6 @@ class RegisterSerializer(serializers.ModelSerializer):
                 except Company.DoesNotExist:
                     pass
             
-            # Or create new company (pending approval)
             if not company and company_name:
                 company, created = Company.objects.get_or_create(
                     name=company_name,
@@ -155,21 +152,31 @@ class RegisterSerializer(serializers.ModelSerializer):
                 )
                 user.company = company
             
-            # Workplace supervisors ALWAYS start inactive
-            user.is_active = False
+            # Workplace: Allow login but not approved until company approved
+            user.is_active = True  # ← Allow login
+            user.is_approved = False  # Not approved yet
         
-        # Student: active immediately
+        # Student: active and approved immediately
         elif role == 'student':
             user.is_active = True
+            user.is_approved = True
         
-        # Academic & Admin: need admin approval
-        elif role in ['academic', 'admin']:
-            user.is_active = False
+        # Academic: allow login but need approval
+        elif role == 'academic':
+            user.is_active = True  # ← Allow login
+            user.is_approved = False
+        
+        # Admin: allow login but need approval
+        elif role == 'admin':
+            user.is_active = True  # ← Allow login
+            user.is_approved = False
         
         user.is_superuser = False
         user.is_staff = False     
         user.save()
         return user
+# In your serializers.py, update the ApproveStaffSerializer to this:
+
 class ApproveStaffSerializer(serializers.Serializer):
     user_id = serializers.IntegerField()
     approve = serializers.BooleanField()
@@ -178,29 +185,11 @@ class ApproveStaffSerializer(serializers.Serializer):
         try:
             user = User.objects.get(
                 id=value, 
-                role__in=['workplace', 'academic', 'admin'],
-                is_active=False,
-                is_superuser=False
+                role__in=['workplace', 'academic', 'admin']
             )
             return value
         except User.DoesNotExist:
-            raise serializers.ValidationError("Pending staff user not found")
-    
-    def save(self):
-        user_id = self.validated_data['user_id']
-        approve = self.validated_data['approve']
-        
-        user = User.objects.get(id=user_id)
-        
-        if approve:
-            user.is_active = True
-            user.save()
-            return user, "approved"
-        else:
-            user.delete()  
-            return None, "rejected"
-
-
+            raise serializers.ValidationError("Staff user not found")
 # ==================== PLACEMENT SERIALIZERS ====================
 
 class ApplyForPlacementSerializer(serializers.ModelSerializer):

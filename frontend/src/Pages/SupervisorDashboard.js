@@ -5,17 +5,16 @@ import SupervisorPendingLogs from "./SupervisorPendingLogs";
 import ReviewLogModal from "./ReviewLogModal";
 import EvaluationModal from "./EvaluationModal";
 import "./SupervisorDashboard.css";
-<<<<<<< HEAD
-import { notifySuccess, notifyError, notifyInfo } from "../utils/notifications"; 
-=======
-import notifications from "../utils/notifications"; 
->>>>>>> joel-frontend
+import notifications from "../utils/notifications";
+import PendingApproval from "./PendingApproval";
+import Notifications from "./Notifications";
 
 export default function SupervisorDashboard() {
   const [user, setUser] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [isApproved, setIsApproved] = useState(true);
 
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
@@ -33,14 +32,7 @@ export default function SupervisorDashboard() {
   const handleLogout = () => {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
-<<<<<<< HEAD
-
-
-    notifyInfo("Logged out successfully"); 
-
-=======
     notifications.notifyInfo("Logged out successfully");
->>>>>>> joel-frontend
     window.location.href = "/login";
   };
 
@@ -66,26 +58,16 @@ export default function SupervisorDashboard() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setStudentLogs(res.data);
-<<<<<<< HEAD
-
-      notifySuccess(`Loaded logs for ${studentName}`); 
-    } catch (err) {
-      console.error(err);
-      setStudentLogs([]);
-      notifyError("Failed to load student logs"); 
-=======
       notifications.notifySuccess(`Loaded logs for ${studentName}`);
     } catch (err) {
       console.error(err);
       setStudentLogs([]);
       notifications.notifyError("Failed to load student logs");
->>>>>>> joel-frontend
     } finally {
       setLoadingLogs(false);
     }
-  };
+  };  
 
-  // Refresh dashboard data function
   const refreshDashboard = async () => {
     try {
       const token = getToken();
@@ -111,26 +93,34 @@ export default function SupervisorDashboard() {
         const userRes = await axios.get(`${BASE_URL}/users/me/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setUser(userRes.data.user || userRes.data);
-
-        const dashboardRes = await axios.get(
-          `${BASE_URL}/api/supervisor/dashboard/`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setDashboardData(dashboardRes.data);
-
-<<<<<<< HEAD
+        const userData = userRes.data.user || userRes.data;
+        setUser(userData);
         
-=======
->>>>>>> joel-frontend
-        if (dashboardRes.data?.pending_reviews?.length > 0) {
-          notifications.notifyInfo(
-            `You have ${dashboardRes.data.pending_reviews.length} pending logs to review`
+        const approved = userData.is_approved !== false;
+        setIsApproved(approved);
+        
+        if (approved) {
+          const dashboardRes = await axios.get(
+            `${BASE_URL}/api/supervisor/dashboard/`,
+            { headers: { Authorization: `Bearer ${token}` } }
           );
+          setDashboardData(dashboardRes.data);
+
+          if (dashboardRes.data?.pending_reviews?.length > 0) {
+            notifications.notifyInfo(
+              `You have ${dashboardRes.data.pending_reviews.length} pending logs to review`
+            );
+          }
         }
       } catch (err) {
         console.error(err);
-        notifications.notifyError("Failed to load dashboard data");
+        if (err.response?.status === 401) {
+          localStorage.removeItem("access");
+          localStorage.removeItem("refresh");
+          window.location.href = "/login";
+        } else {
+          notifications.notifyError("Failed to load dashboard data");
+        }
       } finally {
         setLoading(false);
       }
@@ -140,6 +130,11 @@ export default function SupervisorDashboard() {
   }, []);
 
   if (loading) return <p>Loading...</p>;
+  
+  if (!isApproved && user) {
+    const userName = `${user.first_name || ""} ${user.last_name || ""}`;
+    return <PendingApproval role="workplace" userName={userName} />;
+  }
 
   return (
     <div className="dashboard-container">
@@ -148,11 +143,8 @@ export default function SupervisorDashboard() {
         <p>
           {user?.first_name} {user?.last_name}
         </p>
-<<<<<<< HEAD
         <p className="role-badge">Workplace Supervisor</p>
 
-=======
->>>>>>> joel-frontend
         <button onClick={() => setActiveTab("dashboard")}>Dashboard</button>
         <button onClick={() => setActiveTab("students")}>Students</button>
         <button onClick={() => setActiveTab("pending")}>Pending Logs</button>
@@ -162,14 +154,21 @@ export default function SupervisorDashboard() {
       </div>
 
       <div className="main-content">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+          <Notifications 
+            role="workplace"
+            getToken={getToken}
+            BASE_URL={BASE_URL}
+            onNotificationClick={(notification) => {
+              if (notification.type === 'log') setActiveTab('pending');
+            }}
+          />
+        </div>
+
         {activeTab === "dashboard" && (
           <div>
-<<<<<<< HEAD
             <h1>Workplace Supervisor Dashboard</h1>
 
-=======
-            <h1>Supervisor Dashboard</h1>
->>>>>>> joel-frontend
             <div className="dashboard-cards">
               <div className="card">
                 <h3>Assigned Students</h3>
@@ -181,7 +180,6 @@ export default function SupervisorDashboard() {
               </div>
             </div>
 
-            {/* Recent Activity */}
             {dashboardData?.assigned_students?.length > 0 && (
               <div className="recent-activity">
                 <h3>Assigned Students Overview</h3>
@@ -218,12 +216,8 @@ export default function SupervisorDashboard() {
 
         {activeTab === "viewLogs" && viewLogsStudent && (
           <div>
-<<<<<<< HEAD
             <h1>Weekly Logs - {viewLogsStudent.name}</h1>
 
-=======
-            <h1>Logs - {viewLogsStudent.name}</h1>
->>>>>>> joel-frontend
             <button
               className="back-btn"
               onClick={() => {

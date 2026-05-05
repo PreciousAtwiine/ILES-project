@@ -3,6 +3,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./AcademicDashboard.css";
 import notifications from "../utils/notifications";
+import PendingApproval from "./PendingApproval";
+import Notifications from "./Notifications";
 
 export default function AcademicDashboard() {
   const [data, setData] = useState(null);
@@ -11,9 +13,41 @@ export default function AcademicDashboard() {
   const [error, setError] = useState("");
   const [selectedLog, setSelectedLog] = useState(null);
   const [studentSearch, setStudentSearch] = useState("");
+  const [user, setUser] = useState(null);
+  const [isApproved, setIsApproved] = useState(true);
   const navigate = useNavigate();
   const BASE_URL = "http://127.0.0.1:8000";
   const getToken = () => localStorage.getItem("access");
+
+  const loadUserInfo = useCallback(async () => {
+    try {
+      const token = getToken();
+      if (!token) {
+        window.location.href = "/login";
+        return;
+      }
+
+      const userRes = await axios.get(`${BASE_URL}/users/me/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const userData = userRes.data.user;
+      setUser(userData);
+      
+      const approved = userData.is_approved !== false;
+      setIsApproved(approved);
+      
+      return approved;
+    } catch (err) {
+      console.error("Error fetching user:", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("access");
+        localStorage.removeItem("refresh");
+        window.location.href = "/login";
+      }
+      return false;
+    }
+  }, []);
 
   const loadDashboard = useCallback(async () => {
     setLoading(true);
@@ -37,7 +71,17 @@ export default function AcademicDashboard() {
     }
   }, []);
 
-  useEffect(() => { loadDashboard(); }, [loadDashboard]);
+  useEffect(() => {
+    const initialize = async () => {
+      const approved = await loadUserInfo();
+      if (approved) {
+        await loadDashboard();
+      } else {
+        setLoading(false);
+      }
+    };
+    initialize();
+  }, [loadUserInfo, loadDashboard]);
 
   const reviewLog = async (logId, status) => {
     try {
@@ -67,11 +111,13 @@ export default function AcademicDashboard() {
 
   if (loading) return <div className="ac-loading">Loading...</div>;
   if (error) return <div className="ac-loading">{error}</div>;
+  if (!isApproved && user) {
+    const userName = `${user.first_name || ""} ${user.last_name || ""}`;
+    return <PendingApproval role="academic" userName={userName} />;
+  }
 
   return (
     <div className="ac-shell">
-
-      {/* SIDEBAR */}
       <div className="ac-sidebar">
         <div className="ac-brand">
           <h2>Academic Supervisor</h2>
@@ -89,46 +135,52 @@ export default function AcademicDashboard() {
         </div>
       </div>
 
-      {/* MAIN */}
       <div className="ac-main">
-
-        {/* TOPBAR */}
         <div className="ac-topbar">
           <span className="ac-topbar-title">
             Dashboard <span>/ {view.charAt(0).toUpperCase() + view.slice(1)}</span>
           </span>
           <div className="ac-user">
             <div className="ac-avatar">{initials}</div>
-            <span>{data.first_name} {data.last_name}</span>
+            <span>{data?.first_name} {data?.last_name}</span>
           </div>
         </div>
 
-        <div className="ac-content">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 20px', marginTop: '10px' }}>
+          <Notifications 
+            role="academic"
+            getToken={getToken}
+            BASE_URL={BASE_URL}
+            onNotificationClick={(notification) => {
+              if (notification.type === 'log') setView('pending');
+            }}
+          />
+        </div>
 
-          {/* DASHBOARD VIEW */}
+        <div className="ac-content">
           {view === "dashboard" && (
             <>
               <div className="ac-stats">
                 <div className="ac-stat blue">
                   <div className="ac-stat-label">Assigned Students</div>
-                  <div className="ac-stat-value">{data.assigned_students?.length || 0}</div>
+                  <div className="ac-stat-value">{data?.assigned_students?.length || 0}</div>
                   <div className="ac-stat-sub">Active placements</div>
                 </div>
                 <div className="ac-stat amber">
                   <div className="ac-stat-label">Pending Reviews</div>
-                  <div className="ac-stat-value">{data.pending_logs?.length || 0}</div>
+                  <div className="ac-stat-value">{data?.pending_logs?.length || 0}</div>
                   <div className="ac-stat-sub">Awaiting your review</div>
                 </div>
                 <div className="ac-stat green">
                   <div className="ac-stat-label">Reviewed Logs</div>
-                  <div className="ac-stat-value">{data.reviewed_logs?.length || 0}</div>
+                  <div className="ac-stat-value">{data?.reviewed_logs?.length || 0}</div>
                   <div className="ac-stat-sub">Completed reviews</div>
                 </div>
               </div>
 
               <div className="ac-section-header">
                 <span className="ac-section-title">Pending log reviews</span>
-                <span className="ac-badge">{data.pending_logs?.length || 0} pending</span>
+                <span className="ac-badge">{data?.pending_logs?.length || 0} pending</span>
               </div>
               <div className="ac-table-wrap">
                 <table>
@@ -136,10 +188,10 @@ export default function AcademicDashboard() {
                     <tr><th>Student</th><th>Week</th><th>Activities</th><th>Hours</th><th>Submitted</th><th>Status</th><th>Actions</th></tr>
                   </thead>
                   <tbody>
-                    {data.pending_logs?.length === 0 ? (
+                    {data?.pending_logs?.length === 0 ? (
                       <tr><td colSpan="7"><div className="ac-empty">No pending logs to review</div></td></tr>
                     ) : (
-                      data.pending_logs.map((log) => (
+                      data?.pending_logs.map((log) => (
                         <tr key={log.id} onClick={() => setSelectedLog(log)} style={{cursor: "pointer"}}>
                           <td>{log.student_name}</td>
                           <td>Week {log.week_number}</td>
@@ -174,10 +226,10 @@ export default function AcademicDashboard() {
                     <tr><th>Student</th><th>Student ID</th><th>Company</th><th>Duration</th><th>Status</th></tr>
                   </thead>
                   <tbody>
-                    {data.assigned_students?.length === 0 ? (
+                    {data?.assigned_students?.length === 0 ? (
                       <tr><td colSpan="5"><div className="ac-empty">No students assigned yet</div></td></tr>
                     ) : (
-                      data.assigned_students
+                      data?.assigned_students
                         .filter(s =>
                           s.student_name.toLowerCase().includes(studentSearch.toLowerCase()) ||
                           s.company_name.toLowerCase().includes(studentSearch.toLowerCase()) ||
@@ -199,7 +251,6 @@ export default function AcademicDashboard() {
             </>
           )}
 
-          
           {view === "students" && (
             <>
               <div className="ac-section-header">
@@ -218,10 +269,10 @@ export default function AcademicDashboard() {
                     <tr><th>Student</th><th>Student ID</th><th>Company</th><th>Duration</th><th>Status</th></tr>
                   </thead>
                   <tbody>
-                    {data.assigned_students?.length === 0 ? (
+                    {data?.assigned_students?.length === 0 ? (
                       <tr><td colSpan="5"><div className="ac-empty">No students assigned yet</div></td></tr>
                     ) : (
-                      data.assigned_students
+                      data?.assigned_students
                         .filter(s =>
                           s.student_name.toLowerCase().includes(studentSearch.toLowerCase()) ||
                           s.company_name.toLowerCase().includes(studentSearch.toLowerCase()) ||
@@ -243,12 +294,11 @@ export default function AcademicDashboard() {
             </>
           )}
 
-          
           {view === "pending" && (
             <>
               <div className="ac-section-header">
                 <span className="ac-section-title">Pending log reviews</span>
-                <span className="ac-badge">{data.pending_logs?.length || 0} pending</span>
+                <span className="ac-badge">{data?.pending_logs?.length || 0} pending</span>
               </div>
               <div className="ac-table-wrap">
                 <table>
@@ -256,10 +306,10 @@ export default function AcademicDashboard() {
                     <tr><th>Student</th><th>Week</th><th>Activities</th><th>Challenges</th><th>Hours</th><th>Submitted</th><th>Actions</th></tr>
                   </thead>
                   <tbody>
-                    {data.pending_logs?.length === 0 ? (
+                    {data?.pending_logs?.length === 0 ? (
                       <tr><td colSpan="7"><div className="ac-empty">No pending logs</div></td></tr>
                     ) : (
-                      data.pending_logs.map((log) => (
+                      data?.pending_logs.map((log) => (
                         <tr key={log.id} onClick={() => setSelectedLog(log)} style={{cursor: "pointer"}}>
                           <td>{log.student_name}</td>
                           <td>Week {log.week_number}</td>
@@ -280,7 +330,6 @@ export default function AcademicDashboard() {
             </>
           )}
 
-          {/* REVIEWED LOGS VIEW */}
           {view === "reviewed" && (
             <>
               <div className="ac-section-header">
@@ -292,10 +341,10 @@ export default function AcademicDashboard() {
                     <tr><th>Student</th><th>Week</th><th>Status</th><th>Score</th><th>Feedback</th><th>Reviewed At</th></tr>
                   </thead>
                   <tbody>
-                    {data.reviewed_logs?.length === 0 ? (
+                    {data?.reviewed_logs?.length === 0 ? (
                       <tr><td colSpan="6"><div className="ac-empty">No reviewed logs yet</div></td></tr>
                     ) : (
-                      data.reviewed_logs.map((log) => (
+                      data?.reviewed_logs.map((log) => (
                         <tr key={log.id}>
                           <td>{log.student_name}</td>
                           <td>Week {log.week_number}</td>
@@ -311,11 +360,9 @@ export default function AcademicDashboard() {
               </div>
             </>
           )}
-
         </div>
       </div>
 
-      {/* LOG DETAIL MODAL */}
       {selectedLog && (
         <div className="ac-modal-overlay" onClick={() => setSelectedLog(null)}>
           <div className="ac-modal" onClick={(e) => e.stopPropagation()}>
@@ -363,7 +410,6 @@ export default function AcademicDashboard() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

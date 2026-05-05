@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 import uuid
@@ -17,6 +17,34 @@ class Department(models.Model):
     class Meta:
         ordering = ['name']
 
+
+class UserManager(BaseUserManager):
+    def create_user(self, username, email=None, password=None, **extra_fields):
+        """Create and save a regular user"""
+        if not username:
+            raise ValueError('The Username must be set')
+        email = self.normalize_email(email)
+        user = self.model(username=username, email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+    
+    def create_superuser(self, username, email=None, password=None, **extra_fields):
+        """Create and save a superuser"""
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('is_approved', True)
+        extra_fields.setdefault('role', 'admin')
+        
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+        
+        return self.create_user(username, email, password, **extra_fields)
+
+
 class User(AbstractUser):
     
     ROLE_CHOICES = [
@@ -30,6 +58,7 @@ class User(AbstractUser):
     student_id = models.CharField(max_length=50, blank=True, null=True)
     staff_id = models.CharField(max_length=50, blank=True, null=True)
     department = models.CharField(max_length=100, blank=True)
+    
     ACADEMIC_RANK_CHOICES = [
         ('assistant_lecturer', 'Assistant Lecturer'),
         ('lecturer', 'Lecturer'),
@@ -58,9 +87,14 @@ class User(AbstractUser):
         blank=True,
         related_name='supervisors'
     )
+    
+    is_approved = models.BooleanField(default=False, help_text="Designates whether the user has been approved by admin")
+    
+    objects = UserManager()  
+    
     groups = models.ManyToManyField(
         'auth.Group',
-        related_name='iles_app_user_set',  # Unique related_name
+        related_name='iles_app_user_set',
         blank=True,
         help_text='The groups this user belongs to.',
         verbose_name='groups',
@@ -68,11 +102,13 @@ class User(AbstractUser):
     
     user_permissions = models.ManyToManyField(
         'auth.Permission',
-        related_name='iles_app_user_set_permissions',  # Unique related_name
+        related_name='iles_app_user_set_permissions',
         blank=True,
         help_text='Specific permissions for this user.',
         verbose_name='user permissions',
     )
+
+
 class Company(models.Model):
     name = models.CharField(max_length=200, unique=True)
     address = models.TextField(blank=True)
@@ -98,6 +134,8 @@ class Company(models.Model):
     
     def __str__(self):
         return f"{self.name} {'✓' if self.is_approved else '⏳'}"
+
+
 class PasswordReset(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     token = models.CharField(max_length=30, unique=True, default=uuid.uuid4)
@@ -105,6 +143,8 @@ class PasswordReset(models.Model):
     
     def is_valid(self):
         return timezone.now() < self.created_at + timedelta(hours=1)
+
+
 class InternshipPlacement(models.Model):
  
     STATUS_CHOICES = [
@@ -135,6 +175,7 @@ class InternshipPlacement(models.Model):
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_exceptions'
     )
     exception_approved_at = models.DateTimeField(null=True, blank=True)
+    
     def get_academic_supervisor_student_count(self):
         if self.academic_supervisor:
             return InternshipPlacement.objects.filter(
@@ -151,6 +192,7 @@ class InternshipPlacement(models.Model):
             status='approved'
         ).count()
         return current_count < 10
+    
     def __str__(self):
         return f"{self.student.username} @ {self.company_name}"
 
@@ -174,7 +216,6 @@ class WeeklyLog(models.Model):
     submission_date = models.DateTimeField(null=True, blank=True)
     attachment = models.FileField(upload_to='attachments/', blank=True, null=True)
     
-    # addes this
     is_late = models.BooleanField(default=False)
     late_reason = models.TextField(blank=True)
     
@@ -214,54 +255,41 @@ class Evaluation(models.Model):
         return f"Evaluation - {self.placement}"
     
     def calculate_final(self):
-    
         if self.workplace_score is not None and self.academic_score is not None:
             placement = self.placement
             
-            # Calculate total weeks required for this internship
             total_days = (placement.end_date - placement.start_date).days
             total_weeks = (total_days // 7) + 1 if total_days % 7 > 0 else (total_days // 7)
             if total_weeks < 1:
                 total_weeks = 1
             
-            # Get all submitted logs with scores
             submitted_logs = placement.logs.filter(score__isnull=False)
             submitted_weeks = set(submitted_logs.values_list('week_number', flat=True))
             
-            # Calculate log average based on exception status
             if placement.exception_status == 'approved':
-                # AFTER EXCEPTION APPROVED =====
-                # Missing weeks are ignore completely
-                # Only count weeks that i submited
                 if submitted_logs.exists():
                     total_score = sum([log.score for log in submitted_logs])
                     log_avg = total_score / submitted_logs.count()
                 else:
                     log_avg = 0
             else:
-                # BEFORE EXCEPTION (Normal) ===
-                # Missing weeks count as ZERO
-                #like icane i miss a week we steal use total weeks to get average
                 total_score = 0
                 for week in range(1, total_weeks + 1):
                     if week in submitted_weeks:
                         log = placement.logs.get(week_number=week)
                         total_score += log.score if log.score else 0
                     else:
-                        total_score += 0  # Missing week = 0
+                        total_score += 0
                 log_avg = total_score / total_weeks if total_weeks > 0 else 0
             
-            # Calculate final score
             self.final_score = (
-                (self.workplace_score * 0.4) +      # 40% workplace
-                (self.academic_score * 0.3) +       # 30% academic
-                (log_avg * 0.3)                     # 30% log average
+                (self.workplace_score * 0.4) +
+                (self.academic_score * 0.3) +
+                (log_avg * 0.3)
             )
-            
             
             self.final_score = round(self.final_score, 2)
             
-            # Determining grade
             if self.final_score >= 80:
                 self.grade = 'A'
             elif self.final_score >= 75:
