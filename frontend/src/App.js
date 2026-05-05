@@ -1,72 +1,53 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import Login from "./Login";
 import Register from "./Register";
-import StudentDashboard from "./Pages/Dashboard";
-import WorkplaceSupervisorDashboard from "./Pages/WorkplaceSupervisorDashboard";
-
-
-
-
-
-import AcademicDashboard from "./Pages/AcademicDashboard";
-
-import StudentsPage from "./Pages/StudentsPage";
-import PendingLogsPage from "./Pages/PendingLogsPage";
-import ReviewLogPage from "./Pages/ReviewLogPage";
-import EvaluationPage from "./Pages/EvaluationPage";
-import AdminDashboard from "./Pages/AdminDashboard";
-import AcademicEvaluation from "./Pages/AcademicEvaluation";    
-import StudentPlacement from "./Pages/Dashboards/StudentPlacementStatus";
-import studentapplications from "./Pages/Dashboards/StudentApplications";
-import ViewLogs from "./Pages/Dashboards/ViewLogs";
-import SubmitLog from "./Pages/Dashboards/SubmitLog";
-import Attendance from "./Pages/Dashboards/Attendance";
-import studentlogsubmission from "./Pages/Dashboards/StudentLogSubmission";
-
-
+import Dashboard from "./Pages/Dashboard";  
+import AdminDashboard from './Pages/AdminDashboard';
+import StudentDashboard from './Pages/StudentDashboard'; 
+import AcademicDashboard from './Pages/AcademicDashboard';
+import AcademicEvaluation from './Pages/AcademicEvaluation';
+import SupervisorDashboard from './Pages/SupervisorDashboard';
 
 function App() {
   return (
     <Router>
+      
+      
+      <ToastContainer 
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        pauseOnHover
+      />
+
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
+        
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Student */}
-        <Route path="/student" element={<StudentDashboard />} />
-        <Route path="/student/placement-status" element={<StudentPlacement />} />
-        <Route path="/student/view-logs" element={<ViewLogs />} />
-        <Route path="/student/log-submission" element={<SubmitLog />} />
-        <Route path="/student/applications" element={<Attendance />} />
-
-
-
-         {/* Admin */}
+        {/* Admin */}
         <Route path="/admin" element={<AdminDashboard />} />
 
+        {/* Student */}
+        <Route path="/student" element={<StudentDashboard />} />
 
-
-        
-
-        {/* Academic Supervisor*/}
+        {/* Academic Supervisor */}
         <Route path="/academic" element={<AcademicDashboard />} />
-        <Route path="/pending-logs" element={<PendingLogs />} />
-        <Route path="/academic/evaluate" element={<AcademicEvaluation/>} />
+        <Route path="/academic/evaluate" element={<AcademicEvaluation />} />
 
         {/* Workplace Supervisor */}
-        <Route path="/workplace-supervisor" element={<WorkplaceSupervisorDashboard />} />
-        <Route path="/workplace-supervisor" element={<WorkplaceSupervisorDashboard />} />
-        <Route path="/supervisor" element={<AcademicDashboard />} />
-        <Route path="/supervisor/dashboard" element={<WorkplaceSupervisorDashboard />} />
-        <Route path="/supervisor/students" element={<StudentsPage />} />
-        <Route path="/supervisor/pending-logs" element={<PendingLogsPage />} />
-        <Route path="/supervisor/review/:id" element={<ReviewLogPage />} />
-        <Route path="/supervisor/evaluations" element={<EvaluationPage />} />
-        
-        <Route path="/workplace-supervisor-dashboard" element={<WorkplaceSupervisorDashboard />} />
+        <Route path="/workplace-supervisor" element={<SupervisorDashboard />} />
 
+        {/* General Dashboard */}
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
+
     </Router>
   );
 }
