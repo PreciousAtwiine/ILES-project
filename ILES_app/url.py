@@ -60,6 +60,10 @@ urlpatterns = [
     path('api/admin/pending-exceptions/', PendingExceptionsView.as_view(), name='pending-exceptions'),
     path('api/admin/approve-exception/<int:pk>/', ApproveExceptionView.as_view(), name='approve-exception'),
     path('api/admin/reject-exception/<int:pk>/', RejectExceptionView.as_view(), name='reject-exception'),
+    #admin-dashboard
+    path('api/admin/department-students/', DepartmentStudentsView.as_view(), name='department-students'),
+    path('api/admin/department-supervisors/', DepartmentSupervisorsView.as_view(), name='department-supervisors'),
+    path('api/approve-staff/', ApproveStaffAPIView.as_view(), name='approve-staff'),
 ]
     
 

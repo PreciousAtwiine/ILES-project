@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import "./Auth.css";
+import notifications from "./utils/notifications"; // Changed to default import
 
 function Register() {
   const [data, setData] = useState({
     username: "",
     email: "",
     password: "",
+    confirmPassword: "",
     first_name: "",
     last_name: "",
     role: "student",
@@ -19,11 +21,10 @@ function Register() {
 
   const [departments, setDepartments] = useState([]);
   const [companies, setCompanies] = useState([]);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [companySearch, setCompanySearch] = useState("");
+  const [passwordMatchError, setPasswordMatchError] = useState("");
 
   const BASE_URL = "http://127.0.0.1:8000";
 
@@ -39,6 +40,7 @@ function Register() {
         setCompanies(approvedCompanies);
       } catch (err) {
         console.error("Error fetching data:", err);
+        notifications.notifyError("Failed to load departments or companies"); // Changed
       }
     };
     fetchData();
@@ -71,15 +73,38 @@ function Register() {
       setData({ ...data, [name]: value });
     }
     
+    if (name === "password" || name === "confirmPassword") {
+      setPasswordMatchError("");
+    }
+    
     if (fieldErrors[name]) {
       setFieldErrors({ ...fieldErrors, [name]: null });
     }
   };
 
+  const validatePasswords = () => {
+    if (data.password !== data.confirmPassword) {
+      setPasswordMatchError("Passwords do not match");
+      return false;
+    }
+    if (data.password.length > 0 && data.password.length < 12) {
+      setPasswordMatchError("Password must be at least 12 characters long");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     setFieldErrors({});
+    setPasswordMatchError("");
+    
+    if (!validatePasswords()) {
+      notifications.notifyError("Please check your passwords"); // Changed
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
 
     const submitData = {
@@ -120,8 +145,7 @@ function Register() {
 
     try {
       await axios.post(`${BASE_URL}/users/register/`, submitData);
-      setSuccess("Registration successful! Please login.");
-      setError("");
+      notifications.notifySuccess("Registration successful! Please login."); // Changed
       setTimeout(() => {
         window.location.href = "/login";
       }, 2000);
@@ -137,24 +161,24 @@ function Register() {
             setFieldErrors(backendError);
             const firstErrorField = Object.keys(backendError)[0];
             const firstError = backendError[firstErrorField];
-            setError(Array.isArray(firstError) ? firstError[0] : firstError);
+            const errorMsg = Array.isArray(firstError) ? firstError[0] : firstError;
+            notifications.notifyError(errorMsg); // Changed
           } 
           else if (backendError.detail) {
-            setError(backendError.detail);
+            notifications.notifyError(backendError.detail); // Changed
           }
           else {
             const allErrors = Object.values(backendError).flat();
-            setError(allErrors.join(', '));
+            notifications.notifyError(allErrors.join(', ')); // Changed
           }
         } else if (typeof backendError === 'string') {
-          setError(backendError);
+          notifications.notifyError(backendError); // Changed
         } else {
-          setError("Registration failed. Please check your inputs.");
+          notifications.notifyError("Registration failed. Please check your inputs."); // Changed
         }
       } else {
-        setError("Network error. Please make sure the server is running.");
+        notifications.notifyError("Network error. Please make sure the server is running."); // Changed
       }
-      setSuccess("");
     } finally {
       setLoading(false);
     }
@@ -400,12 +424,20 @@ function Register() {
             {fieldErrors.password && <p className="field-error">{fieldErrors.password[0]}</p>}
           </div>
 
+          <div className="form-group">
+            <input
+              name="confirmPassword"
+              type="password"
+              placeholder="Confirm Password"
+              onChange={handleChange}
+              required
+            />
+            {passwordMatchError && <p className="field-error" style={{ color: '#dc3545' }}>{passwordMatchError}</p>}
+          </div>
+
           <button type="submit" disabled={loading}>
             {loading ? "Registering..." : "Register"}
           </button>
-
-          {error && <p className="error">{error}</p>}
-          {success && <p className="success">{success}</p>}
         </form>
       </div>
     </div>

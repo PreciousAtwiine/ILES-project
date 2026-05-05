@@ -1,7 +1,12 @@
-// src/Pages/Applications.jsx
 import React from 'react';
+import notifications from '../utils/notifications';
 
 export default function Applications({ pendingApplications, onAssign }) {
+  const handleAssignClick = (app) => {
+    notifications.notifyInfo(`Opening assignment for ${app.student_name}`);
+    onAssign(app);
+  };
+
   if (!pendingApplications || pendingApplications.length === 0) {
     return <p>No pending placement applications.</p>;
   }
@@ -27,7 +32,7 @@ export default function Applications({ pendingApplications, onAssign }) {
               <td>{app.start_date}</td>
               <td>{app.end_date}</td>
               <td>
-                <button className="assign-btn" onClick={() => onAssign(app)}>
+                <button className="assign-btn" onClick={() => handleAssignClick(app)}>
                   Assign Supervisor
                 </button>
               </td>

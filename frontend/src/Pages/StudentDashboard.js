@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import "./StudentDashboard.css"
+import "./StudentDashboard.css";
 import StudentPlacement from "./StudentPlacement";
 import StudentLogs from "./StudentLogs";
 import ExceptionRequestModal from "./ExceptionRequestModal";
+import notifications from "../utils/notifications";
+import Notifications from "./Notifications";
 
 export default function StudentDashboard() {
   const [user, setUser] = useState(null);
@@ -22,6 +24,7 @@ export default function StudentDashboard() {
   const logout = () => {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
+    notifications.notifyInfo("Logged out successfully");
     window.location.href = "/login";
   };
 
@@ -50,7 +53,8 @@ export default function StudentDashboard() {
         setApprovedCompanies(companiesRes.data);
 
       } catch (error) {
-        console.error("Error fetching student dashboard:", error);
+        console.error("Error fetching student dashboard:", error.response?.data);
+        notifications.notifyError("Failed to load dashboard data");
       } finally {
         setLoading(false);
       }
@@ -68,7 +72,9 @@ export default function StudentDashboard() {
 
     let company_name = "";
     if (selectedCompanyId) {
-      const selectedCompany = approvedCompanies.find(c => c.id === parseInt(selectedCompanyId));
+      const selectedCompany = approvedCompanies.find(
+        c => c.id === parseInt(selectedCompanyId)
+      );
       company_name = selectedCompany?.name || "";
     } else {
       company_name = newCompanyName;
@@ -86,7 +92,7 @@ export default function StudentDashboard() {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      alert("Placement application submitted successfully!");
+      notifications.notifySuccess("Placement application submitted successfully!");
 
       const dashboardRes = await axios.get(`${BASE_URL}/api/student/dashboard/`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -96,19 +102,36 @@ export default function StudentDashboard() {
       setActiveTab("dashboard");
 
     } catch (error) {
-      console.error("Error applying for placement:", error);
-      alert("Application failed");
+      console.error("Placement error:", error.response?.data);
+      notifications.notifyError(error.response?.data?.error || "Application failed");
     }
   };
 
   const submitWeeklyLog = async (e) => {
     e.preventDefault();
 
+    if (!dashboardData?.placement?.id) {
+      notifications.notifyError("You must have a placement before submitting logs.");
+      return;
+    }
+
+    if (dashboardData?.placement?.status !== "approved") {
+      notifications.notifyError("Your placement must be approved first.");
+      return;
+    }
+
     const formData = new FormData();
-    formData.append("placement", dashboardData?.placement?.id);
+
+    formData.append("placement", dashboardData.placement.id);
     formData.append("week_number", document.getElementById("week_number").value);
     formData.append("activities", document.getElementById("activities").value);
     formData.append("challenges", document.getElementById("challenges").value);
+    formData.append("working_hours", document.getElementById("working_hours").value);
+
+    const fileInput = document.getElementById("attachment");
+    if (fileInput && fileInput.files.length > 0) {
+      formData.append("attachment", fileInput.files[0]);
+    }
 
     try {
       const token = getToken();
@@ -120,7 +143,7 @@ export default function StudentDashboard() {
         }
       });
 
-      alert("Weekly log submitted successfully!");
+      notifications.notifySuccess("Weekly log submitted successfully!");
 
       const dashboardRes = await axios.get(`${BASE_URL}/api/student/dashboard/`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -129,8 +152,8 @@ export default function StudentDashboard() {
       setDashboardData(dashboardRes.data);
 
     } catch (error) {
-      console.error("Error submitting log:", error);
-      alert("Failed to submit log");
+      console.error("LOG ERROR:", error.response?.data);
+      notifications.notifyError(error.response?.data?.error || "Failed to submit log");
     }
   };
 
@@ -156,6 +179,18 @@ export default function StudentDashboard() {
       </div>
 
       <div className="main-content">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+          <Notifications 
+            role="student"
+            getToken={getToken}
+            BASE_URL={BASE_URL}
+            onNotificationClick={(notification) => {
+              if (notification.type === 'placement') setActiveTab('placement');
+              else if (notification.type === 'review') setActiveTab('logs');
+            }}
+          />
+        </div>
+
         {activeTab === "dashboard" && (
           <div>
             <h1>Student Dashboard</h1>
