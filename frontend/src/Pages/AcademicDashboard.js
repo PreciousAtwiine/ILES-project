@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./AcademicDashboard.css";
+import notifications from "../utils/notifications";
 
 export default function AcademicDashboard() {
   const [data, setData] = useState(null);
@@ -29,6 +30,7 @@ export default function AcademicDashboard() {
         window.location.href = "/login";
       } else {
         setError("Failed to load dashboard");
+        notifications.notifyError("Failed to load dashboard");
       }
     } finally {
       setLoading(false);
@@ -44,15 +46,18 @@ export default function AcademicDashboard() {
         { status },
         { headers: { Authorization: `Bearer ${getToken()}` } }
       );
+      notifications.notifySuccess(`Log reviewed and marked as ${status}`);
       loadDashboard();
     } catch (err) {
-      alert("Failed to review log");
+      console.error(err);
+      notifications.notifyError("Failed to review log");
     }
   };
 
   const logout = () => {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
+    notifications.notifyInfo("Logged out successfully");
     window.location.href = "/login";
   };
 
@@ -194,7 +199,7 @@ export default function AcademicDashboard() {
             </>
           )}
 
-          {/* STUDENTS VIEW */}
+          
           {view === "students" && (
             <>
               <div className="ac-section-header">
@@ -238,7 +243,7 @@ export default function AcademicDashboard() {
             </>
           )}
 
-          {/* PENDING LOGS VIEW */}
+          
           {view === "pending" && (
             <>
               <div className="ac-section-header">

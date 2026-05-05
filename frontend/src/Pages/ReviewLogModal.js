@@ -2,7 +2,7 @@
 import { useState } from "react";
 import axios from "axios";
 import "./ReviewLogModal.css";
-import { notifySuccess, notifyError } from "../utils/notifications"; // ✅ added
+import notifications from "../utils/notifications"; 
 
 export default function ReviewLogModal({ log, onClose, onReviewComplete }) {
   const [score, setScore] = useState("");
@@ -31,13 +31,13 @@ export default function ReviewLogModal({ log, onClose, onReviewComplete }) {
         }
       );
 
-      notifySuccess("Log reviewed successfully!");
-      onReviewComplete();
+      notifications.notifySuccess("Log reviewed successfully!");
+      if (onReviewComplete) onReviewComplete();
       onClose();
 
     } catch (error) {
       console.error("Error reviewing log:", error);
-      notifyError(
+      notifications.notifyError(
         error.response?.data?.error || "Failed to review log"
       ); 
     } finally {

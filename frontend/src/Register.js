@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import "./Auth.css";
+import notifications from "./utils/notifications"; // ✅ fixed path
 
 function Register() {
   const [data, setData] = useState({
@@ -19,8 +20,6 @@ function Register() {
 
   const [departments, setDepartments] = useState([]);
   const [companies, setCompanies] = useState([]);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [companySearch, setCompanySearch] = useState("");
@@ -39,6 +38,7 @@ function Register() {
         setCompanies(approvedCompanies);
       } catch (err) {
         console.error("Error fetching data:", err);
+        notifications.notifyError("Failed to load departments or companies");
       }
     };
     fetchData();
@@ -78,7 +78,6 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     setFieldErrors({});
     setLoading(true);
 
@@ -120,8 +119,7 @@ function Register() {
 
     try {
       await axios.post(`${BASE_URL}/users/register/`, submitData);
-      setSuccess("Registration successful! Please login.");
-      setError("");
+      notifications.notifySuccess("Registration successful! Please login.");
       setTimeout(() => {
         window.location.href = "/login";
       }, 2000);
@@ -137,24 +135,24 @@ function Register() {
             setFieldErrors(backendError);
             const firstErrorField = Object.keys(backendError)[0];
             const firstError = backendError[firstErrorField];
-            setError(Array.isArray(firstError) ? firstError[0] : firstError);
+            const errorMsg = Array.isArray(firstError) ? firstError[0] : firstError;
+            notifications.notifyError(errorMsg);
           } 
           else if (backendError.detail) {
-            setError(backendError.detail);
+            notifications.notifyError(backendError.detail);
           }
           else {
             const allErrors = Object.values(backendError).flat();
-            setError(allErrors.join(', '));
+            notifications.notifyError(allErrors.join(', '));
           }
         } else if (typeof backendError === 'string') {
-          setError(backendError);
+          notifications.notifyError(backendError);
         } else {
-          setError("Registration failed. Please check your inputs.");
+          notifications.notifyError("Registration failed. Please check your inputs.");
         }
       } else {
-        setError("Network error. Please make sure the server is running.");
+        notifications.notifyError("Network error. Please make sure the server is running.");
       }
-      setSuccess("");
     } finally {
       setLoading(false);
     }
@@ -403,9 +401,6 @@ function Register() {
           <button type="submit" disabled={loading}>
             {loading ? "Registering..." : "Register"}
           </button>
-
-          {error && <p className="error">{error}</p>}
-          {success && <p className="success">{success}</p>}
         </form>
       </div>
     </div>

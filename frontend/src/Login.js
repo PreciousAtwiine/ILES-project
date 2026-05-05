@@ -1,10 +1,10 @@
 import { useState } from "react";
 import axios from "axios";
 import "./Login.css";
+import notifications from "./utils/notifications"; 
 
 export default function Login() {
   const [data, setData] = useState({ username: "", password: "" });
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -14,10 +14,8 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
 
     try {
-      
       const res = await axios.post(
         "http://127.0.0.1:8000/api/token/",
         data
@@ -27,7 +25,6 @@ export default function Login() {
       localStorage.setItem("access", token);
       localStorage.setItem("refresh", res.data.refresh);
 
-      //added: Get user info for me
       const userRes = await axios.get(
         "http://127.0.0.1:8000/users/me/",
         {
@@ -35,16 +32,19 @@ export default function Login() {
         }
       );
 
-      
       const role = userRes.data.user.role;
+      notifications.notifySuccess(`Welcome back, ${userRes.data.user.first_name || userRes.data.user.username}!`);
 
       if (role === "student") window.location.href = "/student";
       else if (role === "workplace") window.location.href = "/workplace-supervisor";
       else if (role === "academic") window.location.href = "/academic";
       else if (role === "admin") window.location.href = "/admin";
-      else setError("Unknown role");
+      else {
+        notifications.notifyError("Unknown user role");
+        setLoading(false);
+      }
     } catch (err) {
-      setError("Invalid username or password");
+      notifications.notifyError("Invalid username or password");
     } finally {
       setLoading(false);
     }
@@ -61,7 +61,6 @@ export default function Login() {
           </p>
         </div>
       </div>
-
 
       <div className="login-right">
         <form className="login-card" onSubmit={handleSubmit}>
@@ -85,14 +84,16 @@ export default function Login() {
             <a href="/forgot-password">Forgot Password?</a>
           </div>
 
-          <button type="submit" disabled= {loading}> {loading ? "Logging in..." : "Login"}</button>
+          <button type="submit" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
+          </button>
 
           <p className="signup-text">
             Don't have an account?{" "}
             <a href="/register">Register here</a>
           </p>
 
-          {error && <p className="error">{error}</p>}
+          
         </form>
       </div>
     </div>
