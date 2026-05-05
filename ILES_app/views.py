@@ -92,48 +92,61 @@ class UserViewSet(viewsets.ModelViewSet):
             'role': request.user.role
         })
     
+    
     @action(detail=False, methods=['get'], permission_classes=[IsAdmin])
     def pending_staff(self, request):
         users = User.objects.filter(
             role__in=['workplace', 'academic', 'admin'],
-            is_active=False, is_superuser=False
+            is_approved=False,  
+            is_superuser=False
         )
         
         if not request.user.is_superuser and request.user.department_fk:
             users = users.filter(department_fk=request.user.department_fk)
         
         return Response(UserSerializer(users, many=True).data)
+        
+# Add this at the very end of your views.py file
+
+class ApproveStaffAPIView(APIView):
+    permission_classes = [IsAdmin]
     
-    @action(detail=False, methods=['post'])
-    def approve_staff(self, request):
+    def post(self, request):
         if not (request.user.is_superuser or request.user.role == 'admin'):
-            return Response({"error": "Only superuser or admin can approve staff"}, status=403)
+            return Response({"error": "Only superuser or admin can approve staff"}, status=status.HTTP_403_FORBIDDEN)
         
         serializer = ApproveStaffSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
         user_id = serializer.validated_data['user_id']
-        staff_user = User.objects.get(id=user_id)
+        approve = serializer.validated_data['approve']
         
+        try:
+            staff_user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "Staff user not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Check department permission
         if not request.user.is_superuser and request.user.department_fk:
             if staff_user.department_fk != request.user.department_fk:
-                return Response({"error": "You can only approve staff from your own department"}, status=403)
+                return Response({"error": "You can only approve staff from your own department"}, status=status.HTTP_403_FORBIDDEN)
         
-        user, result = serializer.save()
-        
-        if user is None:
-            return Response({"message": f"Staff registration {result}"})
-        
-        if result == "approved":
+        if approve:
+            staff_user.is_approved = True
+            staff_user.is_active = True
+            staff_user.save()
+            
+            # Send email notification
             send_email(
-                user.email,
+                staff_user.email,
                 'Account Approved - ILES',
-                f'Hello {user.get_full_name() or user.username},\n\nYour account has been approved.\n\nLogin: http://localhost:3000/login\n\nUsername: {user.username}\n\n- ILES Team'
+                f'Hello {staff_user.get_full_name() or staff_user.username},\n\nYour account has been approved.\n\nLogin: http://localhost:3000/login\n\nUsername: {staff_user.username}\n\n- ILES Team'
             )
-        
-        return Response({"message": f"Staff {user.username} {result}"})
-
-
+            
+            return Response({"message": f"Staff {staff_user.username} approved successfully"}, status=status.HTTP_200_OK)
+        else:
+            staff_user.delete()
+            return Response({"message": f"Staff registration rejected and deleted"}, status=status.HTTP_200_OK)
 class ForgotPasswordView(APIView):
     permission_classes = [AllowAny]
     
@@ -770,7 +783,76 @@ class RejectCompanyView(APIView):
         company.delete()
         
         return Response({"message": "Company rejected and removed"})
+class DepartmentStudentsView(APIView):
+    permission_classes = [IsAdmin]
+    
+    def get(self, request):
+        user = request.user
+        # Get students in admin's department
+        students = User.objects.filter(
+            role='student',
+            department_fk=user.department_fk
+        )
+        
+        data = []
+        for student in students:
+            placement = InternshipPlacement.objects.filter(
+                student=student,
+                status='approved'
+            ).first()
+            
+            data.append({
+                'id': student.id,
+                'name': f"{student.first_name} {student.last_name}",
+                'student_id': student.student_id,
+                'email': student.email,
+                'company_name': placement.company_name if placement else None,
+                'has_active_placement': placement is not None,
+                'placement_period': {
+                    'start_date': str(placement.start_date) if placement else None,
+                    'end_date': str(placement.end_date) if placement else None
+                } if placement else None
+            })
+        
+        return Response(data)
 
+
+class DepartmentSupervisorsView(APIView):
+    permission_classes = [IsAdmin]
+    
+    def get(self, request):
+        user = request.user
+        
+        supervisors = User.objects.filter(
+            role__in=['academic', 'workplace'],
+            department_fk=user.department_fk
+        )
+        
+        data = []
+        for supervisor in supervisors:
+            
+            if supervisor.role == 'academic':
+                assigned_count = InternshipPlacement.objects.filter(
+                    academic_supervisor=supervisor,
+                    status='approved'
+                ).count()
+            else:
+                assigned_count = InternshipPlacement.objects.filter(
+                    workplace_supervisor=supervisor,
+                    status='approved'
+                ).count()
+            
+            data.append({
+                'id': supervisor.id,
+                'name': f"{supervisor.first_name} {supervisor.last_name}",
+                'staff_id': supervisor.staff_id,
+                'email': supervisor.email,
+                'role': supervisor.role,
+                'assigned_students_count': assigned_count,
+                'is_approved': supervisor.is_approved
+            })
+        
+        return Response(data)
 class AcademicDashboardView(generics.RetrieveAPIView):
     permission_classes = [IsAcademic]
     
