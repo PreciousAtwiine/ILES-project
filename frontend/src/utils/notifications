@@ -1,6 +1,26 @@
-import { toast } from "react-toastify";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-export const notifySuccess = (message) => toast.success(message);
-export const notifyError = (message) => toast.error(message);
-export const notifyInfo = (message) => toast.info(message);
-export const notifyWarning = (message) => toast.warning(message);
+// ✅ Named Export for Success
+export const notifySuccess = (message) => {
+  toast.success(message, {
+    position: "top-right",
+    autoClose: 3000,
+  });
+};
+
+// ✅ Named Export for Error
+export const notifyError = (message) => {
+  toast.error(message, {
+    position: "top-right",
+    autoClose: 4000,
+  });
+};
+
+// ✅ Named Export for Info
+export const notifyInfo = (message) => {
+  toast.info(message, {
+    position: "top-right",
+    autoClose: 3000,
+  });
+};

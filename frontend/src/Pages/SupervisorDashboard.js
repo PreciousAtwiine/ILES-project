@@ -5,7 +5,11 @@ import SupervisorPendingLogs from "./SupervisorPendingLogs";
 import ReviewLogModal from "./ReviewLogModal";
 import EvaluationModal from "./EvaluationModal";
 import "./SupervisorDashboard.css";
+<<<<<<< HEAD
 import { notifySuccess, notifyError, notifyInfo } from "../utils/notifications"; 
+=======
+import notifications from "../utils/notifications"; 
+>>>>>>> joel-frontend
 
 export default function SupervisorDashboard() {
   const [user, setUser] = useState(null);
@@ -29,10 +33,14 @@ export default function SupervisorDashboard() {
   const handleLogout = () => {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
+<<<<<<< HEAD
 
 
     notifyInfo("Logged out successfully"); 
 
+=======
+    notifications.notifyInfo("Logged out successfully");
+>>>>>>> joel-frontend
     window.location.href = "/login";
   };
 
@@ -58,12 +66,20 @@ export default function SupervisorDashboard() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setStudentLogs(res.data);
+<<<<<<< HEAD
 
       notifySuccess(`Loaded logs for ${studentName}`); 
     } catch (err) {
       console.error(err);
       setStudentLogs([]);
       notifyError("Failed to load student logs"); 
+=======
+      notifications.notifySuccess(`Loaded logs for ${studentName}`);
+    } catch (err) {
+      console.error(err);
+      setStudentLogs([]);
+      notifications.notifyError("Failed to load student logs");
+>>>>>>> joel-frontend
     } finally {
       setLoadingLogs(false);
     }
@@ -103,16 +119,18 @@ export default function SupervisorDashboard() {
         );
         setDashboardData(dashboardRes.data);
 
+<<<<<<< HEAD
         
+=======
+>>>>>>> joel-frontend
         if (dashboardRes.data?.pending_reviews?.length > 0) {
-          notifyInfo(
+          notifications.notifyInfo(
             `You have ${dashboardRes.data.pending_reviews.length} pending logs to review`
           );
         }
-
       } catch (err) {
         console.error(err);
-        notifyError("Failed to load dashboard data"); // ✅ added
+        notifications.notifyError("Failed to load dashboard data");
       } finally {
         setLoading(false);
       }
@@ -125,38 +143,38 @@ export default function SupervisorDashboard() {
 
   return (
     <div className="dashboard-container">
-
-      {/* Sidebar */}
       <div className="sidebar">
         <h2>Workplace Supervisor Panel</h2>
         <p>
           {user?.first_name} {user?.last_name}
         </p>
+<<<<<<< HEAD
         <p className="role-badge">Workplace Supervisor</p>
 
+=======
+>>>>>>> joel-frontend
         <button onClick={() => setActiveTab("dashboard")}>Dashboard</button>
         <button onClick={() => setActiveTab("students")}>Students</button>
         <button onClick={() => setActiveTab("pending")}>Pending Logs</button>
-
         <button className="logout-btn" onClick={handleLogout}>
           Logout
         </button>
       </div>
 
-      {/* Main Content */}
       <div className="main-content">
-
-        {/* DASHBOARD */}
         {activeTab === "dashboard" && (
           <div>
+<<<<<<< HEAD
             <h1>Workplace Supervisor Dashboard</h1>
 
+=======
+            <h1>Supervisor Dashboard</h1>
+>>>>>>> joel-frontend
             <div className="dashboard-cards">
               <div className="card">
                 <h3>Assigned Students</h3>
                 <p>{dashboardData?.assigned_students?.length || 0}</p>
               </div>
-
               <div className="card">
                 <h3>Pending Reviews</h3>
                 <p>{dashboardData?.pending_reviews?.length || 0}</p>
@@ -182,7 +200,6 @@ export default function SupervisorDashboard() {
           </div>
         )}
 
-        {/* STUDENTS */}
         {activeTab === "students" && (
           <SupervisorStudents
             assignedStudents={dashboardData?.assigned_students || []}
@@ -192,7 +209,6 @@ export default function SupervisorDashboard() {
           />
         )}
 
-        {/* PENDING LOGS */}
         {activeTab === "pending" && (
           <SupervisorPendingLogs
             pendingReviews={dashboardData?.pending_reviews || []}
@@ -200,11 +216,14 @@ export default function SupervisorDashboard() {
           />
         )}
 
-        {/* VIEW STUDENT LOGS */}
         {activeTab === "viewLogs" && viewLogsStudent && (
           <div>
+<<<<<<< HEAD
             <h1>Weekly Logs - {viewLogsStudent.name}</h1>
 
+=======
+            <h1>Logs - {viewLogsStudent.name}</h1>
+>>>>>>> joel-frontend
             <button
               className="back-btn"
               onClick={() => {
@@ -214,7 +233,6 @@ export default function SupervisorDashboard() {
             >
               ← Back to Students
             </button>
-
             {loadingLogs ? (
               <p>Loading logs...</p>
             ) : studentLogs.length > 0 ? (
@@ -271,7 +289,6 @@ export default function SupervisorDashboard() {
         )}
       </div>
 
-      {/* MODALS */}
       {showReviewModal && selectedLog && (
         <ReviewLogModal
           log={selectedLog}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import "./AdminDashboard.css";
+import notifications from "../utils/notifications";
 
 import StaffApprovals from "./StaffApprovals";
 import Applications from "./Applications";
@@ -10,13 +11,11 @@ import AssignSupervisorModal from "./AssignSupervisorModal";
 
 export default function AdminDashboard({ user }) {
   const [activeTab, setActiveTab] = useState("dashboard");
-
   const [dashboardData, setDashboardData] = useState({});
   const [pendingStaff, setPendingStaff] = useState([]);
   const [pendingApplications, setPendingApplications] = useState([]);
   const [pendingCompanies, setPendingCompanies] = useState([]);
   const [exceptionRequests, setExceptionRequests] = useState([]);
-
   const [loading, setLoading] = useState(true);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedPlacement, setSelectedPlacement] = useState(null);
@@ -25,120 +24,150 @@ export default function AdminDashboard({ user }) {
   const getToken = () => localStorage.getItem("access");
 
   useEffect(() => {
-    fetchAllAdminData();
-  }, []);
+    const fetchAllAdminData = async () => {
+      try {
+        const token = getToken();
 
-  const fetchAllAdminData = async () => {
+        const [dashboardRes, staffRes, applicationsRes, companiesRes, exceptionsRes] =
+          await Promise.all([
+            axios.get(`${BASE_URL}/api/admin/dashboard/`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            axios.get(`${BASE_URL}/users/pending_staff/`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            axios.get(`${BASE_URL}/placements/pending/`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            axios.get(`${BASE_URL}/api/admin/pending-companies/`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            axios.get(`${BASE_URL}/api/admin/pending-exceptions/`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+          ]);
+
+        setDashboardData(dashboardRes.data);
+        setPendingStaff(staffRes.data);
+        setPendingApplications(applicationsRes.data);
+        setPendingCompanies(companiesRes.data);
+        setExceptionRequests(exceptionsRes.data);
+      } catch (error) {
+        console.error("Admin dashboard load error:", error);
+        notifications.notifyError("Failed to load admin dashboard");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllAdminData();
+  }, []); 
+
+  const approveStaff = async (staff) => {
     try {
       const token = getToken();
-
-      const [dashboardRes, staffRes, applicationsRes, companiesRes, exceptionsRes] =
-        await Promise.all([
-          axios.get(`${BASE_URL}/api/admin/dashboard/`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(`${BASE_URL}/users/pending_staff/`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(`${BASE_URL}/placements/pending/`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(`${BASE_URL}/api/admin/pending-companies/`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(`${BASE_URL}/api/admin/pending-exceptions/`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-
-      setDashboardData(dashboardRes.data);
-      setPendingStaff(staffRes.data);
-      setPendingApplications(applicationsRes.data);
-      setPendingCompanies(companiesRes.data);
-      setExceptionRequests(exceptionsRes.data);
-
+      await axios.post(
+        `${BASE_URL}/users/approve_staff/`,
+        { user_id: staff.id, approve: true },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      notifications.notifySuccess(`Staff ${staff.username} approved`);
+      // Refresh data after approval
+      window.location.reload(); 
     } catch (error) {
-      console.error("Admin dashboard load error:", error);
-    } finally {
-      setLoading(false);
+      console.error(error);
+      notifications.notifyError("Failed to approve staff");
     }
   };
 
-  const approveStaff = async (staff) => {
-    const token = getToken();
-
-    await axios.post(
-      `${BASE_URL}/users/approve_staff/`,
-      { user_id: staff.id, approve: true },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    fetchAllAdminData();
-  };
-
   const rejectStaff = async (staff) => {
-    const token = getToken();
-
-    await axios.post(
-      `${BASE_URL}/users/approve_staff/`,
-      { user_id: staff.id, approve: false },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    fetchAllAdminData();
+    try {
+      const token = getToken();
+      await axios.post(
+        `${BASE_URL}/users/approve_staff/`,
+        { user_id: staff.id, approve: false },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      notifications.notifyInfo(`Staff ${staff.username} rejected`);
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      notifications.notifyError("Failed to reject staff");
+    }
   };
 
   const approveCompany = async (id) => {
-    const token = getToken();
-
-    await axios.post(
-      `${BASE_URL}/api/admin/approve-company/${id}/`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    fetchAllAdminData();
+    try {
+      const token = getToken();
+      await axios.post(
+        `${BASE_URL}/api/admin/approve-company/${id}/`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      notifications.notifySuccess("Company approved");
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      notifications.notifyError("Failed to approve company");
+    }
   };
 
   const rejectCompany = async (id) => {
-    const token = getToken();
-
-    await axios.post(
-      `${BASE_URL}/api/admin/reject-company/${id}/`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    fetchAllAdminData();
+    try {
+      const token = getToken();
+      await axios.post(
+        `${BASE_URL}/api/admin/reject-company/${id}/`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      notifications.notifyInfo("Company rejected");
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      notifications.notifyError("Failed to reject company");
+    }
   };
 
   const approveException = async (id) => {
-    const token = getToken();
-
-    await axios.post(
-      `${BASE_URL}/api/admin/approve-exception/${id}/`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    fetchAllAdminData();
+    try {
+      const token = getToken();
+      await axios.post(
+        `${BASE_URL}/api/admin/approve-exception/${id}/`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      notifications.notifySuccess("Exception request approved");
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      notifications.notifyError("Failed to approve exception");
+    }
   };
 
   const rejectException = async (id) => {
-    const token = getToken();
-
-    await axios.post(
-      `${BASE_URL}/api/admin/reject-exception/${id}/`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    fetchAllAdminData();
+    try {
+      const token = getToken();
+      await axios.post(
+        `${BASE_URL}/api/admin/reject-exception/${id}/`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      notifications.notifyInfo("Exception request rejected");
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      notifications.notifyError("Failed to reject exception");
+    }
   };
 
   const openAssignModal = (app) => {
     setSelectedPlacement(app);
     setShowAssignModal(true);
+  };
+
+  const handleAssign = () => {
+    notifications.notifySuccess("Supervisor assigned successfully");
+    window.location.reload();
   };
 
   if (loading) return <div>Loading Admin Dashboard...</div>;
@@ -147,7 +176,6 @@ export default function AdminDashboard({ user }) {
     <div className="dashboard-container">
       <div className="sidebar">
         <h2>Admin Dashboard</h2>
-
         <button onClick={() => setActiveTab("dashboard")}>Dashboard</button>
         <button onClick={() => setActiveTab("staff")}>Staff Approvals</button>
         <button onClick={() => setActiveTab("applications")}>Applications</button>
@@ -213,10 +241,7 @@ export default function AdminDashboard({ user }) {
         <AssignSupervisorModal
           placement={selectedPlacement}
           onClose={() => setShowAssignModal(false)}
-          onAssign={() => {
-            fetchAllAdminData();
-            setShowAssignModal(false);
-          }}
+          onAssign={handleAssign}
         />
       )}
     </div>
