@@ -21,7 +21,7 @@ export default function StudentLogs({ recentLogs, onSubmit }) {
             <textarea id="challenges" rows="2" placeholder="Any challenges faced?"></textarea>
           </div>
           <div className="form-group">
-            <label>Working Hours</label>
+            <label>Hours Worked</label>
             <input type="number" id="working_hours" step="0.5" placeholder="Hours worked this week" />
           </div>
           <div className="form-group">
