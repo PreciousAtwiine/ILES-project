@@ -201,11 +201,11 @@ export default function StudentDashboard() {
                 <p>{user?.student_id || "Not set"}</p>
               </div>
               <div className="card">
-                <h3>Department</h3>
+                <h3>Allocated Department</h3>
                 <p>{user?.department_name || "Not set"}</p>
               </div>
               <div className="card">
-                <h3>Email</h3>
+                <h3>Email Address</h3>
                 <p>{user?.email || "Not set"}</p>
               </div>
             </div>
