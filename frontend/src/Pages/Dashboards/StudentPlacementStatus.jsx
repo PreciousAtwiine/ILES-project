@@ -49,3 +49,31 @@ export default function StudentPlacement({
               <small className="hint-text">No companies found. You can add a new one below.</small>
             )}
           </div>
+            <div className="form-group">
+            <label>Or enter new company name:</label>
+            <input
+              type="text"
+              placeholder="New Company Name"
+              value={newCompanyName}
+              onChange={onNewCompanyChange}
+            />
+            <small className="hint-text">New companies will need admin approval</small>
+          </div>
+          
+          <div className="form-row">
+            <div className="form-group">
+              <label>Start Date *</label>
+              <input type="date" id="start_date" name="start_date" required />
+            </div>
+            <div className="form-group">
+              <label>End Date *</label>
+              <input type="date" id="end_date" name="end_date" required />
+            </div>
+          </div>
+          
+          <button type="submit" className="submit-btn">Submit Application</button>
+        </form>
+      </div>
+    </div>
+  );
+}
