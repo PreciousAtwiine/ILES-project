@@ -28,38 +28,38 @@ export default function StudentDashboard() {
     window.location.href = "/login";
   };
 
+  const fetchStudentData = async () => {
+    const token = getToken();
+    if (!token) {
+      window.location.href = "/login";
+      return;
+    }
+
+    try {
+      const userRes = await axios.get(`${BASE_URL}/users/me/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setUser(userRes.data.user);
+
+      const studentRes = await axios.get(`${BASE_URL}/api/student/dashboard/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setDashboardData(studentRes.data);
+
+      const companiesRes = await axios.get(`${BASE_URL}/api/companies/approved/`);
+      setApprovedCompanies(companiesRes.data);
+
+    } catch (error) {
+      console.error("Error fetching student dashboard:", error.response?.data);
+      notifications.notifyError("Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchStudentData = async () => {
-      const token = getToken();
-      if (!token) {
-        window.location.href = "/login";
-        return;
-      }
-
-      try {
-        const userRes = await axios.get(`${BASE_URL}/users/me/`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        setUser(userRes.data.user);
-
-        const studentRes = await axios.get(`${BASE_URL}/api/student/dashboard/`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        setDashboardData(studentRes.data);
-
-        const companiesRes = await axios.get(`${BASE_URL}/api/companies/approved/`);
-        setApprovedCompanies(companiesRes.data);
-
-      } catch (error) {
-        console.error("Error fetching student dashboard:", error.response?.data);
-        notifications.notifyError("Failed to load dashboard data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchStudentData();
   }, []);
 
@@ -157,6 +157,15 @@ export default function StudentDashboard() {
     }
   };
 
+  const openExceptionModal = () => {
+    setShowExceptionModal(true);
+  };
+
+  const handleExceptionComplete = async () => {
+    await fetchStudentData();
+    setShowExceptionModal(false);
+  };
+
   if (loading) {
     return <div className="loading-container">Loading dashboard...</div>;
   }
@@ -214,12 +223,229 @@ export default function StudentDashboard() {
               <div className="placement-info">
                 <h2>Placement Information</h2>
                 <p><strong>Company:</strong> {dashboardData.placement.company_name}</p>
-                <p><strong>Status:</strong> {dashboardData.placement.status}</p>
+                <p><strong>Status:</strong> 
+                  <span className={`status-badge ${dashboardData.placement.status}`}>
+                    {dashboardData.placement.status}
+                  </span>
+                </p>
                 <p><strong>Start Date:</strong> {dashboardData.placement.start_date}</p>
                 <p><strong>End Date:</strong> {dashboardData.placement.end_date}</p>
+                {dashboardData.placement.workplace_supervisor_name && (
+                  <p><strong>Workplace Supervisor:</strong> {dashboardData.placement.workplace_supervisor_name}</p>
+                )}
+                {dashboardData.placement.academic_supervisor_name && (
+                  <p><strong>Academic Supervisor:</strong> {dashboardData.placement.academic_supervisor_name}</p>
+                )}
               </div>
             ) : (
-              <p>No placement yet. Apply under Placement tab.</p>
+              <div className="empty-placement">
+                <p>No placement yet. <button onClick={() => setActiveTab("placement")}>Apply now</button></p>
+              </div>
+            )}
+
+            {/* ✅ FIXED: EXCEPTION REQUEST SECTION - Only show if eligible AND not requested yet */}
+            {dashboardData?.can_request_exception && !dashboardData?.log_exception_requested && (
+              <div className="exception-request" style={{
+                background: '#fef3c7',
+                border: '1px solid #f59e0b',
+                borderRadius: '8px',
+                padding: '16px',
+                marginTop: '20px'
+              }}>
+                <p>⚠️ You have missing weekly logs. The system cannot calculate your final grade.</p>
+                <button 
+                  className="exception-btn" 
+                  onClick={openExceptionModal}
+                  style={{
+                    background: '#f59e0b',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    marginTop: '10px'
+                  }}
+                >
+                  Request Exception for Missing Logs
+                </button>
+              </div>
+            )}
+
+            {/* ✅ FIXED: EXCEPTION STATUS DISPLAY - ONLY show if an exception was ACTUALLY requested */}
+            {dashboardData?.log_exception_requested === true && dashboardData?.exception_status && (
+              <>
+                {dashboardData.exception_status === 'approved' && (
+                  <div className="exception-status approved" style={{
+                    background: '#dcfce7',
+                    border: '1px solid #86efac',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    marginTop: '20px',
+                    color: '#15803d'
+                  }}>
+                    <p>✅ Your exception request has been approved! Your grade will be calculated based on submitted logs.</p>
+                  </div>
+                )}
+                
+                {dashboardData.exception_status === 'rejected' && (
+                  <div className="exception-status rejected" style={{
+                    background: '#fee2e2',
+                    border: '1px solid #fca5a5',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    marginTop: '20px',
+                    color: '#b91c1c'
+                  }}>
+                    <p>❌ Your exception request was rejected. Please contact your supervisor to resolve missing logs.</p>
+                  </div>
+                )}
+                
+                {dashboardData.exception_status === 'pending' && (
+                  <div className="exception-status pending" style={{
+                    background: '#eff6ff',
+                    border: '1px solid #3b82f6',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    marginTop: '20px',
+                    color: '#1e40af'
+                  }}>
+                    <p>⏳ Your exception request is pending admin review. You will be notified once a decision is made.</p>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* FINAL EVALUATION DISPLAY */}
+            {dashboardData?.evaluation && (
+              <>
+                <div className="section-title">
+                  <h2>Final Evaluation Results</h2>
+                </div>
+                <div className="evaluation-card" style={{
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  borderRadius: '20px',
+                  padding: '24px',
+                  color: 'white',
+                  marginTop: '20px'
+                }}>
+                  <div className="evaluation-scores" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                    gap: '20px'
+                  }}>
+                    <div className="score-item" style={{
+                      textAlign: 'center',
+                      padding: '12px',
+                      background: 'rgba(255, 255, 255, 0.15)',
+                      borderRadius: '12px'
+                    }}>
+                      <span>Workplace Score (40%)</span>
+                      <strong style={{ fontSize: '24px', display: 'block' }}>
+                        {dashboardData.evaluation.workplace_score || "Pending"}
+                      </strong>
+                    </div>
+                    <div className="score-item" style={{
+                      textAlign: 'center',
+                      padding: '12px',
+                      background: 'rgba(255, 255, 255, 0.15)',
+                      borderRadius: '12px'
+                    }}>
+                      <span>Academic Score (30%)</span>
+                      <strong style={{ fontSize: '24px', display: 'block' }}>
+                        {dashboardData.evaluation.academic_score || "Pending"}
+                      </strong>
+                    </div>
+                    <div className="score-item" style={{
+                      textAlign: 'center',
+                      padding: '12px',
+                      background: 'rgba(255, 255, 255, 0.15)',
+                      borderRadius: '12px'
+                    }}>
+                      <span>Log Average (30%)</span>
+                      <strong style={{ fontSize: '24px', display: 'block' }}>
+                        {dashboardData.evaluation.log_avg_score || "Pending"}
+                      </strong>
+                    </div>
+                    <div className="score-item total" style={{
+                      textAlign: 'center',
+                      padding: '12px',
+                      background: 'rgba(255, 255, 255, 0.25)',
+                      borderRadius: '12px'
+                    }}>
+                      <span>Final Score</span>
+                      <strong style={{ fontSize: '28px', display: 'block' }}>
+                        {dashboardData.evaluation.final_score || "Pending"}
+                      </strong>
+                    </div>
+                    <div className="score-item grade" style={{
+                      textAlign: 'center',
+                      padding: '12px',
+                      background: 'rgba(255, 255, 255, 0.15)',
+                      borderRadius: '12px'
+                    }}>
+                      <span>Grade</span>
+                      <strong style={{
+                        fontSize: '32px',
+                        background: '#fbbf24',
+                        color: '#1e293b',
+                        padding: '4px 16px',
+                        borderRadius: '40px',
+                        display: 'inline-block'
+                      }}>
+                        {dashboardData.evaluation.grade || "Pending"}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Recent Logs Section */}
+            <div className="section-title">
+              <h2>Recent Weekly Logs</h2>
+            </div>
+            {dashboardData?.recent_logs?.length > 0 ? (
+              <div className="logs-list">
+                {dashboardData.recent_logs.slice(0, 5).map((log, idx) => (
+                  <div key={idx} className="log-item">
+                    <div className="log-header">
+                      <strong>Week {log.week_number}</strong>
+                      <span className={`status-badge ${log.status}`}>{log.status}</span>
+                      {log.is_late && <span className="status-badge late">Late</span>}
+                      <span className="log-date">Submitted: {new Date(log.submission_date).toLocaleDateString()}</span>
+                    </div>
+                    <p className="log-activities">{log.activities}</p>
+                    {log.score && <div className="log-score">Score: {log.score}/100</div>}
+                    {log.feedback && (
+                      <div className="log-feedback" style={{
+                        background: '#f0fdf4',
+                        padding: '10px 12px',
+                        borderRadius: '10px',
+                        marginTop: '10px',
+                        fontSize: '13px',
+                        color: '#166534'
+                      }}>
+                        <strong>Feedback:</strong> {log.feedback}
+                      </div>
+                    )}
+                    {log.late_reason && (
+                      <div className="late-reason" style={{
+                        marginTop: '8px',
+                        padding: '8px 12px',
+                        background: '#fffbeb',
+                        borderLeft: '3px solid #f59e0b',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        color: '#92400e'
+                      }}>
+                        {log.late_reason}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p>No logs yet. Submit your first weekly log.</p>
             )}
           </div>
         )}
@@ -247,6 +473,7 @@ export default function StudentDashboard() {
       {showExceptionModal && (
         <ExceptionRequestModal
           onClose={() => setShowExceptionModal(false)}
+          onComplete={handleExceptionComplete}
         />
       )}
     </div>

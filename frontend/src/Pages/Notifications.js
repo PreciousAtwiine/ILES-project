@@ -175,43 +175,104 @@ const Notifications = ({ role, getToken, BASE_URL, onNotificationClick }) => {
       }
       else if (role === 'student') {
         try {
-          const [placementRes, logReviewsRes] = await Promise.all([
-            axios.get(`${BASE_URL}/placements/my-placement/`, { headers: { Authorization: `Bearer ${token}` } }),
-            axios.get(`${BASE_URL}/logs/my-reviews/`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] }))
-          ]);
-
-          const placement = placementRes.data;
+          // Use the existing student dashboard endpoint
+          const dashboardRes = await axios.get(`${BASE_URL}/api/student/dashboard/`, { 
+            headers: { Authorization: `Bearer ${token}` } 
+          });
+          
+          const dashboardData = dashboardRes.data;
+          const placement = dashboardData.placement;
+          
+          // 1. Placement Approved Notification
           if (placement && placement.status === 'approved') {
             const notifId = `placement_${placement.id}`;
-            if (!seenIds.includes(notifId)) {
+            if (!seenIds.includes(notifId) && !previousDataRef.current.placementIds.includes(placement.id)) {
               newNotifications.push({
                 id: notifId,
                 title: '✅ Placement Approved',
-                message: `Your internship at ${placement.company_name} has been approved!`,
+                message: `Your internship at ${placement.company_name} has been approved! You can now submit weekly logs.`,
                 icon: '✅',
                 timestamp: Date.now(),
                 type: 'placement',
-                action: 'Submit Log'
+                action: 'Go to Placement'
+              });
+              previousDataRef.current.placementIds.push(placement.id);
+            }
+          }
+          
+          // 2. Log Review Notifications (from recent_logs)
+          const recentLogs = dashboardData.recent_logs || [];
+          const newReviews = recentLogs.filter(log => 
+            log.feedback && !previousDataRef.current.reviewIds.includes(`review_${log.id}`)
+          );
+          
+          newReviews.forEach(log => {
+            newNotifications.push({
+              id: `review_${log.id}`,
+              title: log.status === 'approved' ? '✅ Log Approved' : '❌ Log Rejected',
+              message: `Week ${log.week_number} log: ${log.status}. Score: ${log.score || 'N/A'}. Feedback: ${log.feedback?.substring(0, 60)}${log.feedback?.length > 60 ? '...' : ''}`,
+              icon: log.status === 'approved' ? '✅' : '❌',
+              timestamp: log.reviewed_at ? new Date(log.reviewed_at).getTime() : Date.now(),
+              type: 'review',
+              action: 'View Logs'
+            });
+            previousDataRef.current.reviewIds.push(`review_${log.id}`);
+          });
+          
+          // 3. Exception Status Notification
+          if (dashboardData.log_exception_requested === true) {
+            const notifId = `exception_${placement?.id || 'status'}`;
+            if (!seenIds.includes(notifId)) {
+              let icon = '⏳';
+              let title = '';
+              let message = '';
+              
+              if (dashboardData.exception_status === 'approved') {
+                icon = '✅';
+                title = 'Exception Request Approved';
+                message = 'Your exception request has been approved! Your grade will be calculated based on submitted logs.';
+              } else if (dashboardData.exception_status === 'rejected') {
+                icon = '❌';
+                title = 'Exception Request Rejected';
+                message = 'Your exception request was rejected. Please contact your supervisor.';
+              } else if (dashboardData.exception_status === 'pending') {
+                icon = '⏳';
+                title = 'Exception Request Pending';
+                message = 'Your exception request is pending admin review.';
+              }
+              
+              newNotifications.push({
+                id: notifId,
+                title: title,
+                message: message,
+                icon: icon,
+                timestamp: Date.now(),
+                type: 'exception',
+                action: 'View Status'
               });
             }
           }
-
-          const reviews = logReviewsRes.data;
-          const newReviews = detectNewItems(reviews, previousDataRef.current.reviewIds);
-          newReviews.forEach(review => {
-            newNotifications.push({
-              id: `review_${review.id}`,
-              title: review.status === 'approved' ? '✅ Log Approved' : '❌ Log Rejected',
-              message: `Week ${review.week_number} log: ${review.status}. Score: ${review.score || 'N/A'}`,
-              icon: review.status === 'approved' ? '✅' : '❌',
-              timestamp: Date.now(),
-              type: 'review',
-              action: 'View Details'
-            });
-          });
-
-          previousDataRef.current.reviewIds = reviews.map(r => r.id);
-          previousDataRef.current.placementIds = placement ? [placement.id] : [];
+          
+          // 4. Evaluation Complete Notification
+          if (dashboardData.evaluation?.final_score) {
+            const notifId = `evaluation_${placement?.id || 'final'}`;
+            if (!seenIds.includes(notifId)) {
+              newNotifications.push({
+                id: notifId,
+                title: '🎓 Evaluation Complete',
+                message: `Your final score is ${dashboardData.evaluation.final_score} (Grade: ${dashboardData.evaluation.grade})`,
+                icon: '🎓',
+                timestamp: Date.now(),
+                type: 'evaluation',
+                action: 'View Results'
+              });
+            }
+          }
+          
+          // Update stored review IDs (keep unique)
+          previousDataRef.current.reviewIds = [...new Set(previousDataRef.current.reviewIds)];
+          previousDataRef.current.placementIds = [...new Set(previousDataRef.current.placementIds)];
+          
         } catch (err) {
           console.error("Student notification error:", err);
         }
@@ -238,10 +299,10 @@ const Notifications = ({ role, getToken, BASE_URL, onNotificationClick }) => {
     }
   }, [role, getToken, BASE_URL]);
 
-  // Fetch on mount and every 30 seconds (NOT every millisecond!)
+  // Fetch on mount and every 30 seconds
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000); // 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 

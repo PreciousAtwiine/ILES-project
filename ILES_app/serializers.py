@@ -512,16 +512,20 @@ class StudentDashboardSerializer(serializers.ModelSerializer):
     exception_status = serializers.SerializerMethodField()
     exception_reason = serializers.SerializerMethodField()
     department_name = serializers.SerializerMethodField()
+    log_exception_requested = serializers.SerializerMethodField()  # ← ADD THIS
     
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'student_id', 
                   'department', 'department_name', 'placement', 'recent_logs', 'evaluation',
-                  'can_request_exception', 'exception_status', 'exception_reason']
+                  'can_request_exception', 'exception_status', 'exception_reason',
+                  'log_exception_requested'] 
+    
     def get_department_name(self, obj):
         if obj.department_fk:
             return obj.department_fk.name
         return obj.department or "Not set"
+    
     def get_placement(self, obj):
         placement = InternshipPlacement.objects.filter(
             student=obj
@@ -570,17 +574,23 @@ class StudentDashboardSerializer(serializers.ModelSerializer):
             
             return data
         return None
-        
+    
     def get_can_request_exception(self, obj):
         """Check if student can request a log exception"""
         placement = InternshipPlacement.objects.filter(student=obj).first()
         if not placement:
             return False
         
+        # Don't show if already requested
+        if placement.log_exception_requested:
+            return False
+        
         # Calculate total weeks
         from datetime import timedelta
         total_days = (placement.end_date - placement.start_date).days
         total_weeks = (total_days // 7) + 1 if total_days >= 0 else 1
+        if total_weeks < 1:
+            total_weeks = 1
         
         # Check if final week is submitted
         has_final_week = WeeklyLog.objects.filter(
@@ -591,24 +601,32 @@ class StudentDashboardSerializer(serializers.ModelSerializer):
         submitted_logs = WeeklyLog.objects.filter(placement=placement).count()
         missing_logs = total_weeks - submitted_logs
         
-        # Check if already requested or processed
-        already_requested = placement.log_exception_requested
+        # Check if already processed
         already_processed = placement.exception_status in ['approved', 'rejected']
         
         return (has_final_week and missing_logs > 0 and 
-                not already_requested and not already_processed)
+                not placement.log_exception_requested and 
+                not already_processed)
     
     def get_exception_status(self, obj):
+        """Return exception status ONLY if an exception was actually requested"""
         placement = InternshipPlacement.objects.filter(student=obj).first()
-        if placement:
+        if placement and placement.log_exception_requested:
             return placement.exception_status
         return None
     
     def get_exception_reason(self, obj):
         placement = InternshipPlacement.objects.filter(student=obj).first()
-        if placement:
+        if placement and placement.log_exception_requested:
             return placement.exception_reason
         return None
+    
+    def get_log_exception_requested(self, obj):
+        """Return whether an exception was requested"""
+        placement = InternshipPlacement.objects.filter(student=obj).first()
+        if placement:
+            return placement.log_exception_requested
+        return False
 
 class SupervisorDashboardSerializer(serializers.ModelSerializer):
     assigned_students = serializers.SerializerMethodField()
