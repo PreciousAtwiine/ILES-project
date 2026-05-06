@@ -296,7 +296,7 @@ export default function StudentDashboard() {
                     marginTop: '20px',
                     color: '#b91c1c'
                   }}>
-                    <p>❌ Your exception request was rejected. Please contact your supervisor to resolve missing logs.</p>
+                    <p>❌ Your exception request was rejected. Please contact your Academic supervisor to resolve missing logs.</p>
                   </div>
                 )}
                 
