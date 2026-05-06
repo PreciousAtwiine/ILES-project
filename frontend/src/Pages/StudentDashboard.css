@@ -1,10 +1,10 @@
 /* EXCEPTION REQUEST STYLES */
 .exception-request {
-  background: #fef3c7;
-  border: 1px solid #f59e0b;
-  border-radius: 12px;
-  padding: 20px;
-  margin-top: 24px;
+  background: #e6e5e1;
+  border: 1px solid #030113;
+  border-radius: 11px;
+  padding: 15px;
+  margin-top: 20px;
 }
 
 .exception-request p {
