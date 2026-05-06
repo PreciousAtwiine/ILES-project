@@ -36,7 +36,7 @@ export default function StudentPlacement({
             />
           </div>
            <div className="form-group">
-            <label>Select existing company (approved):</label>
+            <label>Select from existing company list (approved):</label>
             <select value={selectedCompanyId} onChange={onCompanyChange} size="5">
               <option value="">-- Select Company --</option>
               {filteredCompanies.map((company) => (
