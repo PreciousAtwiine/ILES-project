@@ -35,7 +35,8 @@ class UserModelTest(TestCase):
             last_name="Student",
             role="student",
             student_id="STU001",
-            department_fk=self.department
+            department_fk=self.department,
+            is_approved=True
         )
         self.assertEqual(student.role, "student")
         self.assertEqual(student.student_id, "STU001")
@@ -67,6 +68,22 @@ class UserModelTest(TestCase):
         )
         self.assertEqual(academic.role, "academic")
         self.assertEqual(academic.staff_id, "AC001")
+    
+    def test_duplicate_email_not_allowed(self):
+        User.objects.create_user(
+            username="user1",
+            email="duplicate@test.com",
+            password="pass123",
+            role="student"
+        )
+        
+        with self.assertRaises(Exception):
+            User.objects.create_user(
+                username="user2",
+                email="duplicate@test.com",  # Same email
+                password="pass123",
+                role="student"
+            )
 
 
 class CompanyModelTest(TestCase):
@@ -202,3 +219,58 @@ class EvaluationModelTest(TestCase):
         self.assertIsNotNone(evaluation.final_score)
         self.assertIsNotNone(evaluation.grade)
         self.assertGreater(evaluation.final_score, 0)
+
+
+class AcademicSupervisorLimitTest(TestCase):
+    """Test Academic Supervisor limit (max 10 students)"""
+    
+    def test_academic_supervisor_limit(self):
+        dept = Department.objects.create(name="CS", code="CS001")
+        academic = User.objects.create_user(
+            username="academic",
+            email="acad@test.com",
+            password="pass",
+            role="academic",
+            staff_id="AC001",
+            department_fk=dept
+        )
+        
+        # Create 10 placements for this supervisor
+        for i in range(10):
+            student = User.objects.create_user(
+                username=f"student{i}",
+                email=f"s{i}@test.com",
+                password="pass",
+                role="student",
+                student_id=f"STU00{i}",
+                department_fk=dept
+            )
+            InternshipPlacement.objects.create(
+                student=student,
+                company_name="Test Co",
+                academic_supervisor=academic,
+                start_date=date.today(),
+                end_date=date.today() + timedelta(days=30),
+                status='approved'
+            )
+        
+        # Create 11th student
+        student11 = User.objects.create_user(
+            username="student11",
+            email="s11@test.com",
+            password="pass",
+            role="student",
+            student_id="STU011",
+            department_fk=dept
+        )
+        
+        
+        placement = InternshipPlacement.objects.create(
+            student=student11,
+            company_name="Test Co",
+            academic_supervisor=academic,
+            start_date=date.today(),
+            end_date=date.today() + timedelta(days=30),
+            status='approved'
+        )
+        self.assertIsNotNone(placement)
