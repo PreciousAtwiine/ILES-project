@@ -729,9 +729,13 @@ class StudentLogsListView(generics.ListCreateAPIView):
     permission_classes = [IsStudent]
     
     def get_queryset(self):
+        # Get placement that is approved OR has late_approved exception
         placement = InternshipPlacement.objects.filter(
-            student=self.request.user, status='approved'
+            student=self.request.user
+        ).filter(
+            Q(status='approved') | Q(exception_status='late_approved')
         ).first()
+        
         if placement:
             return WeeklyLog.objects.filter(placement=placement)
         return WeeklyLog.objects.none()
@@ -743,18 +747,20 @@ class StudentLogsListView(generics.ListCreateAPIView):
         return Response(WeeklyLogSerializer(queryset, many=True).data)
     
     def post(self, request):
+        # Allow submission if placement approved OR late_approved exception
         placement = InternshipPlacement.objects.filter(
-            student=request.user, status='approved'
+            student=request.user
+        ).filter(
+            Q(status='approved') | Q(exception_status='late_approved')
         ).first()
+        
         if not placement:
-            return Response({"error": "No approved placement"}, status=400)
+            return Response({"error": "No approved placement or late submission approval. Please contact your supervisor."}, status=400)
         
         serializer = SubmitLogSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(placement=placement)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
 class StudentDashboardView(generics.RetrieveAPIView):
     serializer_class = StudentDashboardSerializer
     permission_classes = [IsStudent]

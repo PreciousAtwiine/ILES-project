@@ -135,8 +135,9 @@ export default function StudentDashboard() {
       return;
     }
 
-    if (dashboardData?.placement?.status !== "approved") {
-      notifications.notifyError("Your placement must be approved first.");
+    // ✅ FIX: Allow if status approved OR late_approved
+    if (dashboardData?.placement?.status !== "approved" && dashboardData?.exception_status !== "late_approved") {
+      notifications.notifyError("Your placement must be approved or you need late submission approval.");
       return;
     }
 
@@ -163,13 +164,24 @@ export default function StudentDashboard() {
         }
       });
 
-      notifications.notifySuccess("Weekly log submitted successfully!");
+      notifications.notifySuccess("Weekly log submitted successfully! Your workplace supervisor will review it soon.");
 
       const dashboardRes = await axios.get(`${BASE_URL}/api/student/dashboard/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       setDashboardData(dashboardRes.data);
+      
+      // Clear form fields
+      document.getElementById("week_number").value = "";
+      document.getElementById("activities").value = "";
+      document.getElementById("challenges").value = "";
+      if (document.getElementById("working_hours")) {
+        document.getElementById("working_hours").value = "";
+      }
+      if (document.getElementById("attachment")) {
+        document.getElementById("attachment").value = "";
+      }
 
     } catch (error) {
       console.error("LOG ERROR:", error.response?.data);
@@ -184,6 +196,22 @@ export default function StudentDashboard() {
   const handleExceptionComplete = async () => {
     await fetchStudentData();
     setShowExceptionModal(false);
+  };
+
+  // Helper function to calculate missing weeks
+  const calculateMissingWeeks = () => {
+    if (!dashboardData?.placement) return [];
+    const placement = dashboardData.placement;
+    const startDate = new Date(placement.start_date);
+    const endDate = new Date(placement.end_date);
+    const totalDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
+    const totalWeeks = Math.ceil(totalDays / 7) || 1;
+    const submittedWeeks = dashboardData.recent_logs?.map(l => l.week_number) || [];
+    const missing = [];
+    for (let i = 1; i <= totalWeeks; i++) {
+      if (!submittedWeeks.includes(i)) missing.push(i);
+    }
+    return missing;
   };
 
   if (loading) {
@@ -246,6 +274,7 @@ export default function StudentDashboard() {
                 <p><strong>Status:</strong> 
                   <span className={`status-badge ${dashboardData.placement.status}`}>
                     {dashboardData.placement.status}
+                    {dashboardData.exception_status === 'late_approved' && ' (Late Submission Approved)'}
                   </span>
                 </p>
                 <p><strong>Start Date:</strong> {dashboardData.placement.start_date}</p>
@@ -272,7 +301,7 @@ export default function StudentDashboard() {
                 padding: '16px',
                 marginTop: '20px'
               }}>
-                <p> You have missing weekly logs. The system cannot calculate your final grade.</p>
+                <p>You have missing weekly logs. The system cannot calculate your final grade.</p>
                 <button 
                   className="exception-btn" 
                   onClick={openExceptionModal}
@@ -303,7 +332,7 @@ export default function StudentDashboard() {
                     marginTop: '20px',
                     color: '#15803d'
                   }}>
-                    <p>Your exception request has been approved! Your grade will be calculated based on submitted logs.</p>
+                    <p> Your exception request has been approved! Your grade will be calculated based on submitted logs.</p>
                   </div>
                 )}
                 
@@ -334,6 +363,62 @@ export default function StudentDashboard() {
                 )}
               </>
             )}
+
+            {/*  LATE SUBMISSION APPROVED BANNER */}
+            {dashboardData?.exception_status === 'late_approved' && (
+              <div className="late-approved-banner" style={{
+                background: '#d1fae5',
+                border: '1px solid #10b981',
+                borderRadius: '12px',
+                padding: '16px 20px',
+                marginTop: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                flexWrap: 'wrap'
+              }}>
+                <span style={{ fontSize: '24px' }}></span>
+                <div style={{ flex: 1 }}>
+                  <strong style={{ color: '#065f46', fontSize: '16px' }}>Late Submission Approved!</strong>
+                  <p style={{ color: '#065f46', margin: '4px 0 0 0', fontSize: '13px' }}>
+                    Your request to submit missing logs has been approved by your workplace supervisor.
+                    You can now submit your missing weekly logs for review.
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setActiveTab("logs")}
+                  style={{
+                    background: '#10b981',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: '500'
+                  }}
+                >
+                  Go to Weekly Logs →
+                </button>
+              </div>
+            )}
+
+            {/* Missing Weeks Info (when late_approved) */}
+            {dashboardData?.exception_status === 'late_approved' && dashboardData?.placement && (() => {
+              const missingWeeks = calculateMissingWeeks();
+              return missingWeeks.length > 0 && (
+                <div style={{
+                  background: '#fef3c7',
+                  border: '1px solid #f59e0b',
+                  borderRadius: '12px',
+                  padding: '12px 16px',
+                  marginTop: '12px'
+                }}>
+                  <p style={{ margin: 0, color: '#92400e', fontSize: '14px' }}>
+                    <strong> Missing weeks you can now submit:</strong> Week {missingWeeks.join(', ')}
+                  </p>
+                </div>
+              );
+            })()}
 
             {/* FINAL EVALUATION DISPLAY WITH CHECKBOX */}
             {dashboardData?.evaluation && (
@@ -448,8 +533,8 @@ export default function StudentDashboard() {
                       }}
                     >
                       {dashboardData.evaluation.student_confirmed_view 
-                        ? "✅ I have reviewed my evaluation results" 
-                        : "☐ I confirm that I have reviewed my evaluation results"}
+                        ? " I have reviewed my evaluation results" 
+                        : "I confirm that I have reviewed my evaluation results"}
                     </label>
                     
                     {confirmingView && (
@@ -556,7 +641,7 @@ export default function StudentDashboard() {
                       </div>
                       
                       <p style={{ margin: '5px 0', fontSize: '13px', color: '#555' }}>
-                        📅 {history.start_date} → {history.end_date}
+                         {history.start_date} → {history.end_date}
                       </p>
                       
                       {history.workplace_supervisor_name && (
@@ -581,7 +666,7 @@ export default function StudentDashboard() {
                           border: '1px solid #e2e8f0'
                         }}>
                           <h4 style={{ margin: '0 0 10px 0', color: '#1f3c88', fontSize: '14px' }}>
-                            📊 Evaluation Results
+                             Evaluation Results
                           </h4>
                           <div style={{
                             display: 'grid',
@@ -632,7 +717,7 @@ export default function StudentDashboard() {
                               color: '#10b981',
                               textAlign: 'right'
                             }}>
-                              ✅ Viewed on {new Date(history.evaluation.student_confirmed_view_at).toLocaleDateString()}
+                               Viewed on {new Date(history.evaluation.student_confirmed_view_at).toLocaleDateString()}
                             </div>
                           )}
                         </div>

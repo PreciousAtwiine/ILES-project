@@ -244,6 +244,7 @@ class InternshipPlacementSerializer(serializers.ModelSerializer):
     exception_status = serializers.SerializerMethodField()
     exception_reason = serializers.CharField(read_only=True)
     log_exception_requested = serializers.BooleanField(read_only=True)
+    exception_request_type = serializers.CharField(read_only=True)  
     
     class Meta:
         model = InternshipPlacement
@@ -252,10 +253,11 @@ class InternshipPlacementSerializer(serializers.ModelSerializer):
                   'academic_supervisor', 'academic_supervisor_name',
                   'academic_supervisor_student_count',
                   'start_date', 'end_date', 'status', 'created_at',
-                  'exception_status', 'exception_reason', 'log_exception_requested']
+                  'exception_status', 'exception_reason', 'log_exception_requested',
+                  'exception_request_type']  
         read_only_fields = ['id', 'student', 'status', 'created_at',
                            'exception_status', 'exception_reason', 'log_exception_requested',
-                           'academic_supervisor_student_count']
+                           'academic_supervisor_student_count', 'exception_request_type']  
     
     def get_exception_status(self, obj):
         return obj.exception_status
@@ -267,7 +269,6 @@ class InternshipPlacementSerializer(serializers.ModelSerializer):
                 status='approved'
             ).count()
         return 0
-
 
 class AssignSupervisorsSerializer(serializers.Serializer):
     workplace_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
@@ -352,8 +353,10 @@ class SubmitLogSerializer(serializers.ModelSerializer):
         week = data['week_number']
         hours = data.get('working_hours', 0)
         
-        if placement.status != 'approved':
+       
+        if placement.status != 'approved' and placement.exception_status != 'late_approved':
             raise serializers.ValidationError("Your placement must be approved before submitting logs")
+        
         
         total_days = (placement.end_date - placement.start_date).days
         total_weeks = (total_days // 7) + 1 if total_days % 7 > 0 else (total_days // 7)
@@ -502,14 +505,23 @@ class StudentDashboardSerializer(serializers.ModelSerializer):
         return obj.department or "Not set"
     
     def get_placement(self, obj):
-        """Get current placement - show active OR most recent completed if no active"""
+        """Get current placement - show active OR completed if late_approved"""
+        
         # First try active placement (pending or approved)
         placement = InternshipPlacement.objects.filter(
             student=obj,
             status__in=['pending', 'approved']
         ).order_by('-created_at').first()
         
-        # If no active placement, get the most recent completed placement
+        # If no active placement, check for completed with late_approved
+        if not placement:
+            placement = InternshipPlacement.objects.filter(
+                student=obj,
+                status='completed',
+                exception_status='late_approved'
+            ).order_by('-created_at').first()
+        
+        # If still none, get most recent completed
         if not placement:
             placement = InternshipPlacement.objects.filter(
                 student=obj,
@@ -521,14 +533,23 @@ class StudentDashboardSerializer(serializers.ModelSerializer):
         return None
     
     def get_recent_logs(self, obj):
-        """Get logs from current placement (active or most recent completed)"""
+        """Get logs from current placement (active or late_approved)"""
+        
         # First try active placement
         placement = InternshipPlacement.objects.filter(
             student=obj,
             status__in=['pending', 'approved']
         ).first()
         
-        # If no active, get most recent completed
+        # If no active, check for completed with late_approved
+        if not placement:
+            placement = InternshipPlacement.objects.filter(
+                student=obj,
+                status='completed',
+                exception_status='late_approved'
+            ).first()
+        
+        # If still none, get most recent completed
         if not placement:
             placement = InternshipPlacement.objects.filter(
                 student=obj,
@@ -539,7 +560,7 @@ class StudentDashboardSerializer(serializers.ModelSerializer):
             logs = WeeklyLog.objects.filter(placement=placement).order_by('-created_at')[:5]
             return WeeklyLogSerializer(logs, many=True).data
         return []
-    
+        
     def get_evaluation(self, obj):
         """Get evaluation for current placement (active or most recent completed)"""
         # First try active placement
