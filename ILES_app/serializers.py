@@ -6,8 +6,6 @@ from datetime import timedelta
 
 from .models import Evaluation, InternshipPlacement, User, WeeklyLog, Department, Company
 
-# ==================== USER SERIALIZERS ====================
-
 class UserSerializer(serializers.ModelSerializer):
     department_name = serializers.SerializerMethodField()
     
@@ -58,7 +56,7 @@ class CompanySerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=12)
+    password = serializers.CharField(write_only=True, min_length=8)
     company_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
     
     class Meta:
@@ -187,7 +185,6 @@ class ApproveStaffSerializer(serializers.Serializer):
             raise serializers.ValidationError("Staff user not found")
 
 
-# ==================== PLACEMENT SERIALIZERS ====================
 
 class ApplyForPlacementSerializer(serializers.ModelSerializer):
     student_id = serializers.CharField(write_only=True)
