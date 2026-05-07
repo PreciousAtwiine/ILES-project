@@ -106,7 +106,7 @@ class UserViewSet(viewsets.ModelViewSet):
         
         return Response(UserSerializer(users, many=True).data)
         
-# Add this at the very end of your views.py file
+
 
 class ApproveStaffAPIView(APIView):
     permission_classes = [IsAdmin]
@@ -226,29 +226,51 @@ class InternshipPlacementViewSet(viewsets.ModelViewSet):
         
         if request.method == 'GET':
             def get_available(role):
-                busy = InternshipPlacement.objects.filter(
-                    status='approved', **{f'{role}_supervisor__isnull': False}
-                ).exclude(id=placement.id).values_list(f'{role}_supervisor_id', flat=True)
-                
-                supervisors = User.objects.filter(role=role, is_active=True).exclude(id__in=busy)
-                
-                # Filter workplace supervisors by company
                 if role == 'workplace':
-                    supervisors = supervisors.filter(company__name=placement.company_name)
-                
-                if not request.user.is_superuser and request.user.department_fk:
-                    if role == 'academic':
-                        supervisors = supervisors.filter(department_fk=request.user.department_fk)
-                
-                return supervisors
+                    # Workplace supervisors: Show ALL active supervisors from this company
+                    # Never mark as busy (they can have unlimited students)
+                    supervisors = User.objects.filter(
+                        role=role, 
+                        is_active=True,
+                        company__name=placement.company_name
+                    )
+                    return supervisors
+                else: 
+                    # Academic supervisors: Show only those with less than 10 students
+                    all_academics = User.objects.filter(role=role, is_active=True)
+                    
+                    available = []
+                    for sup in all_academics:
+                        current_count = InternshipPlacement.objects.filter(
+                            academic_supervisor=sup,
+                            status='approved'
+                        ).count()
+                        if current_count < 10:  # Only show if under limit
+                            available.append(sup)
+                    
+                    # Exclude current supervisor if already assigned
+                    if placement.academic_supervisor:
+                        available = [s for s in available if s.id != placement.academic_supervisor.id]
+                    
+                    return available
             
             return Response({
                 'current': {
                     'workplace': placement.workplace_supervisor_id,
                     'academic': placement.academic_supervisor_id
                 },
-                'available_workplace': [{'id': s.id, 'name': s.get_full_name(), 'company': s.company.name if s.company else 'N/A'} for s in get_available('workplace')],
-                'available_academic': [{'id': s.id, 'name': s.get_full_name()} for s in get_available('academic')]
+                'available_workplace': [
+                    {
+                        'id': s.id, 
+                        'name': s.get_full_name(), 
+                        'company': s.company.name if s.company else 'N/A'
+                    } 
+                    for s in get_available('workplace')
+                ],
+                'available_academic': [
+                    {'id': s.id, 'name': s.get_full_name()} 
+                    for s in get_available('academic')
+                ]
             })
         
         serializer = AssignSupervisorsSerializer(
@@ -1063,75 +1085,4 @@ class AcademicDashboardView(generics.RetrieveAPIView):
                 }
                 for log in reviewed_logs
             ]
-        })
-
-        
-#Academic supervisor
-class AcademicDashboardView(generics.RetrieveAPIView):
-    permission_classes = [IsAcademic]
-    
-    def get(self, request):
-        user = request.user
-        
-        # Getting assigned students
-        placements = InternshipPlacement.objects.filter(
-            academic_supervisor=user,
-            status='approved'
-        )
-        
-        # Getting pending logs
-        pending_logs = WeeklyLog.objects.filter(
-            placement__academic_supervisor=user,
-            status='submitted'
-        )
-        
-        # Getting reviewed logs
-        reviewed_logs = WeeklyLog.objects.filter(
-            placement__academic_supervisor=user,
-            status__in=['approved', 'rejected']
-        )
-        
-        return Response({
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'department': user.department,
-            'staff_id': user.staff_id,
-            'assigned_students': [
-                {
-                    'id': p.id,
-                    'student_name': f"{p.student.first_name} {p.student.last_name}",
-                    'student_id': p.student.student_id,
-                    'company_name': p.company_name,
-                    'status': p.status,
-                    'start_date': str(p.start_date),
-                    'end_date': str(p.end_date),
-                }
-                for p in placements
-            ],
-            'pending_logs': [
-                {
-                    'id': log.id,
-                    'student_name': f"{log.placement.student.first_name} {log.placement.student.last_name}",
-                    'week_number': log.week_number,
-                    'activities': log.activities,
-                    'challenges': log.challenges,
-                    'working_hours': str(log.working_hours),
-                    'status': log.status,
-                    'submission_date': str(log.submission_date),
-                    'attachment': log.attachment.url if log.attachment else None,
-                }
-                for log in pending_logs
-            ],
-            'reviewed_logs': [
-                {
-                    'id': log.id,
-                    'student_name': f"{log.placement.student.first_name} {log.placement.student.last_name}",
-                    'week_number': log.week_number,
-                    'status': log.status,
-                    'score': log.score,
-                    'feedback': log.feedback,
-                    'reviewed_at': str(log.reviewed_at),
-                }
-                for log in reviewed_logs
-            ]
-        })
+        }) 
