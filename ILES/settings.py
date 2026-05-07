@@ -42,7 +42,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -169,7 +168,10 @@ else:
 
 FRONTEND_URL = config('FRONTEND_URL', default='https://your-frontend-url.onrender.com')
 
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:3000,http://127.0.0.1:3000').split(',')
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='http://localhost:3000,http://127.0.0.1:3000,https://your-app.vercel.app'
+).split(',')
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_METHODS = [
@@ -193,8 +195,4 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-<<<<<<< HEAD
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='https://*.onrender.com,http://localhost:3000').split(',')
-=======
-CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='https://*.onrender.com,http://localhost:3000').split(',')
->>>>>>> cfd9693af29ed6f94c447624f697c8397fa8c59d
