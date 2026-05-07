@@ -193,4 +193,8 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
+<<<<<<< HEAD
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='https://*.onrender.com,http://localhost:3000').split(',')
+=======
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='https://*.onrender.com,http://localhost:3000').split(',')
+>>>>>>> cfd9693af29ed6f94c447624f697c8397fa8c59d
