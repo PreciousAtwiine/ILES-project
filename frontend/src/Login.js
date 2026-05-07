@@ -16,17 +16,13 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await axios.post(
-        "http://127.0.0.1:8000/api/token/",
-        data
-      );
+      const res = await axios.post(`${BASE_URL}/api/token/`, data);
 
       const token = res.data.access;
       localStorage.setItem("access", token);
       localStorage.setItem("refresh", res.data.refresh);
 
-      const userRes = await axios.get(
-        "http://127.0.0.1:8000/users/me/",
+      const userRes = await axios.get(`${BASE_URL}/users/me/`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
