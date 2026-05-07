@@ -165,6 +165,19 @@ class InternshipPlacement(models.Model):
     
     created_at = models.DateTimeField(auto_now_add=True)
     log_exception_requested = models.BooleanField(default=False)
+    EXCEPTION_REQUEST_CHOICES = [
+        ('count_existing', 'Count Existing Only'),
+        ('late_submission', 'Request Late Submission'),
+    ]
+    
+    exception_request_type = models.CharField(
+        max_length=20,
+        choices=EXCEPTION_REQUEST_CHOICES,
+        blank=True,
+        null=True
+    )
+    workplace_notified_at = models.DateTimeField(null=True, blank=True)
+    workplace_decision_reason = models.TextField(blank=True)
     exception_reason = models.TextField(blank=True)
     exception_status = models.CharField(
         max_length=20,
@@ -250,7 +263,8 @@ class Evaluation(models.Model):
         
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+    student_confirmed_view = models.BooleanField(default=False)
+    student_confirmed_view_at = models.DateTimeField(null=True, blank=True)
     def __str__(self):
         return f"Evaluation - {self.placement}"
     

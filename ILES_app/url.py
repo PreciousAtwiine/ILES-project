@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/supervisor/dashboard/', SupervisorDashboardView.as_view(), name='supervisor-dashboard'),
     path('api/admin/dashboard/', AdminDashboardView.as_view(), name='admin-dashboard'),
     path('api/supervisor/academic/dashboard/', AcademicDashboardView.as_view(), name='academic-dashboard'),
+    path('api/student/confirm-evaluation-view/', ConfirmEvaluationViewView.as_view(), name='confirm-evaluation-view'),
     # SUPERVISOR HELPERS
     path('api/supervisor/assigned-students/', AssignedStudentsView.as_view(), name='assigned-students'),
     path('api/supervisor/pending-logs/', PendingLogsView.as_view(), name='pending-logs'),
@@ -58,6 +59,10 @@ urlpatterns = [
     # Exception Request URLs
     path('api/student/request-exception/', RequestLogExceptionView.as_view(), name='request-exception'),
     path('api/admin/pending-exceptions/', PendingExceptionsView.as_view(), name='pending-exceptions'),
+    path('api/admin/approve-count-existing/<int:pk>/', ApproveCountExistingView.as_view(), name='approve-count-existing'),
+    path('api/admin/notify-workplace/<int:pk>/', NotifyWorkplaceForLateSubmissionView.as_view(), name='notify-workplace'),
+    path('api/workplace/late-decision/<int:pk>/', WorkplaceLateSubmissionDecisionView.as_view(), name='workplace-late-decision'),
+    # Keep old one for backward compatibility
     path('api/admin/approve-exception/<int:pk>/', ApproveExceptionView.as_view(), name='approve-exception'),
     path('api/admin/reject-exception/<int:pk>/', RejectExceptionView.as_view(), name='reject-exception'),
     #admin-dashboard

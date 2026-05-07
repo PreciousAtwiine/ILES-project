@@ -13,6 +13,7 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [showExceptionModal, setShowExceptionModal] = useState(false);
+  const [confirmingView, setConfirmingView] = useState(false);
 
   const [approvedCompanies, setApprovedCompanies] = useState([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
@@ -62,6 +63,25 @@ export default function StudentDashboard() {
   useEffect(() => {
     fetchStudentData();
   }, []);
+
+  const confirmEvaluationView = async () => {
+    setConfirmingView(true);
+    try {
+      const token = getToken();
+      await axios.post(`${BASE_URL}/api/student/confirm-evaluation-view/`, {
+        placement_id: dashboardData?.placement?.id
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      notifications.notifySuccess("Evaluation confirmed as viewed!");
+      await fetchStudentData();
+    } catch (error) {
+      console.error("Error confirming evaluation view:", error);
+      notifications.notifyError("Failed to confirm evaluation view");
+    } finally {
+      setConfirmingView(false);
+    }
+  };
 
   const applyForPlacement = async (e) => {
     e.preventDefault();
@@ -243,7 +263,7 @@ export default function StudentDashboard() {
               </div>
             )}
 
-            {/* ✅ FIXED: EXCEPTION REQUEST SECTION - Only show if eligible AND not requested yet */}
+            {/* EXCEPTION REQUEST SECTION */}
             {dashboardData?.can_request_exception && !dashboardData?.log_exception_requested && (
               <div className="exception-request" style={{
                 background: '#fef3c7',
@@ -252,7 +272,7 @@ export default function StudentDashboard() {
                 padding: '16px',
                 marginTop: '20px'
               }}>
-                <p>⚠️ You have missing weekly logs. The system cannot calculate your final grade.</p>
+                <p> You have missing weekly logs. The system cannot calculate your final grade.</p>
                 <button 
                   className="exception-btn" 
                   onClick={openExceptionModal}
@@ -271,7 +291,7 @@ export default function StudentDashboard() {
               </div>
             )}
 
-            {/* ✅ FIXED: EXCEPTION STATUS DISPLAY - ONLY show if an exception was ACTUALLY requested */}
+            {/* EXCEPTION STATUS DISPLAY */}
             {dashboardData?.log_exception_requested === true && dashboardData?.exception_status && (
               <>
                 {dashboardData.exception_status === 'approved' && (
@@ -283,7 +303,7 @@ export default function StudentDashboard() {
                     marginTop: '20px',
                     color: '#15803d'
                   }}>
-                    <p>✅ Your exception request has been approved! Your grade will be calculated based on submitted logs.</p>
+                    <p>Your exception request has been approved! Your grade will be calculated based on submitted logs.</p>
                   </div>
                 )}
                 
@@ -296,7 +316,7 @@ export default function StudentDashboard() {
                     marginTop: '20px',
                     color: '#b91c1c'
                   }}>
-                    <p>❌ Your exception request was rejected. Please contact your Academic supervisor to resolve missing logs.</p>
+                    <p> Your exception request was rejected. Please contact your Academic supervisor to resolve missing logs.</p>
                   </div>
                 )}
                 
@@ -315,7 +335,7 @@ export default function StudentDashboard() {
               </>
             )}
 
-            {/* FINAL EVALUATION DISPLAY */}
+            {/* FINAL EVALUATION DISPLAY WITH CHECKBOX */}
             {dashboardData?.evaluation && (
               <>
                 <div className="section-title">
@@ -396,6 +416,58 @@ export default function StudentDashboard() {
                       </strong>
                     </div>
                   </div>
+
+                  {/* CHECKBOX TO CONFIRM VIEWING */}
+                  <div style={{
+                    marginTop: '24px',
+                    paddingTop: '16px',
+                    borderTop: '1px solid rgba(255,255,255,0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    flexWrap: 'wrap'
+                  }}>
+                    <input
+                      type="checkbox"
+                      id="confirmEvaluationView"
+                      checked={dashboardData.evaluation.student_confirmed_view || false}
+                      onChange={confirmEvaluationView}
+                      disabled={dashboardData.evaluation.student_confirmed_view || confirmingView}
+                      style={{
+                        width: '18px',
+                        height: '18px',
+                        cursor: dashboardData.evaluation.student_confirmed_view ? 'not-allowed' : 'pointer'
+                      }}
+                    />
+                    <label 
+                      htmlFor="confirmEvaluationView" 
+                      style={{ 
+                        fontSize: '14px', 
+                        cursor: dashboardData.evaluation.student_confirmed_view ? 'not-allowed' : 'pointer',
+                        opacity: dashboardData.evaluation.student_confirmed_view ? 0.7 : 1
+                      }}
+                    >
+                      {dashboardData.evaluation.student_confirmed_view 
+                        ? "✅ I have reviewed my evaluation results" 
+                        : "☐ I confirm that I have reviewed my evaluation results"}
+                    </label>
+                    
+                    {confirmingView && (
+                      <span style={{ fontSize: '12px', opacity: 0.8 }}>Confirming...</span>
+                    )}
+                  </div>
+
+                  {/* Show when it was confirmed */}
+                  {dashboardData.evaluation.student_confirmed_view_at && (
+                    <div style={{
+                      marginTop: '8px',
+                      fontSize: '11px',
+                      opacity: 0.7,
+                      textAlign: 'right'
+                    }}>
+                      Confirmed on: {new Date(dashboardData.evaluation.student_confirmed_view_at).toLocaleString()}
+                    </div>
+                  )}
                 </div>
               </>
             )}
@@ -447,6 +519,178 @@ export default function StudentDashboard() {
             ) : (
               <p>No logs yet. Submit your first weekly log.</p>
             )}
+
+            {/*  EVALUATION HISTORY SECTION - Shows past completed placements */}
+            {dashboardData?.evaluation_history && dashboardData.evaluation_history.length > 0 && (
+              <>
+                <div className="section-title">
+                  <h2> Internship History</h2>
+                </div>
+                <div className="history-list">
+                  {dashboardData.evaluation_history.map((history) => (
+                    <div key={history.id} className="history-card" style={{
+                      background: 'white',
+                      borderRadius: '12px',
+                      padding: '20px',
+                      marginBottom: '16px',
+                      border: '1px solid #e2e8f0',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        marginBottom: '12px'
+                      }}>
+                        <h3 style={{ color: '#1f3c88', margin: 0 }}>{history.company_name}</h3>
+                        <span className="status-badge completed" style={{
+                          background: '#6b7280',
+                          color: 'white',
+                          padding: '4px 12px',
+                          borderRadius: '20px',
+                          fontSize: '12px'
+                        }}>
+                          Completed
+                        </span>
+                      </div>
+                      
+                      <p style={{ margin: '5px 0', fontSize: '13px', color: '#555' }}>
+                        📅 {history.start_date} → {history.end_date}
+                      </p>
+                      
+                      {history.workplace_supervisor_name && (
+                        <p style={{ margin: '5px 0', fontSize: '13px', color: '#555' }}>
+                           Workplace Supervisor: {history.workplace_supervisor_name}
+                        </p>
+                      )}
+                      
+                      {history.academic_supervisor_name && (
+                        <p style={{ margin: '5px 0', fontSize: '13px', color: '#555' }}>
+                           Academic Supervisor: {history.academic_supervisor_name}
+                        </p>
+                      )}
+                      
+                      {/* Evaluation Results for this placement */}
+                      {history.evaluation && (
+                        <div style={{
+                          marginTop: '15px',
+                          background: '#f8fafc',
+                          borderRadius: '10px',
+                          padding: '15px',
+                          border: '1px solid #e2e8f0'
+                        }}>
+                          <h4 style={{ margin: '0 0 10px 0', color: '#1f3c88', fontSize: '14px' }}>
+                            📊 Evaluation Results
+                          </h4>
+                          <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
+                            gap: '10px'
+                          }}>
+                            <div style={{ textAlign: 'center' }}>
+                              <div style={{ fontSize: '11px', color: '#666' }}>Workplace</div>
+                              <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f3c88' }}>
+                                {history.evaluation.workplace_score || '—'}
+                              </div>
+                            </div>
+                            <div style={{ textAlign: 'center' }}>
+                              <div style={{ fontSize: '11px', color: '#666' }}>Academic</div>
+                              <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f3c88' }}>
+                                {history.evaluation.academic_score || '—'}
+                              </div>
+                            </div>
+                            <div style={{ textAlign: 'center' }}>
+                              <div style={{ fontSize: '11px', color: '#666' }}>Final Score</div>
+                              <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f3c88' }}>
+                                {history.evaluation.final_score || '—'}
+                              </div>
+                            </div>
+                            <div style={{ textAlign: 'center' }}>
+                              <div style={{ fontSize: '11px', color: '#666' }}>Grade</div>
+                              <div style={{
+                                fontSize: '20px',
+                                fontWeight: 'bold',
+                                background: history.evaluation.grade === 'A' ? '#10b981' :
+                                           history.evaluation.grade === 'B' ? '#3b82f6' :
+                                           history.evaluation.grade === 'C' ? '#f59e0b' : '#ef4444',
+                                color: 'white',
+                                padding: '2px 12px',
+                                borderRadius: '20px',
+                                display: 'inline-block'
+                              }}>
+                                {history.evaluation.grade || '—'}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Show confirmation status */}
+                          {history.evaluation.student_confirmed_view && (
+                            <div style={{
+                              marginTop: '10px',
+                              fontSize: '11px',
+                              color: '#10b981',
+                              textAlign: 'right'
+                            }}>
+                              ✅ Viewed on {new Date(history.evaluation.student_confirmed_view_at).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Logs Summary for this placement */}
+                      {history.logs && history.logs.length > 0 && (
+                        <details style={{ marginTop: '15px' }}>
+                          <summary style={{
+                            cursor: 'pointer',
+                            color: '#3b82f6',
+                            fontSize: '13px',
+                            fontWeight: '500'
+                          }}>
+                            📋 View Submitted Logs ({history.logs.length} weeks)
+                          </summary>
+                          <div style={{
+                            marginTop: '10px',
+                            maxHeight: '200px',
+                            overflowY: 'auto'
+                          }}>
+                            <table style={{
+                              width: '100%',
+                              fontSize: '12px',
+                              borderCollapse: 'collapse'
+                            }}>
+                              <thead>
+                                <tr style={{ background: '#f1f5f9' }}>
+                                  <th style={{ padding: '8px', textAlign: 'left' }}>Week</th>
+                                  <th style={{ padding: '8px', textAlign: 'left' }}>Status</th>
+                                  <th style={{ padding: '8px', textAlign: 'left' }}>Score</th>
+                                  <th style={{ padding: '8px', textAlign: 'left' }}>Feedback</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {history.logs.map((log, idx) => (
+                                  <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td style={{ padding: '6px 8px' }}>Week {log.week_number}</td>
+                                    <td style={{ padding: '6px 8px' }}>
+                                      <span className={`status-badge ${log.status}`} style={{ fontSize: '10px' }}>
+                                        {log.status}
+                                      </span>
+                                    </td>
+                                    <td style={{ padding: '6px 8px' }}>{log.score || '—'}/100</td>
+                                    <td style={{ padding: '6px 8px' }}>{log.feedback || '—'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </details>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
           </div>
         )}
 

@@ -66,7 +66,7 @@ export default function SupervisorDashboard() {
     } finally {
       setLoadingLogs(false);
     }
-  };  
+  };
 
   const refreshDashboard = async () => {
     try {
@@ -76,8 +76,30 @@ export default function SupervisorDashboard() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setDashboardData(dashboardRes.data);
+      
+      if (dashboardRes.data?.pending_late_requests && dashboardRes.data.pending_late_requests.length > 0) {
+        notifications.notifyInfo(`You have ${dashboardRes.data.pending_late_requests.length} late submission request(s) to review`);
+      }
     } catch (err) {
       console.error("Error refreshing dashboard:", err);
+    }
+  };
+
+  // Handle workplace decision on late submission
+  const handleLateDecision = async (request, decision, reason) => {
+    try {
+      const token = getToken();
+      await axios.post(`${BASE_URL}/api/workplace/late-decision/${request.id}/`, {
+        decision: decision,
+        reason: reason || ""
+      }, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+      });
+      notifications.notifySuccess(`Late submission ${decision}d successfully`);
+      refreshDashboard();
+    } catch (error) {
+      console.error("Error submitting decision:", error);
+      notifications.notifyError(error.response?.data?.error || "Failed to submit decision");
     }
   };
 
@@ -161,6 +183,7 @@ export default function SupervisorDashboard() {
             BASE_URL={BASE_URL}
             onNotificationClick={(notification) => {
               if (notification.type === 'log') setActiveTab('pending');
+              else if (notification.type === 'late_submission') setActiveTab('dashboard');
             }}
           />
         </div>
@@ -179,6 +202,70 @@ export default function SupervisorDashboard() {
                 <p>{dashboardData?.pending_reviews?.length || 0}</p>
               </div>
             </div>
+
+            {/* PENDING LATE SUBMISSION REQUESTS */}
+            {dashboardData?.pending_late_requests && dashboardData.pending_late_requests.length > 0 && (
+              <div style={{ marginTop: '24px' }}>
+                <div className="section-title">
+                  <h2>📝 Pending Late Submission Requests</h2>
+                  <p>Students have requested to submit missing logs late. Please review and make a decision.</p>
+                </div>
+                
+                {dashboardData.pending_late_requests.map((request) => (
+                  <div key={request.id} className="exception-card pending" style={{
+                    background: 'white',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    marginBottom: '16px',
+                    border: '1px solid #e2e8f0',
+                    borderLeft: '4px solid #f59e0b'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', marginBottom: '12px' }}>
+                      <h3 style={{ margin: 0, color: '#1e293b' }}>{request.student_name}</h3>
+                      <span style={{ background: '#fef3c7', color: '#92400e', padding: '4px 12px', borderRadius: '20px', fontSize: '12px' }}>
+                        ⏳ Awaiting Your Decision
+                      </span>
+                    </div>
+                    
+                    <p style={{ margin: '5px 0', color: '#64748b', fontSize: '14px' }}>
+                      <strong>Company:</strong> {request.company_name}
+                    </p>
+                    
+                    <div style={{ margin: '10px 0', padding: '12px', background: '#f8fafc', borderRadius: '8px' }}>
+                      <strong>Student's Explanation:</strong>
+                      <p style={{ marginTop: '8px', fontSize: '14px', color: '#334155' }}>{request.exception_reason}</p>
+                    </div>
+                    
+                    <div style={{ margin: '10px 0' }}>
+                      <p><strong>Missing Weeks:</strong> Week {request.missing_weeks.join(', ')}</p>
+                      <p><strong>Submitted Weeks:</strong> Week {request.submitted_weeks.join(', ')}</p>
+                    </div>
+                    
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                      <button 
+                        onClick={() => {
+                          const reason = prompt("Optional: Add a reason for approval");
+                          handleLateDecision(request, 'approve', reason);
+                        }}
+                        style={{ background: '#10b981', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '6px', cursor: 'pointer' }}
+                      >
+                        ✅ Approve Late Submission
+                      </button>
+                      <button 
+                        onClick={() => {
+                          const reason = prompt("Please provide a reason for rejection:");
+                          if (reason) handleLateDecision(request, 'reject', reason);
+                          else alert("A reason is required for rejection");
+                        }}
+                        style={{ background: '#ef4444', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '6px', cursor: 'pointer' }}
+                      >
+                        ❌ Reject
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {dashboardData?.assigned_students?.length > 0 && (
               <div className="recent-activity">
@@ -283,6 +370,7 @@ export default function SupervisorDashboard() {
         )}
       </div>
 
+      {/* Review Log Modal */}
       {showReviewModal && selectedLog && (
         <ReviewLogModal
           log={selectedLog}
@@ -293,6 +381,7 @@ export default function SupervisorDashboard() {
         />
       )}
 
+      {/* Evaluation Modal */}
       {showEvaluationModal && selectedStudent && (
         <EvaluationModal
           student={selectedStudent}

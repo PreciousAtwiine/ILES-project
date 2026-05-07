@@ -5,6 +5,7 @@ import "./ExceptionRequestModal.css";
 
 export default function ExceptionRequestModal({ onClose, onComplete }) {
   const [reason, setReason] = useState("");
+  const [requestType, setRequestType] = useState("count_existing");
   const [loading, setLoading] = useState(false);
   const [charCount, setCharCount] = useState(0);
 
@@ -40,12 +41,19 @@ export default function ExceptionRequestModal({ onClose, onComplete }) {
       const token = getToken();
       const response = await axios.post(
         `${BASE_URL}/api/student/request-exception/`,
-        { reason: trimmedReason },
+        { 
+          reason: trimmedReason,
+          request_type: requestType 
+        },
         { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
       
       if (response.status === 200) {
-        alert("Exception request submitted! Admin will review your case.");
+        if (requestType === 'count_existing') {
+          alert("Exception request submitted! Admin will review your case.");
+        } else {
+          alert("Late submission request submitted! Admin will review and notify your workplace supervisor.");
+        }
         onComplete();
         onClose();
       }
@@ -64,12 +72,65 @@ export default function ExceptionRequestModal({ onClose, onComplete }) {
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <h2>📢 Request Exception for Missing Logs</h2>
+        <h2> Request Exception for Missing Logs</h2>
         <p className="modal-description">
-          Please explain why you missed some weekly logs. The admin team will review your request.
+          Please explain why you missed some weekly logs and choose what you want.
         </p>
 
         <form onSubmit={handleSubmit}>
+          {/* Request Type Selection */}
+          <div className="form-group">
+            <label>What would you like? <span className="required">*</span></label>
+            <div style={{ marginTop: '10px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '15px', 
+                padding: '12px', 
+                border: requestType === 'count_existing' ? '2px solid #3b82f6' : '1px solid #e2e8f0', 
+                borderRadius: '8px', 
+                cursor: 'pointer',
+                background: requestType === 'count_existing' ? '#eff6ff' : 'white'
+              }}>
+                <input
+                  type="radio"
+                  name="requestType"
+                  value="count_existing"
+                  checked={requestType === 'count_existing'}
+                  onChange={(e) => setRequestType(e.target.value)}
+                  style={{ marginRight: '10px' }}
+                />
+                <strong>Count only my submitted logs</strong>
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                  Ignore the missing weeks and calculate my grade based only on what I submitted.
+                  Admin will review and approve directly.
+                </div>
+              </label>
+              
+              <label style={{ 
+                display: 'block', 
+                padding: '12px', 
+                border: requestType === 'late_submission' ? '2px solid #3b82f6' : '1px solid #e2e8f0', 
+                borderRadius: '8px', 
+                cursor: 'pointer',
+                background: requestType === 'late_submission' ? '#eff6ff' : 'white'
+              }}>
+                <input
+                  type="radio"
+                  name="requestType"
+                  value="late_submission"
+                  checked={requestType === 'late_submission'}
+                  onChange={(e) => setRequestType(e.target.value)}
+                  style={{ marginRight: '10px' }}
+                />
+                <strong> Allow me to submit missing logs late</strong>
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                  My workplace supervisor will be asked to approve late submission of missing weeks.
+                </div>
+              </label>
+            </div>
+          </div>
+
+          {/* Explanation Field */}
           <div className="form-group">
             <label>Explanation <span className="required">*</span></label>
             <textarea
@@ -92,8 +153,17 @@ export default function ExceptionRequestModal({ onClose, onComplete }) {
             </div>
           </div>
 
-          <div className="info-note">
-            <span>ℹ️ Missing logs affect compliance. Provide a genuine explanation to proceed.</span>
+          {/* Info Note - changes based on selection */}
+          <div className="info-note" style={{
+            background: requestType === 'count_existing' ? '#fef3c7' : '#e0f2fe',
+            border: requestType === 'count_existing' ? '1px solid #f59e0b' : '1px solid #38bdf8',
+            color: requestType === 'count_existing' ? '#92400e' : '#0369a1'
+          }}>
+            <span>
+              {requestType === 'count_existing' 
+                ? ' If approved, missing weeks will be ignored and your grade will be calculated only from submitted logs.'
+                : ' If approved, your workplace supervisor will be contacted. They have the final say on allowing late submissions.'}
+            </span>
           </div>
 
           <div className="modal-buttons">

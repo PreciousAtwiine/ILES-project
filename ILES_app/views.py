@@ -1,5 +1,5 @@
 from logging import log
-
+from django.db.models import Q
 from rest_framework import viewsets,generics, status
 from rest_framework import viewsets, generics, status
 from django.core.mail import send_mail
@@ -411,6 +411,10 @@ class EvaluationViewSet(viewsets.ModelViewSet):
         evaluation.refresh_from_db()
         if evaluation.workplace_score is not None and evaluation.academic_score is not None:
             evaluation.calculate_final()
+            if placement.status != 'completed':
+                placement.status = 'completed'
+                placement.save()
+                print(f"Placement {placement.id} marked as completed")
             
             send_email(
                 placement.student.email,
@@ -435,6 +439,8 @@ class RequestLogExceptionView(APIView):
             return Response({"error": "No placement found"}, status=404)
         
         reason = request.data.get('reason')
+        request_type = request.data.get('request_type', 'count_existing')
+        
         if not reason:
             return Response({"error": "Please provide a reason"}, status=400)
         
@@ -442,12 +448,9 @@ class RequestLogExceptionView(APIView):
             return Response({"error": "You have already requested an exception"}, status=400)
         
         total_days = (placement.end_date - placement.start_date).days
-        
         total_weeks = (total_days // 7) + 1 if total_days % 7 != 0 else (total_days // 7)
         if total_weeks < 1:
-            total_weeks = 1#8 days =2weeks upto 14ds        
             total_weeks = 1
-    
         
         has_final_week = WeeklyLog.objects.filter(
             placement=placement, week_number=total_weeks
@@ -458,28 +461,140 @@ class RequestLogExceptionView(APIView):
         
         placement.log_exception_requested = True
         placement.exception_reason = reason
-        placement.exception_status = 'pending'
+        placement.exception_request_type = request_type
+        
+        if request_type == 'count_existing':
+            placement.exception_status = 'pending'
+        else:
+            placement.exception_status = 'late_pending'
+        
         placement.save()
         
+        # Send email to admin (using DEFAULT_FROM_EMAIL)
         send_email(
             settings.DEFAULT_FROM_EMAIL,
-            f'[ILES] Log Exception Request - {student.get_full_name()}',
+            f'[ILES] Exception Request - {student.get_full_name()}',
             f'Student: {student.get_full_name()}\n'
             f'Student ID: {student.student_id or "N/A"}\n'
-            f'Company: {placement.company_name}\n'
+            f'Request Type: {request_type}\n'
             f'Reason: {reason}\n\n'
-            f'Please review this request in the admin panel.\n'
-            f'Admin URL: /admin/ILES_app/internshipplacement/'
+            f'Please login to the admin dashboard to review this request.\n'
+            f'Admin URL: http://localhost:3000/admin'
         )
         
         return Response({
-            "message": "Exception request submitted successfully. Admin will review your case.",
-            "status": "pending"
+            "message": f"Exception request submitted successfully. Admin will review your case.",
+            "status": placement.exception_status,
+            "request_type": request_type
         }, status=status.HTTP_200_OK)
 
+class ApproveCountExistingView(APIView):
+    permission_classes = [IsAdmin]
+    
+    def post(self, request, pk):
+        placement = get_object_or_404(InternshipPlacement, id=pk)
+        
+        if placement.exception_request_type != 'count_existing':
+            return Response({"error": "This request is not for count existing"}, status=400)
+        
+        if placement.exception_status != 'pending':
+            return Response({"error": "This request has already been processed"}, status=400)
+        
+        placement.exception_status = 'approved'
+        placement.exception_approved_by = request.user
+        placement.exception_approved_at = timezone.now()
+        placement.save()
+        
+        # Recalculate final grade
+        evaluation = Evaluation.objects.filter(placement=placement).first()
+        if evaluation:
+            evaluation.calculate_final()
+        
+        send_email(
+            placement.student.email,
+            '[ILES] Exception Request Approved',
+            f'Dear {placement.student.get_full_name()},\n\n'
+            f'Your request for a log exception has been APPROVED.\n'
+            f'Your missing weeks will be ignored.\n'
+            f'Your grade has been recalculated.\n\n'
+            f'- ILES Team'
+        )
+        
+        return Response({"message": "Count existing request approved. Grade recalculated."})
 
 
+class NotifyWorkplaceForLateSubmissionView(APIView):
+    permission_classes = [IsAdmin]
+    
+    def post(self, request, pk):
+        placement = get_object_or_404(InternshipPlacement, id=pk)
+        
+        if placement.exception_request_type != 'late_submission':
+            return Response({"error": "This request is not for late submission"}, status=400)
+        
+        if placement.exception_status != 'late_pending':
+            return Response({"error": "This request has already been processed"}, status=400)
+        
+        placement.exception_status = 'workplace_pending'
+        placement.workplace_notified_at = timezone.now()
+        placement.save()
+        
+        # Send notification to workplace supervisor
+        if placement.workplace_supervisor:
+            send_email(
+                placement.workplace_supervisor.email,
+                f'[ILES] Late Submission Request - {placement.student.get_full_name()}',
+                f'Dear {placement.workplace_supervisor.get_full_name()},\n\n'
+                f'A student under your supervision has requested to submit missing logs late.\n\n'
+                f'Student: {placement.student.get_full_name()}\n'
+                f'Company: {placement.company_name}\n'
+                f'Reason: {placement.exception_reason}\n\n'
+                f'Please login to review and make a decision.\n'
+                f'Login: http://localhost:3000/login\n\n'
+                f'- ILES Team'
+            )
+        
+        return Response({"message": "Workplace supervisor notified. Waiting for their decision."})
 
+
+class WorkplaceLateSubmissionDecisionView(APIView):
+    permission_classes = [IsWorkplace]
+    
+    def post(self, request, pk):
+        placement = get_object_or_404(InternshipPlacement, id=pk)
+        
+        if placement.workplace_supervisor != request.user:
+            return Response({"error": "Not your student"}, status=403)
+        
+        if placement.exception_status != 'workplace_pending':
+            return Response({"error": "This request is not pending your decision"}, status=400)
+        
+        decision = request.data.get('decision')  # 'approve' or 'reject'
+        reason = request.data.get('reason', '')
+        
+        if decision not in ['approve', 'reject']:
+            return Response({"error": "Invalid decision"}, status=400)
+        
+        if decision == 'approve':
+            placement.exception_status = 'late_approved'
+            
+        else:
+            placement.exception_status = 'late_rejected'
+            placement.workplace_decision_reason = reason
+        
+        placement.workplace_decision_at = timezone.now()
+        placement.save()
+        
+        send_email(
+            placement.student.email,
+            f'[ILES] Late Submission Request {decision.upper()}',
+            f'Dear {placement.student.get_full_name()},\n\n'
+            f'Your request for late submission of missing logs has been {decision} by your workplace supervisor.\n'
+            f'Reason: {reason if reason else "No reason provided"}\n\n'
+            f'- ILES Team'
+        )
+        
+        return Response({"message": f"Late submission {decision}d"})
 class PendingExceptionsView(generics.ListAPIView):
     serializer_class = InternshipPlacementSerializer
     permission_classes = [IsAdmin]
@@ -569,7 +684,29 @@ class ApplyForPlacementView(generics.CreateAPIView):
             "fields": ["student_id", "company_name", "start_date", "end_date"]
         })
 
-
+class ConfirmEvaluationViewView(APIView):
+    permission_classes = [IsStudent]
+    
+    def post(self, request):
+        student = request.user
+        placement_id = request.data.get('placement_id')
+        
+        if placement_id:
+            evaluation = Evaluation.objects.filter(placement_id=placement_id).first()
+        else:
+            placement = InternshipPlacement.objects.filter(
+                student=student,
+                status='completed'
+            ).order_by('-created_at').first()
+            evaluation = Evaluation.objects.filter(placement=placement).first() if placement else None
+        
+        if evaluation and not evaluation.student_confirmed_view:
+            evaluation.student_confirmed_view = True
+            evaluation.student_confirmed_view_at = timezone.now()
+            evaluation.save()
+            return Response({"message": "Evaluation confirmed as viewed", "success": True})
+        
+        return Response({"message": "Already confirmed or no evaluation found", "success": False}, status=400)
 class StudentPlacementStatusView(generics.RetrieveAPIView):
     serializer_class = InternshipPlacementSerializer
     permission_classes = [IsStudent]
