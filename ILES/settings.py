@@ -175,7 +175,7 @@ else:
     EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
     DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='ILES System <noreply@iles.com>')
 
-FRONTEND_URL = config('FRONTEND_URL', default='https://your-frontend-url.onrender.com')
+FRONTEND_URL = config('FRONTEND_URL', default='https://your-app.vercel.app')
 
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
