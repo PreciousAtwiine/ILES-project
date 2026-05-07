@@ -1,5 +1,5 @@
 from logging import log
-
+from django.db.models import Q
 from rest_framework import viewsets,generics, status
 from rest_framework import viewsets, generics, status
 from django.core.mail import send_mail
@@ -92,48 +92,61 @@ class UserViewSet(viewsets.ModelViewSet):
             'role': request.user.role
         })
     
+    
     @action(detail=False, methods=['get'], permission_classes=[IsAdmin])
     def pending_staff(self, request):
         users = User.objects.filter(
             role__in=['workplace', 'academic', 'admin'],
-            is_active=False, is_superuser=False
+            is_approved=False,  
+            is_superuser=False
         )
         
         if not request.user.is_superuser and request.user.department_fk:
             users = users.filter(department_fk=request.user.department_fk)
         
         return Response(UserSerializer(users, many=True).data)
+        
+
+
+class ApproveStaffAPIView(APIView):
+    permission_classes = [IsAdmin]
     
-    @action(detail=False, methods=['post'])
-    def approve_staff(self, request):
+    def post(self, request):
         if not (request.user.is_superuser or request.user.role == 'admin'):
-            return Response({"error": "Only superuser or admin can approve staff"}, status=403)
+            return Response({"error": "Only superuser or admin can approve staff"}, status=status.HTTP_403_FORBIDDEN)
         
         serializer = ApproveStaffSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
         user_id = serializer.validated_data['user_id']
-        staff_user = User.objects.get(id=user_id)
+        approve = serializer.validated_data['approve']
         
+        try:
+            staff_user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "Staff user not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Check department permission
         if not request.user.is_superuser and request.user.department_fk:
             if staff_user.department_fk != request.user.department_fk:
-                return Response({"error": "You can only approve staff from your own department"}, status=403)
+                return Response({"error": "You can only approve staff from your own department"}, status=status.HTTP_403_FORBIDDEN)
         
-        user, result = serializer.save()
-        
-        if user is None:
-            return Response({"message": f"Staff registration {result}"})
-        
-        if result == "approved":
+        if approve:
+            staff_user.is_approved = True
+            staff_user.is_active = True
+            staff_user.save()
+            
+            # Send email notification
             send_email(
-                user.email,
+                staff_user.email,
                 'Account Approved - ILES',
-                f'Hello {user.get_full_name() or user.username},\n\nYour account has been approved.\n\nLogin: http://localhost:3000/login\n\nUsername: {user.username}\n\n- ILES Team'
+                f'Hello {staff_user.get_full_name() or staff_user.username},\n\nYour account has been approved.\n\nLogin: http://localhost:3000/login\n\nUsername: {staff_user.username}\n\n- ILES Team'
             )
-        
-        return Response({"message": f"Staff {user.username} {result}"})
-
-
+            
+            return Response({"message": f"Staff {staff_user.username} approved successfully"}, status=status.HTTP_200_OK)
+        else:
+            staff_user.delete()
+            return Response({"message": f"Staff registration rejected and deleted"}, status=status.HTTP_200_OK)
 class ForgotPasswordView(APIView):
     permission_classes = [AllowAny]
     
@@ -213,29 +226,51 @@ class InternshipPlacementViewSet(viewsets.ModelViewSet):
         
         if request.method == 'GET':
             def get_available(role):
-                busy = InternshipPlacement.objects.filter(
-                    status='approved', **{f'{role}_supervisor__isnull': False}
-                ).exclude(id=placement.id).values_list(f'{role}_supervisor_id', flat=True)
-                
-                supervisors = User.objects.filter(role=role, is_active=True).exclude(id__in=busy)
-                
-                # Filter workplace supervisors by company
                 if role == 'workplace':
-                    supervisors = supervisors.filter(company__name=placement.company_name)
-                
-                if not request.user.is_superuser and request.user.department_fk:
-                    if role == 'academic':
-                        supervisors = supervisors.filter(department_fk=request.user.department_fk)
-                
-                return supervisors
+                    # Workplace supervisors: Show ALL active supervisors from this company
+                    # Never mark as busy (they can have unlimited students)
+                    supervisors = User.objects.filter(
+                        role=role, 
+                        is_active=True,
+                        company__name=placement.company_name
+                    )
+                    return supervisors
+                else: 
+                    # Academic supervisors: Show only those with less than 10 students
+                    all_academics = User.objects.filter(role=role, is_active=True)
+                    
+                    available = []
+                    for sup in all_academics:
+                        current_count = InternshipPlacement.objects.filter(
+                            academic_supervisor=sup,
+                            status='approved'
+                        ).count()
+                        if current_count < 10:  # Only show if under limit
+                            available.append(sup)
+                    
+                    # Exclude current supervisor if already assigned
+                    if placement.academic_supervisor:
+                        available = [s for s in available if s.id != placement.academic_supervisor.id]
+                    
+                    return available
             
             return Response({
                 'current': {
                     'workplace': placement.workplace_supervisor_id,
                     'academic': placement.academic_supervisor_id
                 },
-                'available_workplace': [{'id': s.id, 'name': s.get_full_name(), 'company': s.company.name if s.company else 'N/A'} for s in get_available('workplace')],
-                'available_academic': [{'id': s.id, 'name': s.get_full_name()} for s in get_available('academic')]
+                'available_workplace': [
+                    {
+                        'id': s.id, 
+                        'name': s.get_full_name(), 
+                        'company': s.company.name if s.company else 'N/A'
+                    } 
+                    for s in get_available('workplace')
+                ],
+                'available_academic': [
+                    {'id': s.id, 'name': s.get_full_name()} 
+                    for s in get_available('academic')
+                ]
             })
         
         serializer = AssignSupervisorsSerializer(
@@ -398,6 +433,10 @@ class EvaluationViewSet(viewsets.ModelViewSet):
         evaluation.refresh_from_db()
         if evaluation.workplace_score is not None and evaluation.academic_score is not None:
             evaluation.calculate_final()
+            if placement.status != 'completed':
+                placement.status = 'completed'
+                placement.save()
+                print(f"Placement {placement.id} marked as completed")
             
             send_email(
                 placement.student.email,
@@ -422,6 +461,8 @@ class RequestLogExceptionView(APIView):
             return Response({"error": "No placement found"}, status=404)
         
         reason = request.data.get('reason')
+        request_type = request.data.get('request_type', 'count_existing')
+        
         if not reason:
             return Response({"error": "Please provide a reason"}, status=400)
         
@@ -429,12 +470,9 @@ class RequestLogExceptionView(APIView):
             return Response({"error": "You have already requested an exception"}, status=400)
         
         total_days = (placement.end_date - placement.start_date).days
-        
         total_weeks = (total_days // 7) + 1 if total_days % 7 != 0 else (total_days // 7)
         if total_weeks < 1:
-            total_weeks = 1#8 days =2weeks upto 14ds        
             total_weeks = 1
-    
         
         has_final_week = WeeklyLog.objects.filter(
             placement=placement, week_number=total_weeks
@@ -445,43 +483,155 @@ class RequestLogExceptionView(APIView):
         
         placement.log_exception_requested = True
         placement.exception_reason = reason
-        placement.exception_status = 'pending'
+        placement.exception_request_type = request_type
+        
+        if request_type == 'count_existing':
+            placement.exception_status = 'pending'
+        else:
+            placement.exception_status = 'late_pending'
+        
         placement.save()
         
+        # Send email to admin (using DEFAULT_FROM_EMAIL)
         send_email(
             settings.DEFAULT_FROM_EMAIL,
-            f'[ILES] Log Exception Request - {student.get_full_name()}',
+            f'[ILES] Exception Request - {student.get_full_name()}',
             f'Student: {student.get_full_name()}\n'
             f'Student ID: {student.student_id or "N/A"}\n'
-            f'Company: {placement.company_name}\n'
+            f'Request Type: {request_type}\n'
             f'Reason: {reason}\n\n'
-            f'Please review this request in the admin panel.\n'
-            f'Admin URL: /admin/ILES_app/internshipplacement/'
+            f'Please login to the admin dashboard to review this request.\n'
+            f'Admin URL: http://localhost:3000/admin'
         )
         
         return Response({
-            "message": "Exception request submitted successfully. Admin will review your case.",
-            "status": "pending"
+            "message": f"Exception request submitted successfully. Admin will review your case.",
+            "status": placement.exception_status,
+            "request_type": request_type
         }, status=status.HTTP_200_OK)
 
+class ApproveCountExistingView(APIView):
+    permission_classes = [IsAdmin]
+    
+    def post(self, request, pk):
+        placement = get_object_or_404(InternshipPlacement, id=pk)
+        
+        if placement.exception_request_type != 'count_existing':
+            return Response({"error": "This request is not for count existing"}, status=400)
+        
+        if placement.exception_status != 'pending':
+            return Response({"error": "This request has already been processed"}, status=400)
+        
+        placement.exception_status = 'approved'
+        placement.exception_approved_by = request.user
+        placement.exception_approved_at = timezone.now()
+        placement.save()
+        
+        # Recalculate final grade
+        evaluation = Evaluation.objects.filter(placement=placement).first()
+        if evaluation:
+            evaluation.calculate_final()
+        
+        send_email(
+            placement.student.email,
+            '[ILES] Exception Request Approved',
+            f'Dear {placement.student.get_full_name()},\n\n'
+            f'Your request for a log exception has been APPROVED.\n'
+            f'Your missing weeks will be ignored.\n'
+            f'Your grade has been recalculated.\n\n'
+            f'- ILES Team'
+        )
+        
+        return Response({"message": "Count existing request approved. Grade recalculated."})
 
 
+class NotifyWorkplaceForLateSubmissionView(APIView):
+    permission_classes = [IsAdmin]
+    
+    def post(self, request, pk):
+        placement = get_object_or_404(InternshipPlacement, id=pk)
+        
+        if placement.exception_request_type != 'late_submission':
+            return Response({"error": "This request is not for late submission"}, status=400)
+        
+        if placement.exception_status != 'late_pending':
+            return Response({"error": "This request has already been processed"}, status=400)
+        
+        placement.exception_status = 'workplace_pending'
+        placement.workplace_notified_at = timezone.now()
+        placement.save()
+        
+        # Send notification to workplace supervisor
+        if placement.workplace_supervisor:
+            send_email(
+                placement.workplace_supervisor.email,
+                f'[ILES] Late Submission Request - {placement.student.get_full_name()}',
+                f'Dear {placement.workplace_supervisor.get_full_name()},\n\n'
+                f'A student under your supervision has requested to submit missing logs late.\n\n'
+                f'Student: {placement.student.get_full_name()}\n'
+                f'Company: {placement.company_name}\n'
+                f'Reason: {placement.exception_reason}\n\n'
+                f'Please login to review and make a decision.\n'
+                f'Login: http://localhost:3000/login\n\n'
+                f'- ILES Team'
+            )
+        
+        return Response({"message": "Workplace supervisor notified. Waiting for their decision."})
 
+
+class WorkplaceLateSubmissionDecisionView(APIView):
+    permission_classes = [IsWorkplace]
+    
+    def post(self, request, pk):
+        placement = get_object_or_404(InternshipPlacement, id=pk)
+        
+        if placement.workplace_supervisor != request.user:
+            return Response({"error": "Not your student"}, status=403)
+        
+        if placement.exception_status != 'workplace_pending':
+            return Response({"error": "This request is not pending your decision"}, status=400)
+        
+        decision = request.data.get('decision')  # 'approve' or 'reject'
+        reason = request.data.get('reason', '')
+        
+        if decision not in ['approve', 'reject']:
+            return Response({"error": "Invalid decision"}, status=400)
+        
+        if decision == 'approve':
+            placement.exception_status = 'late_approved'
+            
+        else:
+            placement.exception_status = 'late_rejected'
+            placement.workplace_decision_reason = reason
+        
+        placement.workplace_decision_at = timezone.now()
+        placement.save()
+        
+        send_email(
+            placement.student.email,
+            f'[ILES] Late Submission Request {decision.upper()}',
+            f'Dear {placement.student.get_full_name()},\n\n'
+            f'Your request for late submission of missing logs has been {decision} by your workplace supervisor.\n'
+            f'Reason: {reason if reason else "No reason provided"}\n\n'
+            f'- ILES Team'
+        )
+        
+        return Response({"message": f"Late submission {decision}d"})
 class PendingExceptionsView(generics.ListAPIView):
     serializer_class = InternshipPlacementSerializer
     permission_classes = [IsAdmin]
     
     def get_queryset(self):
+        # Include BOTH 'pending' AND 'late_pending'
         queryset = InternshipPlacement.objects.filter(
             log_exception_requested=True,
-            exception_status='pending'
+            exception_status__in=['pending', 'late_pending']  
         )
         
         if not self.request.user.is_superuser and self.request.user.department_fk:
             queryset = queryset.filter(student__department_fk=self.request.user.department_fk)
         
         return queryset
-
 
 class ApproveExceptionView(APIView):
     permission_classes = [IsAdmin]
@@ -556,7 +706,29 @@ class ApplyForPlacementView(generics.CreateAPIView):
             "fields": ["student_id", "company_name", "start_date", "end_date"]
         })
 
-
+class ConfirmEvaluationViewView(APIView):
+    permission_classes = [IsStudent]
+    
+    def post(self, request):
+        student = request.user
+        placement_id = request.data.get('placement_id')
+        
+        if placement_id:
+            evaluation = Evaluation.objects.filter(placement_id=placement_id).first()
+        else:
+            placement = InternshipPlacement.objects.filter(
+                student=student,
+                status='completed'
+            ).order_by('-created_at').first()
+            evaluation = Evaluation.objects.filter(placement=placement).first() if placement else None
+        
+        if evaluation and not evaluation.student_confirmed_view:
+            evaluation.student_confirmed_view = True
+            evaluation.student_confirmed_view_at = timezone.now()
+            evaluation.save()
+            return Response({"message": "Evaluation confirmed as viewed", "success": True})
+        
+        return Response({"message": "Already confirmed or no evaluation found", "success": False}, status=400)
 class StudentPlacementStatusView(generics.RetrieveAPIView):
     serializer_class = InternshipPlacementSerializer
     permission_classes = [IsStudent]
@@ -579,9 +751,13 @@ class StudentLogsListView(generics.ListCreateAPIView):
     permission_classes = [IsStudent]
     
     def get_queryset(self):
+        # Get placement that is approved OR has late_approved exception
         placement = InternshipPlacement.objects.filter(
-            student=self.request.user, status='approved'
+            student=self.request.user
+        ).filter(
+            Q(status='approved') | Q(exception_status='late_approved')
         ).first()
+        
         if placement:
             return WeeklyLog.objects.filter(placement=placement)
         return WeeklyLog.objects.none()
@@ -593,18 +769,20 @@ class StudentLogsListView(generics.ListCreateAPIView):
         return Response(WeeklyLogSerializer(queryset, many=True).data)
     
     def post(self, request):
+        # Allow submission if placement approved OR late_approved exception
         placement = InternshipPlacement.objects.filter(
-            student=request.user, status='approved'
+            student=request.user
+        ).filter(
+            Q(status='approved') | Q(exception_status='late_approved')
         ).first()
+        
         if not placement:
-            return Response({"error": "No approved placement"}, status=400)
+            return Response({"error": "No approved placement or late submission approval. Please contact your supervisor."}, status=400)
         
         serializer = SubmitLogSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(placement=placement)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
 class StudentDashboardView(generics.RetrieveAPIView):
     serializer_class = StudentDashboardSerializer
     permission_classes = [IsStudent]
@@ -770,7 +948,76 @@ class RejectCompanyView(APIView):
         company.delete()
         
         return Response({"message": "Company rejected and removed"})
+class DepartmentStudentsView(APIView):
+    permission_classes = [IsAdmin]
+    
+    def get(self, request):
+        user = request.user
+        # Get students in admin's department
+        students = User.objects.filter(
+            role='student',
+            department_fk=user.department_fk
+        )
+        
+        data = []
+        for student in students:
+            placement = InternshipPlacement.objects.filter(
+                student=student,
+                status='approved'
+            ).first()
+            
+            data.append({
+                'id': student.id,
+                'name': f"{student.first_name} {student.last_name}",
+                'student_id': student.student_id,
+                'email': student.email,
+                'company_name': placement.company_name if placement else None,
+                'has_active_placement': placement is not None,
+                'placement_period': {
+                    'start_date': str(placement.start_date) if placement else None,
+                    'end_date': str(placement.end_date) if placement else None
+                } if placement else None
+            })
+        
+        return Response(data)
 
+
+class DepartmentSupervisorsView(APIView):
+    permission_classes = [IsAdmin]
+    
+    def get(self, request):
+        user = request.user
+        
+        supervisors = User.objects.filter(
+            role__in=['academic', 'workplace'],
+            department_fk=user.department_fk
+        )
+        
+        data = []
+        for supervisor in supervisors:
+            
+            if supervisor.role == 'academic':
+                assigned_count = InternshipPlacement.objects.filter(
+                    academic_supervisor=supervisor,
+                    status='approved'
+                ).count()
+            else:
+                assigned_count = InternshipPlacement.objects.filter(
+                    workplace_supervisor=supervisor,
+                    status='approved'
+                ).count()
+            
+            data.append({
+                'id': supervisor.id,
+                'name': f"{supervisor.first_name} {supervisor.last_name}",
+                'staff_id': supervisor.staff_id,
+                'email': supervisor.email,
+                'role': supervisor.role,
+                'assigned_students_count': assigned_count,
+                'is_approved': supervisor.is_approved
+            })
+        
+        return Response(data)
 class AcademicDashboardView(generics.RetrieveAPIView):
     permission_classes = [IsAcademic]
     
@@ -838,75 +1085,4 @@ class AcademicDashboardView(generics.RetrieveAPIView):
                 }
                 for log in reviewed_logs
             ]
-        })
-
-        
-#Academic supervisor
-class AcademicDashboardView(generics.RetrieveAPIView):
-    permission_classes = [IsAcademic]
-    
-    def get(self, request):
-        user = request.user
-        
-        # Getting assigned students
-        placements = InternshipPlacement.objects.filter(
-            academic_supervisor=user,
-            status='approved'
-        )
-        
-        # Getting pending logs
-        pending_logs = WeeklyLog.objects.filter(
-            placement__academic_supervisor=user,
-            status='submitted'
-        )
-        
-        # Getting reviewed logs
-        reviewed_logs = WeeklyLog.objects.filter(
-            placement__academic_supervisor=user,
-            status__in=['approved', 'rejected']
-        )
-        
-        return Response({
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'department': user.department,
-            'staff_id': user.staff_id,
-            'assigned_students': [
-                {
-                    'id': p.id,
-                    'student_name': f"{p.student.first_name} {p.student.last_name}",
-                    'student_id': p.student.student_id,
-                    'company_name': p.company_name,
-                    'status': p.status,
-                    'start_date': str(p.start_date),
-                    'end_date': str(p.end_date),
-                }
-                for p in placements
-            ],
-            'pending_logs': [
-                {
-                    'id': log.id,
-                    'student_name': f"{log.placement.student.first_name} {log.placement.student.last_name}",
-                    'week_number': log.week_number,
-                    'activities': log.activities,
-                    'challenges': log.challenges,
-                    'working_hours': str(log.working_hours),
-                    'status': log.status,
-                    'submission_date': str(log.submission_date),
-                    'attachment': log.attachment.url if log.attachment else None,
-                }
-                for log in pending_logs
-            ],
-            'reviewed_logs': [
-                {
-                    'id': log.id,
-                    'student_name': f"{log.placement.student.first_name} {log.placement.student.last_name}",
-                    'week_number': log.week_number,
-                    'status': log.status,
-                    'score': log.score,
-                    'feedback': log.feedback,
-                    'reviewed_at': str(log.reviewed_at),
-                }
-                for log in reviewed_logs
-            ]
-        })
+        }) 
