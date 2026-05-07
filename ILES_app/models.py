@@ -58,7 +58,7 @@ class User(AbstractUser):
     student_id = models.CharField(max_length=50, blank=True, null=True)
     staff_id = models.CharField(max_length=50, blank=True, null=True)
     department = models.CharField(max_length=100, blank=True)
-    
+    email = models.EmailField(unique=True)
     ACADEMIC_RANK_CHOICES = [
         ('assistant_lecturer', 'Assistant Lecturer'),
         ('lecturer', 'Lecturer'),
@@ -138,7 +138,7 @@ class Company(models.Model):
 
 class PasswordReset(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    token = models.CharField(max_length=30, unique=True, default=uuid.uuid4)
+    token = models.CharField(max_length=100, unique=True, default=uuid.uuid4)
     created_at = models.DateTimeField(auto_now_add=True)
     
     def is_valid(self):
