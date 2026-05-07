@@ -58,7 +58,7 @@ class User(AbstractUser):
     student_id = models.CharField(max_length=50, blank=True, null=True)
     staff_id = models.CharField(max_length=50, blank=True, null=True)
     department = models.CharField(max_length=100, blank=True)
-    
+    email = models.EmailField(unique=True)
     ACADEMIC_RANK_CHOICES = [
         ('assistant_lecturer', 'Assistant Lecturer'),
         ('lecturer', 'Lecturer'),
@@ -138,7 +138,7 @@ class Company(models.Model):
 
 class PasswordReset(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    token = models.CharField(max_length=30, unique=True, default=uuid.uuid4)
+    token = models.CharField(max_length=100, unique=True, default=uuid.uuid4)
     created_at = models.DateTimeField(auto_now_add=True)
     
     def is_valid(self):
@@ -165,6 +165,19 @@ class InternshipPlacement(models.Model):
     
     created_at = models.DateTimeField(auto_now_add=True)
     log_exception_requested = models.BooleanField(default=False)
+    EXCEPTION_REQUEST_CHOICES = [
+        ('count_existing', 'Count Existing Only'),
+        ('late_submission', 'Request Late Submission'),
+    ]
+    
+    exception_request_type = models.CharField(
+        max_length=20,
+        choices=EXCEPTION_REQUEST_CHOICES,
+        blank=True,
+        null=True
+    )
+    workplace_notified_at = models.DateTimeField(null=True, blank=True)
+    workplace_decision_reason = models.TextField(blank=True)
     exception_reason = models.TextField(blank=True)
     exception_status = models.CharField(
         max_length=20,
@@ -250,7 +263,8 @@ class Evaluation(models.Model):
         
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+    student_confirmed_view = models.BooleanField(default=False)
+    student_confirmed_view_at = models.DateTimeField(null=True, blank=True)
     def __str__(self):
         return f"Evaluation - {self.placement}"
     

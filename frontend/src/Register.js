@@ -87,8 +87,8 @@ function Register() {
       setPasswordMatchError("Passwords do not match");
       return false;
     }
-    if (data.password.length > 0 && data.password.length < 12) {
-      setPasswordMatchError("Password must be at least 12 characters long");
+    if (data.password.length > 0 && data.password.length < 8) {
+      setPasswordMatchError("Password must be at least 8 characters long and not similar to names");
       return false;
     }
     return true;
@@ -417,7 +417,7 @@ function Register() {
             <input
               name="password"
               type="password"
-              placeholder="Password (min 12 characters)"
+              placeholder="Password (min 8 characters)"
               onChange={handleChange}
               required
             />

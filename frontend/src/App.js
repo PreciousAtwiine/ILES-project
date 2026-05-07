@@ -10,6 +10,10 @@ import StudentDashboard from './Pages/StudentDashboard';
 import AcademicDashboard from './Pages/AcademicDashboard';
 import AcademicEvaluation from './Pages/AcademicEvaluation';
 import SupervisorDashboard from './Pages/SupervisorDashboard';
+// In App.js - Add these imports
+import ForgotPassword from "./Pages/ForgotPassword";
+import ResetPassword from "./Pages/ResetPassword";
+
 
 function App() {
   return (
@@ -46,6 +50,9 @@ function App() {
 
         {/* General Dashboard */}
         <Route path="/dashboard" element={<Dashboard />} />
+			
+		<Route path="/forgot-password" element={<ForgotPassword />} />
+		<Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
 
     </Router>

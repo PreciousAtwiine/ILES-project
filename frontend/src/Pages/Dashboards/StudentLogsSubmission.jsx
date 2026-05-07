@@ -9,19 +9,19 @@ export default function StudentLogs({ recentLogs, onSubmit }) {
         <h3>Submit Weekly <Logs></Logs></h3>
         <form onSubmit={onSubmit}>
         <div className="form-group">
-            <label>Week Number *</label>
+            <label>Week Number from start of Internship *</label>
             <input type="number" id="week_number" placeholder="Week" min="1" required />
           </div>
           <div className="form-group">
-            <label>Activities Performed *</label>
+            <label>Activities Performed in Week {log.week_number} *</label>
             <textarea id="activities" rows="4" placeholder="Input activities to be done this week" required></textarea>
           </div>
           <div className="form-group">
-            <label>Challenges Faced</label>
+            <label>Challenges Faced while Working in Week {log.week_number}</label>
             <textarea id="challenges" rows="2" placeholder="Any challenges faced?"></textarea>
           </div>
           <div className="form-group">
-            <label>Working Hours</label>
+            <label>Hours Worked</label>
             <input type="number" id="working_hours" step="0.5" placeholder="Hours worked this week" />
           </div>
           <div className="form-group">
