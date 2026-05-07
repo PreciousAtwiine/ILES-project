@@ -26,7 +26,7 @@ function Register() {
   const [companySearch, setCompanySearch] = useState("");
   const [passwordMatchError, setPasswordMatchError] = useState("");
 
-  const BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+  const BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
 
   useEffect(() => {
     const fetchData = async () => {

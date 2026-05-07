@@ -9,7 +9,7 @@ export default function ExceptionRequestModal({ onClose, onComplete }) {
   const [loading, setLoading] = useState(false);
   const [charCount, setCharCount] = useState(0);
 
-  const BASE_URL = "http://127.0.0.1:8000";
+  const BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
   const getToken = () => localStorage.getItem("access");
 
   const handleReasonChange = (e) => {

@@ -16,7 +16,7 @@ export default function AcademicDashboard() {
   const [user, setUser] = useState(null);
   const [isApproved, setIsApproved] = useState(true);
   const navigate = useNavigate();
-  const BASE_URL = "http://127.0.0.1:8000";
+  const BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
   const getToken = () => localStorage.getItem("access");
 
   const loadUserInfo = useCallback(async () => {

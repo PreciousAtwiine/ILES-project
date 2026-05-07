@@ -13,7 +13,7 @@ export default function AcademicEvaluation() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const BASE_URL = "http://127.0.0.1:8000";
+  const BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
   const getToken = () => localStorage.getItem("access");
 
   useEffect(() => {
