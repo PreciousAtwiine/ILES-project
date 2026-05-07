@@ -1,19 +1,12 @@
-pip install django==6.0.4
-pip install djangorestframework==3.17.1
-pip install djangorestframework-simplejwt==5.5.1
-pip install django-cors-headers==4.9.0
-pip install django-filter==25.2
-pip install psycopg[binary]==3.3.3
-pip install python-dotenv==1.1.0
-pip install python-decouple==3.8
-pip install whitenoise==6.6.0
-pip install gunicorn==21.2.0
-
+asgiref==3.11.1
 Django==6.0.4
-djangorestframework==3.17.1
-djangorestframework-simplejwt==5.5.1
 django-cors-headers==4.9.0
 django-filter==25.2
-psycopg[binary]==3.3.3
+djangorestframework==3.17.1
+djangorestframework_simplejwt==5.5.1
+psycopg==3.3.3
+psycopg-binary==3.3.3
+PyJWT==2.12.1
 python-dotenv==1.1.0
-
+sqlparse==0.5.5
+tzdata==2025.3
