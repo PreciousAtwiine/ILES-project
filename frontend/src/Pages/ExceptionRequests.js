@@ -4,7 +4,7 @@ import axios from 'axios';
 
 export default function ExceptionRequests({ exceptionRequests, loadingExceptions, onApprove, onReject }) {
   const [processingId, setProcessingId] = useState(null);
-  const BASE_URL = "http://127.0.0.1:8000";
+  const BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
   const getToken = () => localStorage.getItem("access");
 
   const handleApproveCountExisting = async (id) => {
