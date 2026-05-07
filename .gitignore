@@ -1,9 +1,8 @@
-
-# Python cache
-__pycache__/
-*.pyc
-
-# Node
-node_modules/
-``
-db.sqlite3
+.env 
+__pycache__/ 
+*.pyc 
+media/ 
+staticfiles/ 
+db.sqlite3 
+*.log 
+.DS_Store 
