@@ -9,8 +9,8 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.15.0",
     "jwt-decode": "^4.0.0",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-router-dom": "^7.14.1",
     "react-scripts": "5.0.1",
     "react-toastify": "^11.1.0",
@@ -18,7 +18,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "NODE_OPTIONS=--max-old-space-size=512 react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -39,5 +39,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
