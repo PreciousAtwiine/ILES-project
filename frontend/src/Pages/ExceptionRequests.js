@@ -14,7 +14,7 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
       await axios.post(`${BASE_URL}/api/admin/approve-count-existing/${id}/`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert("Count existing request approved! Grade recalculated.");
+      alert("✅ Count existing request approved! Grade recalculated.");
       onApprove(id);
     } catch (error) {
       console.error(error);
@@ -31,7 +31,7 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
       await axios.post(`${BASE_URL}/api/admin/notify-workplace/${id}/`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert("Workplace supervisor notified! Waiting for their decision.");
+      alert("📧 Workplace supervisor notified! Waiting for their decision.");
       onApprove(id);
     } catch (error) {
       console.error(error);
@@ -62,11 +62,21 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
   const countExistingPending = exceptionRequests.filter(req => 
     req.exception_request_type === 'count_existing' && req.exception_status === 'pending'
   );
+  
   const lateSubmissionPending = exceptionRequests.filter(req => 
     req.exception_request_type === 'late_submission' && req.exception_status === 'late_pending'
   );
-  const otherRequests = exceptionRequests.filter(req => 
-    !(req.exception_status === 'pending' || req.exception_status === 'late_pending')
+  
+  const workplacePending = exceptionRequests.filter(req => 
+    req.exception_request_type === 'late_submission' && req.exception_status === 'workplace_pending'
+  );
+  
+  const approvedRequests = exceptionRequests.filter(req => 
+    req.exception_status === 'approved' || req.exception_status === 'late_approved'
+  );
+  
+  const rejectedRequests = exceptionRequests.filter(req => 
+    req.exception_status === 'rejected' || req.exception_status === 'late_rejected'
   );
 
   return (
@@ -76,12 +86,12 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
         <p className="subtitle">Review and manage student requests for missing weekly logs</p>
       </div>
 
-      {/* Count Existing - Pending */}
+      {/* COUNT EXISTING - PENDING ADMIN APPROVAL */}
       {countExistingPending.length > 0 && (
         <>
           <div className="exception-tabs">
             <button className="exception-tab active">
-               Count Existing Only
+              📊 Count Existing Only
               <span className="badge">{countExistingPending.length}</span>
             </button>
           </div>
@@ -107,8 +117,8 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
                 </div>
                 <div className="info-row">
                   <span className="info-label">Request Type</span>
-                  <span className="info-value" style={{ background: '#fef3c7', padding: '2px 8px', borderRadius: '4px' }}>
-                     Count existing only
+                  <span className="info-value" style={{ background: '#fef3c7', padding: '2px 8px', borderRadius: '4px', display: 'inline-block' }}>
+                    📊 Count existing only
                   </span>
                 </div>
                 <div className="info-row">
@@ -123,14 +133,14 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
                   disabled={processingId === req.id}
                   style={{ background: '#10b981' }}
                 >
-                  {processingId === req.id ? "Processing..." : "Approve (Count Existing)"}
+                  {processingId === req.id ? "Processing..." : "✅ Approve (Count Existing)"}
                 </button>
                 <button 
                   className="btn-reject" 
                   onClick={() => onReject(req.id)}
                   disabled={processingId === req.id}
                 >
-                   Reject
+                  ❌ Reject
                 </button>
               </div>
             </div>
@@ -138,12 +148,12 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
         </>
       )}
 
-      {/* Late Submission - Pending Admin Review */}
+      {/* LATE SUBMISSION - PENDING ADMIN REVIEW (Before forwarding to workplace) */}
       {lateSubmissionPending.length > 0 && (
         <>
           <div className="exception-tabs">
             <button className="exception-tab active">
-              📝 Late Submission Requests
+              📝 Late Submission (Admin Review)
               <span className="badge">{lateSubmissionPending.length}</span>
             </button>
           </div>
@@ -169,13 +179,17 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
                 </div>
                 <div className="info-row">
                   <span className="info-label">Request Type</span>
-                  <span className="info-value" style={{ background: '#e0f2fe', padding: '2px 8px', borderRadius: '4px' }}>
-                     Request late submission
+                  <span className="info-value" style={{ background: '#e0f2fe', padding: '2px 8px', borderRadius: '4px', display: 'inline-block' }}>
+                    📝 Request late submission
                   </span>
                 </div>
                 <div className="info-row">
                   <span className="info-label">Reason</span>
                   <div className="reason-text">{req.reason || req.exception_reason}</div>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Missing Weeks</span>
+                  <span className="info-value">{req.missing_weeks?.join(', ') || 'Check logs'}</span>
                 </div>
               </div>
               <div className="exception-card-footer">
@@ -192,7 +206,7 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
                   onClick={() => onReject(req.id)}
                   disabled={processingId === req.id}
                 >
-                   Reject
+                  ❌ Reject Request
                 </button>
               </div>
             </div>
@@ -200,25 +214,73 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
         </>
       )}
 
-      {/* Other Requests (Approved/Rejected) */}
-      {otherRequests.length > 0 && (
+      {/* LATE SUBMISSION - PENDING WORKPLACE DECISION */}
+      {workplacePending.length > 0 && (
         <>
           <div className="exception-tabs">
             <button className="exception-tab">
-              Processed Requests
-              <span className="badge">{otherRequests.length}</span>
+              ⏳ Pending Workplace Decision
+              <span className="badge">{workplacePending.length}</span>
             </button>
           </div>
-          {otherRequests.map((req) => (
-            <div key={req.id} className={`exception-card ${req.exception_status === 'approved' ? 'approved' : 'rejected'}`}>
+          {workplacePending.map((req) => (
+            <div key={req.id} className="exception-card pending" style={{ borderLeftColor: '#3b82f6' }}>
               <div className="exception-card-header">
                 <div className="student-info">
                   <span className="student-name">{req.student_name}</span>
                   <span className="student-id">{req.student_id}</span>
-                  <span className={`status-badge-sm ${req.exception_status}`}>
-                    {req.exception_status === 'approved' ? '✓ Approved' : 
-                     req.exception_status === 'late_approved' ? '✓ Late Approved' :
-                     req.exception_status === 'late_rejected' ? '✗ Late Rejected' : '✗ Rejected'}
+                </div>
+                <span className="request-date">
+                  {new Date(req.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                </span>
+              </div>
+              <div className="exception-card-body">
+                <div className="info-row">
+                  <span className="info-label">Placement</span>
+                  <span className="info-value">{req.company_name}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Status</span>
+                  <span className="info-value" style={{ background: '#dbeafe', padding: '2px 8px', borderRadius: '4px', display: 'inline-block' }}>
+                    ⏳ Waiting for workplace decision
+                  </span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Reason</span>
+                  <div className="reason-text">{req.reason || req.exception_reason}</div>
+                </div>
+              </div>
+              <div className="exception-card-footer">
+                <span style={{ color: '#666', fontSize: '12px' }}>
+                  Workplace supervisor has been notified and is reviewing this request.
+                </span>
+              </div>
+            </div>
+          ))}
+        </>
+      )}
+
+      {/* APPROVED REQUESTS */}
+      {approvedRequests.length > 0 && (
+        <>
+          <div className="exception-tabs">
+            <button className="exception-tab">
+              ✅ Approved
+              <span className="badge">{approvedRequests.length}</span>
+            </button>
+          </div>
+          {approvedRequests.map((req) => (
+            <div key={req.id} className="exception-card approved">
+              <div className="exception-card-header">
+                <div className="student-info">
+                  <span className="student-name">{req.student_name}</span>
+                  <span className="student-id">{req.student_id}</span>
+                  <span className="status-badge-sm approved">
+                    {req.exception_status === 'late_approved' ? '✓ Late Approved' : '✓ Approved'}
                   </span>
                 </div>
                 <span className="request-date">
@@ -233,7 +295,51 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
                 <div className="info-row">
                   <span className="info-label">Request Type</span>
                   <span className="info-value">
-                    {req.exception_request_type === 'count_existing' ? ' Count existing only' : ' Late submission'}
+                    {req.exception_request_type === 'count_existing' ? '📊 Count existing only' : '📝 Late submission'}
+                  </span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Reason</span>
+                  <div className="reason-text">{req.reason || req.exception_reason}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </>
+      )}
+
+      {/* REJECTED REQUESTS */}
+      {rejectedRequests.length > 0 && (
+        <>
+          <div className="exception-tabs">
+            <button className="exception-tab">
+              ❌ Rejected
+              <span className="badge">{rejectedRequests.length}</span>
+            </button>
+          </div>
+          {rejectedRequests.map((req) => (
+            <div key={req.id} className="exception-card rejected">
+              <div className="exception-card-header">
+                <div className="student-info">
+                  <span className="student-name">{req.student_name}</span>
+                  <span className="student-id">{req.student_id}</span>
+                  <span className="status-badge-sm rejected">
+                    {req.exception_status === 'late_rejected' ? '✗ Late Rejected' : '✗ Rejected'}
+                  </span>
+                </div>
+                <span className="request-date">
+                  {new Date(req.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                </span>
+              </div>
+              <div className="exception-card-body">
+                <div className="info-row">
+                  <span className="info-label">Request Type</span>
+                  <span className="info-value">
+                    {req.exception_request_type === 'count_existing' ? '📊 Count existing only' : '📝 Late submission'}
                   </span>
                 </div>
                 <div className="info-row">
@@ -242,7 +348,7 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
                 </div>
                 {req.workplace_decision_reason && (
                   <div className="info-row">
-                    <span className="info-label">Workplace Decision</span>
+                    <span className="info-label">Decision Reason</span>
                     <div className="reason-text" style={{ background: '#fee2e2' }}>
                       {req.workplace_decision_reason}
                     </div>

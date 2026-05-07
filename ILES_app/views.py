@@ -603,7 +603,7 @@ class PendingExceptionsView(generics.ListAPIView):
         # Include BOTH 'pending' AND 'late_pending'
         queryset = InternshipPlacement.objects.filter(
             log_exception_requested=True,
-            exception_status__in=['pending', 'late_pending']  # ← ADD 'late_pending'
+            exception_status__in=['pending', 'late_pending']  
         )
         
         if not self.request.user.is_superuser and self.request.user.department_fk:
