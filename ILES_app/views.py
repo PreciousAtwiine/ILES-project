@@ -600,16 +600,16 @@ class PendingExceptionsView(generics.ListAPIView):
     permission_classes = [IsAdmin]
     
     def get_queryset(self):
+        # Include BOTH 'pending' AND 'late_pending'
         queryset = InternshipPlacement.objects.filter(
             log_exception_requested=True,
-            exception_status='pending'
+            exception_status__in=['pending', 'late_pending']  # ← ADD 'late_pending'
         )
         
         if not self.request.user.is_superuser and self.request.user.department_fk:
             queryset = queryset.filter(student__department_fk=self.request.user.department_fk)
         
         return queryset
-
 
 class ApproveExceptionView(APIView):
     permission_classes = [IsAdmin]
