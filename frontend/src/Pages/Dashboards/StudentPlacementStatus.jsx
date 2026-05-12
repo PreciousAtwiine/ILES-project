@@ -46,7 +46,7 @@ export default function StudentPlacement({
               ))}
             </select>
             {filteredCompanies.length === 0 && searchTerm && (
-              <small className="hint-text">No companies found. You can add a new one below.</small>
+              <small className="hint-text">No companies found.Create a new one company below.</small>
             )}
           </div>
             <div className="form-group">
@@ -57,7 +57,7 @@ export default function StudentPlacement({
               value={newCompanyName}
               onChange={onNewCompanyChange}
             />
-            <small className="hint-text">New companies will need admin approval</small>
+            <small className="hint-text">New companies will need System Admin approval</small>
           </div>
           
           <div className="form-row">
@@ -71,7 +71,7 @@ export default function StudentPlacement({
             </div>
           </div>
           
-          <button type="submit" className="submit-btn">Submit Application</button>
+          <button type="submit" className="submit-btn">Submit New Application</button>
         </form>
       </div>
     </div>
