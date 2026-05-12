@@ -71,7 +71,7 @@ export default function StudentPlacement({
             </div>
           </div>
           
-          <button type="submit" className="submit-btn">Submit Application</button>
+          <button type="submit" className="submit-btn">Submit New Application</button>
         </form>
       </div>
     </div>
