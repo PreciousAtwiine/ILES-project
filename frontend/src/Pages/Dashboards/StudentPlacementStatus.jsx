@@ -35,8 +35,9 @@ export default function StudentPlacement({
               className="search-input"
             />
           </div>
-           <div className="form-group">
-            <label>Select from existing company list (approved):</label>
+          
+          <div className="form-group">
+            <label>Select existing company (approved):</label>
             <select value={selectedCompanyId} onChange={onCompanyChange} size="5">
               <option value="">-- Select Company --</option>
               {filteredCompanies.map((company) => (
@@ -44,34 +45,27 @@ export default function StudentPlacement({
                   {company.name}
                 </option>
               ))}
-            </select>
+            </select>  
             {filteredCompanies.length === 0 && searchTerm && (
               <small className="hint-text">No companies found.Create a new one company below.</small>
             )}
           </div>
-            <div className="form-group">
-            <label>Or enter new company name:</label>
+
+        
+          <div className="form-group">
+            <label>Or add new company:</label>
             <input
               type="text"
-              placeholder="New Company Name"
+              placeholder="Enter new company name"
               value={newCompanyName}
               onChange={onNewCompanyChange}
+              className="new-company-input"
             />
-            <small className="hint-text">New companies will need System Admin approval</small>
           </div>
-          
-          <div className="form-row">
-            <div className="form-group">
-              <label>Start Date *</label>
-              <input type="date" id="start_date" name="start_date" required />
-            </div>
-            <div className="form-group">
-              <label>End Date *</label>
-              <input type="date" id="end_date" name="end_date" required />
-            </div>
-          </div>
-          
-          <button type="submit" className="submit-btn">Submit New Application</button>
+
+          <button type="submit" className="submit-button">
+            Submit Application
+          </button>
         </form>
       </div>
     </div>
