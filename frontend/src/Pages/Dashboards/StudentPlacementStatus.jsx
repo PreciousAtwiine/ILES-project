@@ -46,7 +46,7 @@ export default function StudentPlacement({
               ))}
             </select>
             {filteredCompanies.length === 0 && searchTerm && (
-              <small className="hint-text">No companies found. You can add a new one below.</small>
+              <small className="hint-text">No companies found.Create a new one company below.</small>
             )}
           </div>
             <div className="form-group">
