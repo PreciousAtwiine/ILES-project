@@ -60,7 +60,7 @@ export default function StudentLogs({ recentLogs, onSubmit }) {
           })}
         </div>
       ) : (
-        <p>No logs submitted yet.</p>
+        <p>No log Submissions yet.</p>
       )}
     </div>
   );
