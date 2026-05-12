@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+import './StudentPlacement.css';
 export default function StudentPlacement({ 
   studentId, 
   approvedCompanies, 
