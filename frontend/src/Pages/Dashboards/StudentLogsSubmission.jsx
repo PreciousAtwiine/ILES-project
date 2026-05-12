@@ -6,7 +6,7 @@ export default function StudentLogs({ recentLogs, onSubmit }) {
       <h1>Weekly Logs</h1>
       
       <div className="form-card">
-        <h3>Submit Weekly <Logs></Logs></h3>
+        <h3>Submit Weekly Work done  <Logs></Logs></h3>
         <form onSubmit={onSubmit}>
         <div className="form-group">
             <label>Week Number from start of Internship *</label>
