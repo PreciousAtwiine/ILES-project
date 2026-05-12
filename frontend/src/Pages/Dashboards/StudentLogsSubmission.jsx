@@ -28,7 +28,7 @@ export default function StudentLogs({ recentLogs, onSubmit }) {
             <label>Attachment (Optional)</label>
             <input type="file" id="attachment" />
           </div>
-          <button type="submit" className="submit-button">Submit Log</button>
+          <button type="submit" className="submit-button">Submit Weekly Log</button>
         </form>
       </div>
 
