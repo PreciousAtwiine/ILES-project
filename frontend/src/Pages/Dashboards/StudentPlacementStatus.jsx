@@ -35,7 +35,8 @@ export default function StudentPlacement({
               className="search-input"
             />
           </div>
-           <div className="form-group">
+          
+          <div className="form-group">
             <label>Select existing company (approved):</label>
             <select value={selectedCompanyId} onChange={onCompanyChange} size="5">
               <option value="">-- Select Company --</option>
@@ -44,8 +45,29 @@ export default function StudentPlacement({
                   {company.name}
                 </option>
               ))}
-            </select>
+            </select>  
             {filteredCompanies.length === 0 && searchTerm && (
               <small className="hint-text">No companies found. You can add a new one below.</small>
             )}
           </div>
+
+        
+          <div className="form-group">
+            <label>Or add new company:</label>
+            <input
+              type="text"
+              placeholder="Enter new company name"
+              value={newCompanyName}
+              onChange={onNewCompanyChange}
+              className="new-company-input"
+            />
+          </div>
+
+          <button type="submit" className="submit-button">
+            Submit Application
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
