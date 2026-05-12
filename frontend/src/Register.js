@@ -5,18 +5,18 @@ import notifications from "./utils/notifications"; // Changed to default import
 
 function Register() {
   const [data, setData] = useState({
-    username: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    first_name: "",
-    last_name: "",
-    role: "student",
+    Username: "",
+    Email: "",
+    Password: "",
+    Input_Password_Again: "",
+    First_name: "",
+    Last_name: "",
+    Role: "student",
     student_id: "",
-    staff_id: "",
-    department_fk: "",
-    company: "",
-    company_name: ""
+    Staff_id: "",
+    Department_fk: "",
+    Company: "",
+    Company_name: ""
   });
 
   const [departments, setDepartments] = useState([]);
@@ -108,30 +108,30 @@ function Register() {
     setLoading(true);
 
     const submitData = {
-      username: data.username,
-      email: data.email,
-      password: data.password,
-      first_name: data.first_name,
-      last_name: data.last_name,
-      role: data.role,
+      username: data.Username,
+      email: data.Email,
+      password: data.Password,
+      first_name: data.First_name,
+      last_name: data.Last_name,
+      role: data.Role,
     };
 
-    if (data.role === "student") {
+    if (data.Role === "student") {
       submitData.student_id = data.student_id;
-      submitData.department_fk = data.department_fk;
+      submitData.department_fk = data.Department_fk;
     } 
-    else if (data.role === "academic") {
-      submitData.staff_id = data.staff_id;
-      submitData.department_fk = data.department_fk;
+    else if (data.Role === "academic") {
+      submitData.staff_id = data.Staff_id;
+      submitData.department_fk = data.Department_fk;
     } 
-    else if (data.role === "workplace") {
-      submitData.staff_id = data.staff_id;
-      if (data.company) {
+    else if (data.Role === "workplace") {
+      submitData.staff_id = data.Staff_id;
+      if (data.Company) {
         let companyId;
-        if (typeof data.company === 'object' && data.company !== null) {
-          companyId = data.company.id;
+        if (typeof data.Company === 'object' && data.Company !== null) {
+          companyId = data.Company.id;
         } else {
-          companyId = parseInt(data.company);
+          companyId = parseInt(data.Company);
         }
         submitData.company = companyId;
       } else if (data.company_name) {
