@@ -910,3 +910,4 @@ class AcademicDashboardView(generics.RetrieveAPIView):
                 for log in reviewed_logs
             ]
         })
+    
