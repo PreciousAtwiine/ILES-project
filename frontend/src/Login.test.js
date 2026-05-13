@@ -2,15 +2,15 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import axios from "axios";
 import Login from "./Login";
 
-// In Jest, we use jest.mock instead of vi.mock
+
 jest.mock("axios");
 
 describe("Login Component", () => {
   beforeEach(() => {
-    // Clear mocks and storage before each test
+   
     jest.clearAllMocks();
     
-    // Mock window.location.href
+   
     delete window.location;
     window.location = { href: "" };
     
