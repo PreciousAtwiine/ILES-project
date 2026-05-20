@@ -2,7 +2,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from rest_framework import serializers
-from datetime import timedelta
+from datetime import timedelt
 
 from .models import Evaluation, InternshipPlacement, User, WeeklyLog, Department, Company
 

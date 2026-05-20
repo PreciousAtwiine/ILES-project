@@ -1085,10 +1085,7 @@ class AcademicDashboardView(generics.RetrieveAPIView):
                 }
                 for log in reviewed_logs
             ]
-<<<<<<< HEAD
         }) 
-=======
-        })
 
         
 #Academic supervisor
@@ -1161,4 +1158,3 @@ class AcademicDashboardView(generics.RetrieveAPIView):
             ]
         })
     
->>>>>>> joel-frontend
