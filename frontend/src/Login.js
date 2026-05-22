@@ -16,25 +16,34 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await axios.post(
-        "http://127.0.0.1:8000/api/token/",
-        data
-      );
+      const res = await axios.post(`${process.env.REACT_APP_BASE_URL}/api/token/`, data);
 
       const token = res.data.access;
       localStorage.setItem("access", token);
       localStorage.setItem("refresh", res.data.refresh);
 
-      const userRes = await axios.get(
-        "http://127.0.0.1:8000/users/me/",
+      const userRes = await axios.get(`${process.env.REACT_APP_BASE_URL}/users/me/`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      const role = userRes.data.user.role;
-      notifications.notifySuccess(`Welcome back, ${userRes.data.user.first_name || userRes.data.user.username}!`);
+      const user = userRes.data.user;
+      const role = user.role;
+      
+      // Store user info including approval status
+      localStorage.setItem("user_role", role);
+      localStorage.setItem("user_id", user.id);
+      localStorage.setItem("user_name", `${user.first_name || ""} ${user.last_name || ""}`);
+      
+      // Students are auto-approved, others need approval
+      const needsApproval = role !== "student" && user.is_approved === false;
+      localStorage.setItem("needs_approval", needsApproval);
+      localStorage.setItem("is_approved", user.is_approved !== false);
+      
+      notifications.notifySuccess(`Welcome back, ${user.first_name || user.username}!`);
 
+      // Redirect based on role
       if (role === "student") window.location.href = "/student";
       else if (role === "workplace") window.location.href = "/workplace-supervisor";
       else if (role === "academic") window.location.href = "/academic";
@@ -44,7 +53,15 @@ export default function Login() {
         setLoading(false);
       }
     } catch (err) {
-      notifications.notifyError("Invalid username or password");
+      // Only show invalid credentials for actual login failures
+      if (err.response?.status === 401) {
+        notifications.notifyError("Invalid username or password. Please check your credentials and try again.");
+      } else if (err.code === "ERR_NETWORK") {
+        notifications.notifyError("Cannot connect to server. Please check if the server is running.");
+      } else {
+        notifications.notifyError("Login failed. Please try again later.");
+      }
+      console.error("Login error:", err);
     } finally {
       setLoading(false);
     }
@@ -92,8 +109,6 @@ export default function Login() {
             Don't have an account?{" "}
             <a href="/register">Register here</a>
           </p>
-
-          
         </form>
       </div>
     </div>

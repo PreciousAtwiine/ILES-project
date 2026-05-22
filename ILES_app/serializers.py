@@ -2,14 +2,9 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from rest_framework import serializers
-from datetime import timedelta
+from datetime import timedelt
 
 from .models import Evaluation, InternshipPlacement, User, WeeklyLog, Department, Company
-
-
-from .models import Evaluation, InternshipPlacement, User, WeeklyLog, Department, Company
-
-# ==================== USER SERIALIZERS ====================
 
 class UserSerializer(serializers.ModelSerializer):
     department_name = serializers.SerializerMethodField()
@@ -17,16 +12,20 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 
-                  'role', 'student_id', 'staff_id', 'department', 'department_name']
+                  'role', 'student_id', 'staff_id', 'department', 'department_name','is_approved',]
     
     def get_department_name(self, obj):
         if obj.department_fk:
             return obj.department_fk.name
         return obj.department or "Not set"
+
+
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
         fields = ['id', 'name', 'code', 'college']
+
+
 class ForgotPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField()
     
@@ -48,6 +47,7 @@ class ResetPasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError({"confirm_password": "Passwords do not match"})
         return data                  
 
+
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
@@ -56,7 +56,7 @@ class CompanySerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=12)
+    password = serializers.CharField(write_only=True, min_length=8)
     company_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
     
     class Meta:
@@ -68,7 +68,6 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, data):
         role = data.get('role')
         
-        # FIX: Convert company object to ID
         if role == 'workplace':
             company = data.get('company')
             if company and hasattr(company, 'id'):
@@ -76,15 +75,12 @@ class RegisterSerializer(serializers.ModelSerializer):
             elif company and isinstance(company, dict) and 'id' in company:
                 data['company'] = company['id']
         
-        # Students must have student_id
         if role == 'student' and not data.get('student_id'):
             raise serializers.ValidationError({"student_id": "Please enter student ID"})
         
-        # Staff must have staff_id
         if role in ['workplace', 'academic', 'admin'] and not data.get('staff_id'):
             raise serializers.ValidationError({"staff_id": "Please enter staff ID"})
         
-        # Workplace supervisor company validation
         if role == 'workplace':
             company_id = data.get('company')
             company_name = data.get('company_name')
@@ -94,11 +90,9 @@ class RegisterSerializer(serializers.ModelSerializer):
                     {"company": "Please select an existing company or enter a new company name"}
                 )
         
-        # Department validation for students and academic supervisors
         if role in ['student', 'academic'] and not data.get('department_fk'):
             raise serializers.ValidationError({"department_fk": "Please select your department"})
         
-        # Check uniqueness
         if role == 'student' and data.get('student_id'):
             if User.objects.filter(student_id=data['student_id']).exists():
                 raise serializers.ValidationError({"student_id": "Student ID already exists"})
@@ -127,7 +121,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         company_id = validated_data.pop('company', None)
         company_name = validated_data.pop('company_name', None)
         
-        
         if company_id and hasattr(company_id, 'id'):
             company_id = company_id.id
         elif company_id and isinstance(company_id, dict) and 'id' in company_id:
@@ -135,11 +128,9 @@ class RegisterSerializer(serializers.ModelSerializer):
         
         user = User.objects.create_user(**validated_data)
         
-        # Handle company for workplace supervisor
         if role == 'workplace':
             company = None
             
-            # Check if selected existing company
             if company_id:
                 try:
                     company = Company.objects.get(id=company_id)
@@ -147,7 +138,6 @@ class RegisterSerializer(serializers.ModelSerializer):
                 except Company.DoesNotExist:
                     pass
             
-            # Or create new company (pending approval)
             if not company and company_name:
                 company, created = Company.objects.get_or_create(
                     name=company_name,
@@ -155,21 +145,31 @@ class RegisterSerializer(serializers.ModelSerializer):
                 )
                 user.company = company
             
-            # Workplace supervisors ALWAYS start inactive
-            user.is_active = False
-        
-        # Student: active immediately
+            if company and company.is_approved:
+                user.is_approved = True
+                user.is_active = True
+            else:
+                user.is_active = True
+                user.is_approved = False
+                
         elif role == 'student':
             user.is_active = True
+            user.is_approved = True
         
-        # Academic & Admin: need admin approval
-        elif role in ['academic', 'admin']:
-            user.is_active = False
+        elif role == 'academic':
+            user.is_active = True
+            user.is_approved = False
+        
+        elif role == 'admin':
+            user.is_active = True
+            user.is_approved = False
         
         user.is_superuser = False
         user.is_staff = False     
         user.save()
         return user
+
+
 class ApproveStaffSerializer(serializers.Serializer):
     user_id = serializers.IntegerField()
     approve = serializers.BooleanField()
@@ -178,35 +178,15 @@ class ApproveStaffSerializer(serializers.Serializer):
         try:
             user = User.objects.get(
                 id=value, 
-                role__in=['workplace', 'academic', 'admin'],
-                is_active=False,
-                is_superuser=False
+                role__in=['workplace', 'academic', 'admin']
             )
             return value
         except User.DoesNotExist:
-            raise serializers.ValidationError("Pending staff user not found")
-    
-    def save(self):
-        user_id = self.validated_data['user_id']
-        approve = self.validated_data['approve']
-        
-        user = User.objects.get(id=user_id)
-        
-        if approve:
-            user.is_active = True
-            user.save()
-            return user, "approved"
-        else:
-            user.delete()  
-            return None, "rejected"
+            raise serializers.ValidationError("Staff user not found")
 
 
-# ==================== PLACEMENT SERIALIZERS ====================
 
 class ApplyForPlacementSerializer(serializers.ModelSerializer):
-    """
-    STUDENTS use this to apply for placements by entering student id
-    """
     student_id = serializers.CharField(write_only=True)
     student_name = serializers.CharField(source='student.get_full_name', read_only=True)
     
@@ -249,6 +229,7 @@ class ApplyForPlacementSerializer(serializers.ModelSerializer):
         )
         return placement
 
+
 class InternshipPlacementSerializer(serializers.ModelSerializer):
     student_name = serializers.CharField(source='student.get_full_name', read_only=True)
     student_id = serializers.CharField(source='student.student_id', read_only=True)
@@ -260,18 +241,20 @@ class InternshipPlacementSerializer(serializers.ModelSerializer):
     exception_status = serializers.SerializerMethodField()
     exception_reason = serializers.CharField(read_only=True)
     log_exception_requested = serializers.BooleanField(read_only=True)
+    exception_request_type = serializers.CharField(read_only=True)  
     
     class Meta:
         model = InternshipPlacement
         fields = ['id', 'student', 'student_id', 'student_name', 'company_name', 
                   'workplace_supervisor', 'workplace_supervisor_name',
                   'academic_supervisor', 'academic_supervisor_name',
-                  'academic_supervisor_student_count',  # ADDED THIS FOR COUNT ALSO ADD IT IN FRONT EVEN BELOW 
+                  'academic_supervisor_student_count',
                   'start_date', 'end_date', 'status', 'created_at',
-                  'exception_status', 'exception_reason', 'log_exception_requested']
+                  'exception_status', 'exception_reason', 'log_exception_requested',
+                  'exception_request_type']  
         read_only_fields = ['id', 'student', 'status', 'created_at',
                            'exception_status', 'exception_reason', 'log_exception_requested',
-                           'academic_supervisor_student_count']  # ADDED THIS TO R.O
+                           'academic_supervisor_student_count', 'exception_request_type']  
     
     def get_exception_status(self, obj):
         return obj.exception_status
@@ -283,15 +266,18 @@ class InternshipPlacementSerializer(serializers.ModelSerializer):
                 status='approved'
             ).count()
         return 0
+
 class AssignSupervisorsSerializer(serializers.Serializer):
     workplace_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
     academic_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
     
     def validate_supervisor_id(self, value, role):
-        """Validate supervisor exists, is active, and has correct role"""
         if value is not None:
             try:
-                supervisor = User.objects.get(id=value, role=role, is_active=True)
+                if role == 'workplace':
+                    supervisor = User.objects.get(id=value, role=role, is_active=True)
+                else:
+                    supervisor = User.objects.get(id=value, role=role, is_active=True, is_approved=True)
                 return supervisor
             except User.DoesNotExist:
                 raise serializers.ValidationError(
@@ -306,7 +292,6 @@ class AssignSupervisorsSerializer(serializers.Serializer):
         return self.validate_supervisor_id(value, 'academic')
     
     def validate(self, data):
-        """Ensure at least one supervisor is assigned"""
         if not data.get('workplace_id') and not data.get('academic_id'):
             raise serializers.ValidationError("You must assign at least one supervisor")
         
@@ -318,7 +303,6 @@ class AssignSupervisorsSerializer(serializers.Serializer):
             supervisor_dept = academic_supervisor.department_fk
             student_dept = student.department_fk
             
-            # Check department match
             if not supervisor_dept or not student_dept:
                 raise serializers.ValidationError(
                     "Cannot assign: Student or supervisor does not have a department assigned."
@@ -330,7 +314,6 @@ class AssignSupervisorsSerializer(serializers.Serializer):
                     f"Academic supervisor must be from the same department."
                 )
             
-            # Check student limit (max 10)
             current_count = InternshipPlacement.objects.filter(
                 academic_supervisor=academic_supervisor,
                 status='approved'
@@ -341,7 +324,6 @@ class AssignSupervisorsSerializer(serializers.Serializer):
                     f"Cannot assign: {academic_supervisor.get_full_name()} already has {current_count}/10 students. "
                     f"Maximum limit reached."
                 )
-       
         
         return data
 
@@ -368,12 +350,11 @@ class SubmitLogSerializer(serializers.ModelSerializer):
         week = data['week_number']
         hours = data.get('working_hours', 0)
         
-        # Check if placement is approved
-        if placement.status != 'approved':
+       
+        if placement.status != 'approved' and placement.exception_status != 'late_approved':
             raise serializers.ValidationError("Your placement must be approved before submitting logs")
         
-       
-        # Calculate total weeks in internship
+        
         total_days = (placement.end_date - placement.start_date).days
         total_weeks = (total_days // 7) + 1 if total_days % 7 > 0 else (total_days // 7)
         if total_weeks < 1:
@@ -385,7 +366,6 @@ class SubmitLogSerializer(serializers.ModelSerializer):
                 f"Valid weeks are 1 to {total_weeks}."
             )
           
-        # CHECK IF SUPERVISORS ARE ASSIGNED
         if not placement.workplace_supervisor:
             raise serializers.ValidationError(
                 "Cannot submit logs: Workplace supervisor has not been assigned yet. "
@@ -398,11 +378,9 @@ class SubmitLogSerializer(serializers.ModelSerializer):
                 "Please contact the administrator."
             )
         
-        # Check if log already exists
         if WeeklyLog.objects.filter(placement=placement, week_number=week).exists():
             raise serializers.ValidationError(f"Log for week {week} already exists")
         
-        # Validate working hours if provided
         if hours is not None and hours <= 0:
             raise serializers.ValidationError("Working hours must be greater than 0")
         
@@ -412,14 +390,10 @@ class SubmitLogSerializer(serializers.ModelSerializer):
         placement = validated_data['placement']
         week = validated_data['week_number']
         
-        # Calculate week end date (Sunday of that week)
         week_start = placement.start_date + timedelta(days=(week-1)*7)
         week_end = week_start + timedelta(days=6)
-        
-        # Check if submission is late
         is_late = timezone.now().date() > week_end
         
-        # Create the log
         log = WeeklyLog.objects.create(
             **validated_data,
             status='submitted',
@@ -428,7 +402,6 @@ class SubmitLogSerializer(serializers.ModelSerializer):
             late_reason=f"Submitted on {timezone.now().date()}, expected by {week_end}" if is_late else ""
         )
         
-        # Send email to workplace supervisor about late submission
         if is_late and placement.workplace_supervisor:
             from django.core.mail import send_mail
             from django.conf import settings
@@ -442,10 +415,8 @@ class SubmitLogSerializer(serializers.ModelSerializer):
         
         return log
 
+
 class ReviewLogSerializer(serializers.ModelSerializer):
-    """
-    Supervisors use this to review logs
-    """
     class Meta:
         model = WeeklyLog
         fields = ['status', 'feedback', 'score']
@@ -464,9 +435,6 @@ class ReviewLogSerializer(serializers.ModelSerializer):
 # ==================== EVALUATION SERIALIZERS ====================
 
 class EvaluationSerializer(serializers.ModelSerializer):
-    """
-    View evaluation details
-    """
     student_name = serializers.CharField(source='placement.student.get_full_name', read_only=True)
     student_id = serializers.CharField(source='placement.student.student_id', read_only=True)
     company_name = serializers.CharField(source='placement.company_name', read_only=True)
@@ -477,7 +445,8 @@ class EvaluationSerializer(serializers.ModelSerializer):
                   'workplace_score', 'academic_score',
                   'workplace_comments', 'academic_comments',
                   'workplace_submitted_at', 'academic_submitted_at',
-                  'final_score', 'grade', 'created_at', 'updated_at']
+                  'final_score', 'grade', 'created_at', 'updated_at',
+                  'student_confirmed_view', 'student_confirmed_view_at']
         read_only_fields = [
             'id', 'final_score', 'grade',
             'workplace_submitted_at', 'academic_submitted_at',
@@ -486,9 +455,6 @@ class EvaluationSerializer(serializers.ModelSerializer):
 
 
 class WorkplaceEvaluationSerializer(serializers.ModelSerializer):
-    """
-    WORKPLACE SUPERVISOR submits their evaluation
-    """
     class Meta:
         model = Evaluation
         fields = ['workplace_score', 'workplace_comments']
@@ -500,9 +466,6 @@ class WorkplaceEvaluationSerializer(serializers.ModelSerializer):
 
 
 class AcademicEvaluationSerializer(serializers.ModelSerializer):
-    """
-    ACADEMIC SUPERVISOR submits their evaluation
-    """
     class Meta:
         model = Evaluation
         fields = ['academic_score', 'academic_comments']
@@ -523,114 +486,253 @@ class StudentDashboardSerializer(serializers.ModelSerializer):
     exception_status = serializers.SerializerMethodField()
     exception_reason = serializers.SerializerMethodField()
     department_name = serializers.SerializerMethodField()
+    log_exception_requested = serializers.SerializerMethodField()
+    evaluation_history = serializers.SerializerMethodField()
     
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'student_id', 
                   'department', 'department_name', 'placement', 'recent_logs', 'evaluation',
-                  'can_request_exception', 'exception_status', 'exception_reason']
+                  'can_request_exception', 'exception_status', 'exception_reason',
+                  'log_exception_requested', 'evaluation_history'] 
+    
     def get_department_name(self, obj):
         if obj.department_fk:
             return obj.department_fk.name
         return obj.department or "Not set"
+    
     def get_placement(self, obj):
+        """Get current placement - show active OR completed if late_approved"""
+        
+        # First try active placement (pending or approved)
         placement = InternshipPlacement.objects.filter(
-            student=obj
+            student=obj,
+            status__in=['pending', 'approved']
         ).order_by('-created_at').first()
+        
+        # If no active placement, check for completed with late_approved
+        if not placement:
+            placement = InternshipPlacement.objects.filter(
+                student=obj,
+                status='completed',
+                exception_status='late_approved'
+            ).order_by('-created_at').first()
+        
+        # If still none, get most recent completed
+        if not placement:
+            placement = InternshipPlacement.objects.filter(
+                student=obj,
+                status='completed'
+            ).order_by('-created_at').first()
         
         if placement:
             return InternshipPlacementSerializer(placement).data
         return None
     
     def get_recent_logs(self, obj):
-        logs = WeeklyLog.objects.filter(placement__student=obj).order_by('-created_at')[:5]
-        return WeeklyLogSerializer(logs, many=True).data
-    
+        """Get logs from current placement (active or late_approved)"""
+        
+        # First try active placement
+        placement = InternshipPlacement.objects.filter(
+            student=obj,
+            status__in=['pending', 'approved']
+        ).first()
+        
+        # If no active, check for completed with late_approved
+        if not placement:
+            placement = InternshipPlacement.objects.filter(
+                student=obj,
+                status='completed',
+                exception_status='late_approved'
+            ).first()
+        
+        # If still none, get most recent completed
+        if not placement:
+            placement = InternshipPlacement.objects.filter(
+                student=obj,
+                status='completed'
+            ).order_by('-created_at').first()
+        
+        if placement:
+            logs = WeeklyLog.objects.filter(placement=placement).order_by('-created_at')[:5]
+            return WeeklyLogSerializer(logs, many=True).data
+        return []
+        
     def get_evaluation(self, obj):
-        evaluation = Evaluation.objects.filter(placement__student=obj).first()
+        """Get evaluation for current placement (active or most recent completed)"""
+        # First try active placement
+        placement = InternshipPlacement.objects.filter(
+            student=obj,
+            status__in=['pending', 'approved']
+        ).order_by('-created_at').first()
+        
+        # If no active, get most recent completed
+        if not placement:
+            placement = InternshipPlacement.objects.filter(
+                student=obj,
+                status='completed'
+            ).order_by('-created_at').first()
+        
+        if not placement:
+            return None
+        
+        evaluation = Evaluation.objects.filter(placement=placement).first()
         if evaluation:
             data = EvaluationSerializer(evaluation).data
             
-            placement = InternshipPlacement.objects.filter(student=obj).first()
-            if placement:
-                total_days = (placement.end_date - placement.start_date).days
+            total_days = (placement.end_date - placement.start_date).days
+            total_weeks = (total_days // 7) + 1 if total_days % 7 > 0 else (total_days // 7)
+            if total_weeks < 1:
+                total_weeks = 1
                 
-                total_weeks = (total_days // 7) + 1 if total_days % 7 > 0 else (total_days // 7)
-                if total_weeks < 1:
-                    total_weeks = 1 
-                submitted_logs = placement.logs.filter(score__isnull=False)
-                submitted_weeks = set(submitted_logs.values_list('week_number', flat=True))
-                
-                if placement.exception_status == 'approved':
-                    if submitted_logs.exists():
-                        total_score = sum([log.score for log in submitted_logs])
-                        log_avg = total_score / submitted_logs.count()
-                    else:
-                        log_avg = 0
-                else:
-                    total_score = 0
-                    for week in range(1, total_weeks + 1):
-                        if week in submitted_weeks:
-                            log = placement.logs.get(week_number=week)
-                            total_score += log.score if log.score else 0
-                        else:
-                            total_score += 0
-                    log_avg = total_score / total_weeks if total_weeks > 0 else 0
-                
-                data['log_avg_score'] = round(log_avg, 2)
+            submitted_logs = placement.logs.filter(score__isnull=False)
+            submitted_weeks = set(submitted_logs.values_list('week_number', flat=True))
             
+            if placement.exception_status == 'approved':
+                if submitted_logs.exists():
+                    total_score = sum([log.score for log in submitted_logs])
+                    log_avg = total_score / submitted_logs.count()
+                else:
+                    log_avg = 0
+            else:
+                total_score = 0
+                for week in range(1, total_weeks + 1):
+                    if week in submitted_weeks:
+                        log = placement.logs.get(week_number=week)
+                        total_score += log.score if log.score else 0
+                    else:
+                        total_score += 0
+                log_avg = total_score / total_weeks if total_weeks > 0 else 0
+            
+            data['log_avg_score'] = round(log_avg, 2)
             return data
-        return None
         
+        return None
+    
     def get_can_request_exception(self, obj):
-        """Check if student can request a log exception"""
-        placement = InternshipPlacement.objects.filter(student=obj).first()
+        """Check if student can request a log exception (ONLY AFTER both evaluations are done)"""
+        # Only for completed placements
+        placement = InternshipPlacement.objects.filter(
+            student=obj,
+            status='completed'
+        ).order_by('-created_at').first()
+        
         if not placement:
             return False
         
-        # Calculate total weeks
-        from datetime import timedelta
+        # Don't show if already requested
+        if placement.log_exception_requested:
+            return False
+        
+        # Don't show if already processed
+        if placement.exception_status in ['approved', 'rejected']:
+            return False
+        
+        # Both evaluations should be done for completed placements
+        evaluation = Evaluation.objects.filter(placement=placement).first()
+        if not evaluation:
+            return False
+        
+        # Calculate total weeks in internship
         total_days = (placement.end_date - placement.start_date).days
         total_weeks = (total_days // 7) + 1 if total_days >= 0 else 1
+        if total_weeks < 1:
+            total_weeks = 1
         
         # Check if final week is submitted
         has_final_week = WeeklyLog.objects.filter(
             placement=placement, week_number=total_weeks
         ).exists()
+        if not has_final_week:
+            return False
         
         # Check if there are missing logs
         submitted_logs = WeeklyLog.objects.filter(placement=placement).count()
         missing_logs = total_weeks - submitted_logs
         
-        # Check if already requested or processed
-        already_requested = placement.log_exception_requested
-        already_processed = placement.exception_status in ['approved', 'rejected']
-        
-        return (has_final_week and missing_logs > 0 and 
-                not already_requested and not already_processed)
+        return missing_logs > 0
     
     def get_exception_status(self, obj):
+        """Return exception status ONLY if an exception was actually requested"""
         placement = InternshipPlacement.objects.filter(student=obj).first()
-        if placement:
+        if placement and placement.log_exception_requested:
             return placement.exception_status
         return None
     
     def get_exception_reason(self, obj):
         placement = InternshipPlacement.objects.filter(student=obj).first()
-        if placement:
+        if placement and placement.log_exception_requested:
             return placement.exception_reason
         return None
+    
+    def get_log_exception_requested(self, obj):
+        """Return whether an exception was requested"""
+        placement = InternshipPlacement.objects.filter(student=obj).first()
+        if placement:
+            return placement.log_exception_requested
+        return False
+    
+    def get_evaluation_history(self, obj):
+        """Get ALL completed placements except the most recent one (for history)"""
+        # Get all completed placements
+        all_completed = InternshipPlacement.objects.filter(
+            student=obj,
+            status='completed'
+        ).order_by('-end_date')
+        
+        # Get the most recent placement (will be shown as current)
+        most_recent = InternshipPlacement.objects.filter(
+            student=obj,
+            status__in=['pending', 'approved', 'completed']
+        ).order_by('-created_at').first()
+        
+        # Exclude the most recent from history
+        history_placements = all_completed.exclude(id=most_recent.id) if most_recent else all_completed
+        
+        history = []
+        for placement in history_placements:
+            evaluation = Evaluation.objects.filter(placement=placement).first()
+            history.append({
+                'id': placement.id,
+                'company_name': placement.company_name,
+                'start_date': str(placement.start_date),
+                'end_date': str(placement.end_date),
+                'workplace_supervisor_name': placement.workplace_supervisor.get_full_name() if placement.workplace_supervisor else None,
+                'academic_supervisor_name': placement.academic_supervisor.get_full_name() if placement.academic_supervisor else None,
+                'evaluation': {
+                    'workplace_score': evaluation.workplace_score if evaluation else None,
+                    'academic_score': evaluation.academic_score if evaluation else None,
+                    'final_score': evaluation.final_score if evaluation else None,
+                    'grade': evaluation.grade if evaluation else None,
+                    'student_confirmed_view': evaluation.student_confirmed_view if evaluation else False,
+                    'student_confirmed_view_at': evaluation.student_confirmed_view_at if evaluation else None,
+                } if evaluation else None,
+                'logs': [
+                    {
+                        'week_number': log.week_number,
+                        'status': log.status,
+                        'score': log.score,
+                        'feedback': log.feedback
+                    }
+                    for log in placement.logs.filter(score__isnull=False).order_by('week_number')
+                ] if evaluation else []
+            })
+        return history
 
 class SupervisorDashboardSerializer(serializers.ModelSerializer):
     assigned_students = serializers.SerializerMethodField()
+    completed_students = serializers.SerializerMethodField()
     pending_reviews = serializers.SerializerMethodField()
+    pending_late_requests = serializers.SerializerMethodField()
     
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'staff_id', 
-                  'department', 'assigned_students', 'pending_reviews']
+                  'department', 'assigned_students', 'completed_students', 
+                  'pending_reviews', 'pending_late_requests']
     
     def get_assigned_students(self, obj):
+        """Get active students (approved placements, not evaluated yet)"""
         if obj.role == 'workplace':
             placements = InternshipPlacement.objects.filter(
                 workplace_supervisor=obj,
@@ -644,30 +746,71 @@ class SupervisorDashboardSerializer(serializers.ModelSerializer):
         else:
             placements = InternshipPlacement.objects.none()
         
-        # Serialize the data
-        data = InternshipPlacementSerializer(placements, many=True).data
-        
-        # Add evaluation status for each student
-        for i, placement in enumerate(placements):
+        data = []
+        for placement in placements:
             evaluation = Evaluation.objects.filter(placement=placement).first()
             
-            # Check if evaluation has been submitted by this supervisor
+            # Check if evaluation already submitted by this supervisor
             if obj.role == 'workplace':
                 evaluation_submitted = evaluation and evaluation.workplace_score is not None
-            elif obj.role == 'academic':
-                evaluation_submitted = evaluation and evaluation.academic_score is not None
             else:
-                evaluation_submitted = False
+                evaluation_submitted = evaluation and evaluation.academic_score is not None
             
-            data[i]['evaluation_submitted'] = evaluation_submitted
-            data[i]['status'] = placement.status
+            # Only include if evaluation NOT submitted yet
+            if not evaluation_submitted:
+                data.append({
+                    'id': placement.id,
+                    'student_name': placement.student.get_full_name(),
+                    'student_id': placement.student.student_id,
+                    'company_name': placement.company_name,
+                    'status': placement.status,
+                    'start_date': str(placement.start_date),
+                    'end_date': str(placement.end_date),
+                    'evaluation_submitted': evaluation_submitted,
+                })
+        
+        return data
+    
+    def get_completed_students(self, obj):
+        """Get completed/evaluated students"""
+        if obj.role == 'workplace':
+            placements = InternshipPlacement.objects.filter(
+                workplace_supervisor=obj,
+                status='approved'
+            )
+        elif obj.role == 'academic':
+            placements = InternshipPlacement.objects.filter(
+                academic_supervisor=obj,
+                status='approved'
+            )
+        else:
+            placements = InternshipPlacement.objects.none()
+        
+        data = []
+        for placement in placements:
+            evaluation = Evaluation.objects.filter(placement=placement).first()
             
-            # Add evaluation scores if available
-            if evaluation:
-                data[i]['workplace_score'] = evaluation.workplace_score
-                data[i]['academic_score'] = evaluation.academic_score
-                data[i]['final_score'] = evaluation.final_score
-                data[i]['grade'] = evaluation.grade
+            if obj.role == 'workplace':
+                evaluation_submitted = evaluation and evaluation.workplace_score is not None
+            else:
+                evaluation_submitted = evaluation and evaluation.academic_score is not None
+            
+            # Only include if evaluation IS submitted
+            if evaluation_submitted:
+                data.append({
+                    'id': placement.id,
+                    'student_name': placement.student.get_full_name(),
+                    'student_id': placement.student.student_id,
+                    'company_name': placement.company_name,
+                    'status': placement.status,
+                    'start_date': str(placement.start_date),
+                    'end_date': str(placement.end_date),
+                    'evaluation_submitted': evaluation_submitted,
+                    'workplace_score': evaluation.workplace_score if evaluation else None,
+                    'academic_score': evaluation.academic_score if evaluation else None,
+                    'final_score': evaluation.final_score if evaluation else None,
+                    'grade': evaluation.grade if evaluation else None,
+                })
         
         return data
     
@@ -686,8 +829,44 @@ class SupervisorDashboardSerializer(serializers.ModelSerializer):
             logs = WeeklyLog.objects.none()
         
         return WeeklyLogSerializer(logs, many=True).data
-
-
+    
+    def get_pending_late_requests(self, obj):
+        """Get late submission requests pending workplace supervisor decision"""
+        if obj.role != 'workplace':
+            return []
+        
+        
+        pending_requests = InternshipPlacement.objects.filter(
+            workplace_supervisor=obj,
+            log_exception_requested=True,
+            exception_request_type='late_submission',
+            exception_status='workplace_pending'
+        )
+        
+        result = []
+        for p in pending_requests:
+            # Calculate missing weeks
+            total_days = (p.end_date - p.start_date).days
+            total_weeks = (total_days // 7) + 1 if total_days % 7 != 0 else (total_days // 7)
+            if total_weeks < 1:
+                total_weeks = 1
+            
+            submitted_weeks = set(p.logs.values_list('week_number', flat=True))
+            missing_weeks = [w for w in range(1, total_weeks + 1) if w not in submitted_weeks]
+            
+            result.append({
+                'id': p.id,
+                'student_name': p.student.get_full_name(),
+                'student_id': p.student.student_id,
+                'company_name': p.company_name,
+                'exception_reason': p.exception_reason,
+                'missing_weeks': missing_weeks,
+                'submitted_weeks': list(submitted_weeks),
+                'requested_at': p.created_at,
+                'total_weeks': total_weeks
+            })
+        
+        return result
 class AdminDashboardSerializer(serializers.ModelSerializer):
     total_students = serializers.IntegerField(read_only=True)
     total_supervisors = serializers.IntegerField(read_only=True)
@@ -708,7 +887,6 @@ class AdminDashboardSerializer(serializers.ModelSerializer):
         
         placements = InternshipPlacement.objects.filter(status='pending')
         
-        # Filter by department if admin is not superuser
         if admin_dept:
             placements = placements.filter(student__department_fk=admin_dept)
         
@@ -722,7 +900,6 @@ class AdminDashboardSerializer(serializers.ModelSerializer):
             log_exception_requested=True,
             exception_status='pending'
         )
-        
         
         if admin_dept:
             exceptions = exceptions.filter(student__department_fk=admin_dept)

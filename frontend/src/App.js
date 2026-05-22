@@ -10,6 +10,10 @@ import StudentDashboard from './Pages/StudentDashboard';
 import AcademicDashboard from './Pages/AcademicDashboard';
 import AcademicEvaluation from './Pages/AcademicEvaluation';
 import SupervisorDashboard from './Pages/SupervisorDashboard';
+// In App.js - Add these imports
+import ForgotPassword from "./Pages/ForgotPassword";
+import ResetPassword from "./Pages/ResetPassword";
+
 
 function App() {
   return (
@@ -40,12 +44,17 @@ function App() {
         {/* Academic Supervisor */}
         <Route path="/academic" element={<AcademicDashboard />} />
         <Route path="/academic/evaluate" element={<AcademicEvaluation />} />
+        {/* <Route path="/pending-logs" element={<PendingLogs />} /> */}
+        <Route path="/academic/evaluate" element={<AcademicEvaluation/>} />
 
         {/* Workplace Supervisor */}
         <Route path="/workplace-supervisor" element={<SupervisorDashboard />} />
 
         {/* General Dashboard */}
         <Route path="/dashboard" element={<Dashboard />} />
+			
+		<Route path="/forgot-password" element={<ForgotPassword />} />
+		<Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
 
     </Router>
