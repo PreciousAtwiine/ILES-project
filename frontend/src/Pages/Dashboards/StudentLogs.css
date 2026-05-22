@@ -1,6 +1,6 @@
-/* StudentLogs.css */
 
-/* Container styles */
+
+
 .student-logs-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -19,7 +19,6 @@ h1 {
   text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
 }
 
-/* Form Card */
 .form-card {
   background: white;
   border-radius: 16px;
@@ -43,7 +42,7 @@ h1 {
   display: inline-block;
 }
 
-/* Form Groups */
+
 .form-group {
   margin-bottom: 24px;
 }
@@ -80,7 +79,7 @@ h1 {
   border-color: #bdc3c7;
 }
 
-/* File input styling */
+
 .form-group input[type="file"] {
   padding: 10px;
   background: #f8f9fa;
@@ -91,7 +90,7 @@ h1 {
   background: #e9ecef;
 }
 
-/* Submit Button */
+
 .submit-button {
   background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
   color: white;
@@ -117,7 +116,7 @@ h1 {
   transform: translateY(0);
 }
 
-/* Section Title */
+
 .section-title {
   margin: 40px 0 24px 0;
   text-align: center;
@@ -143,14 +142,14 @@ h1 {
   border-radius: 2px;
 }
 
-/* Logs List */
+
 .logs-list {
   display: grid;
   gap: 24px;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
 }
 
-/* Log Item */
+
 .log-item {
   background: white;
   border-radius: 12px;
@@ -165,7 +164,7 @@ h1 {
   box-shadow: 0 8px 24px rgba(0,0,0,0.15);
 }
 
-/* Log Header */
+
 .log-header {
   margin-bottom: 16px;
   padding-bottom: 12px;
@@ -181,7 +180,6 @@ h1 {
   color: #2c3e50;
 }
 
-/* Status Badges */
 .status-badge {
   display: inline-block;
   padding: 4px 12px;
@@ -217,14 +215,13 @@ h1 {
   color: #c2185b;
 }
 
-/* Log Date */
+
 .log-date {
   font-size: 0.8rem;
   color: #7f8c8d;
   margin-left: auto;
 }
 
-/* Log Content */
 .log-activities {
   color: #34495e;
   line-height: 1.6;
@@ -241,7 +238,7 @@ h1 {
   color: #2c3e50;
 }
 
-/* Feedback and Score */
+
 .log-feedback {
   background: #f8f9fa;
   padding: 12px;
@@ -261,7 +258,7 @@ h1 {
   margin-top: 8px;
 }
 
-/* Late Reason */
+
 .late-reason {
   background: #fff3cd;
   border: 1px solid #ffc107;
@@ -272,7 +269,7 @@ h1 {
   margin-top: 12px;
 }
 
-/* Attachment Link */
+
 .log-item a {
   color: #3498db;
   text-decoration: none;
@@ -285,7 +282,7 @@ h1 {
   text-decoration: underline;
 }
 
-/* No Logs Message */
+
 p:only-child {
   text-align: center;
   padding: 40px;
@@ -295,7 +292,7 @@ p:only-child {
   font-size: 1.1rem;
 }
 
-/* Responsive Design */
+
 @media (max-width: 768px) {
   .student-logs-container {
     padding: 16px;
@@ -343,7 +340,7 @@ p:only-child {
   }
 }
 
-/* Loading and Error States (optional) */
+
 .loading {
   text-align: center;
   padding: 40px;
