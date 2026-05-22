@@ -71,7 +71,7 @@ export default function AcademicDashboard() {
   return (
     <div className="ac-shell">
 
-      {/* SIDEBAR */}
+      
       <div className="ac-sidebar">
         <div className="ac-brand">
           <h2>Academic Supervisor</h2>
@@ -89,7 +89,7 @@ export default function AcademicDashboard() {
         </div>
       </div>
 
-      {/* MAIN */}
+      
       <div className="ac-main">
 
         {/* TOPBAR */}
@@ -105,7 +105,7 @@ export default function AcademicDashboard() {
 
         <div className="ac-content">
 
-          {/* DASHBOARD VIEW */}
+      
           {view === "dashboard" && (
             <>
               <div className="ac-stats">
