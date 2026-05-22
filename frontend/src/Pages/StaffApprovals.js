@@ -5,7 +5,7 @@ export default function StaffApprovals({ pendingStaff, onApprove, onReject }) {
     return <p>No pending staff approvals.</p>;
   }
 
-  // Create a copy to avoid loop reference issues
+  
   const staffList = pendingStaff.map(function(staff) {
     return (
       <tr key={staff.id}>
