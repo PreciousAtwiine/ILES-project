@@ -13,7 +13,7 @@ export default function StudentLogs({ recentLogs, onSubmit }) {
             <input type="number" id="week_number" placeholder="Week" min="1" required />
           </div>
           <div className="form-group">
-            <label>Activities Performed in Week {log.week_number} *</label>
+            <label>Activities Performed  {log.week_number} *</label>
             <textarea id="activities" rows="4" placeholder="Input activities to be done this week" required></textarea>
           </div>
           <div className="form-group">
