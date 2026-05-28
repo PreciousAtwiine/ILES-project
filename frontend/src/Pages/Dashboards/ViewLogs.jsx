@@ -6,7 +6,7 @@ export default function StudentLogs({ recentLogs, onSubmit }) {
       <h1>Weekly Logs</h1>
       
       <div className="form-card">
-        <h3>Weekly Work done  <Logs></Logs></h3>
+        <h3>Weekly Work done by Student  <Logs></Logs></h3>
         <form onSubmit={onSubmit}>
         <div className="form-group">
             <label>Week Number from start of Internship *</label>
@@ -17,7 +17,7 @@ export default function StudentLogs({ recentLogs, onSubmit }) {
             <textarea id="activities" rows="4" placeholder="Input activities to be done this week" required></textarea>
           </div>
           <div className="form-group">
-            <label>Challenges Faced while Working in Week {log.week_number}</label>
+            <label>Challenges Faced while Working {log.week_number}</label>
             <textarea id="Challenges or Hinderances " rows="2" placeholder="Any challenges or hinderances faced?"></textarea>
           </div>
           <div className="form-group">
