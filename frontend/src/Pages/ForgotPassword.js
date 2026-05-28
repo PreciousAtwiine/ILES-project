@@ -25,7 +25,7 @@ export default function ForgotPassword() {
       setTimeout(() => navigate("/login"), 3000);
     } catch (err) {
       if (err.response?.status === 404) {
-        setError("No account found with this email address.");
+        setError("No account linked to this email address.");
       } else {
         setError(err.response?.data?.error || "Failed to send reset link. Please try again.");
       }
