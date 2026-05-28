@@ -57,7 +57,7 @@ export default function StudentPlacement({
               value={newCompanyName}
               onChange={onNewCompanyChange}
             />
-            <small className="hint-text">New companies will need System Admin approval</small>
+            <small className="hint-text"> Admin approval</small>
           </div>
           
           <div className="form-row">
