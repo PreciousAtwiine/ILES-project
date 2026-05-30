@@ -1,4 +1,4 @@
-// src/Pages/Notifications.js
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import "./Notifications.css";
@@ -9,7 +9,7 @@ const Notifications = ({ role, getToken, BASE_URL, onNotificationClick }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isFetching, setIsFetching] = useState(false);
   
-  // Store previous data to detect NEW items
+  
   const previousDataRef = useRef({
     staffIds: [],
     appIds: [],
