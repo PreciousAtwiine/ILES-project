@@ -41,16 +41,16 @@ function App() {
         {/* Student */}
         <Route path="/student" element={<StudentDashboard />} />
 
-        {/* Academic Supervisor */}
+      
         <Route path="/academic" element={<AcademicDashboard />} />
         <Route path="/academic/evaluate" element={<AcademicEvaluation />} />
         {/* <Route path="/pending-logs" element={<PendingLogs />} /> */}
         <Route path="/academic/evaluate" element={<AcademicEvaluation/>} />
 
-        {/* Workplace Supervisor */}
+        
         <Route path="/workplace-supervisor" element={<SupervisorDashboard />} />
 
-        {/* General Dashboard */}
+        
         <Route path="/dashboard" element={<Dashboard />} />
 			
 		<Route path="/forgot-password" element={<ForgotPassword />} />
