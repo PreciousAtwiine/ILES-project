@@ -1,4 +1,4 @@
-// src/Pages/StudentPlacement.jsx
+
 import React, { useState } from 'react';
 
 export default function StudentPlacement({ 
