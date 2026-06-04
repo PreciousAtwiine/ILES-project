@@ -3,7 +3,7 @@ import axios from "axios";
 import AdminDashboard from "./AdminDashboard";
 import PendingApproval from "../components/PendingApproval";
 
-// Mock axios and the sub-components
+
 jest.mock("axios");
 jest.mock("./StaffApprovals", () => () => <div data-testid="staff-comp">Staff Component</div>);
 jest.mock("./Applications", () => () => <div data-testid="apps-comp">Apps Component</div>);
@@ -50,7 +50,7 @@ describe("AdminDashboard Component", () => {
     jest.clearAllMocks();
     localStorage.setItem("access", "fake-token");
 
-    // Mock user info endpoint
+
     axios.get.mockImplementation((url) => {
       if (url.includes("/users/me/")) {
         return Promise.resolve({ data: mockUserData });

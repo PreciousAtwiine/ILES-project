@@ -1,4 +1,4 @@
-/* ==================== VARIABLES ==================== */
+
 :root {
   --primary: #4f46e5;
   --primary-dark: #4338ca;
@@ -25,8 +25,6 @@
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 }
-
-/* Reset margins */
 * {
   margin: 0;
   padding: 0;
@@ -34,7 +32,6 @@
 }
 
 
-/* ==================== SIDEBAR - ULTRA TIGHT SPACING WITH PROPER ALIGNMENT ==================== */
 .sidebar {
   width: 250px;
   background: linear-gradient(180deg, #1e1b4b 0%, #2e1065 50%, #1e1b4b 100%);
@@ -102,12 +99,12 @@
   line-height: 1.2;
 }
 
-/* Fix emoji alignment - make them the same width */
+
 .sidebar button::before {
   display: none;
 }
 
-/* Ensure emojis and text are vertically centered */
+
 .sidebar button span,
 .sidebar button .emoji {
   display: inline-flex;
