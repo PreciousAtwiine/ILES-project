@@ -44,7 +44,7 @@ function App() {
       
         <Route path="/academic" element={<AcademicDashboard />} />
         <Route path="/academic/evaluate" element={<AcademicEvaluation />} />
-        {/* <Route path="/pending-logs" element={<PendingLogs />} /> */}
+      
         <Route path="/academic/evaluate" element={<AcademicEvaluation/>} />
 
         
