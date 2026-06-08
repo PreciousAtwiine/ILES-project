@@ -24,7 +24,7 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 
 ALLOWED_HOSTS = [
-    'iles-project-test-deployment.onrender.com',   # ← correct spelling
+    'iles-project-test-deploymen.onrender.com',   # ← correct spelling
     'iles-project-group6.onrender.com',
     'localhost',
     '127.0.0.1',
