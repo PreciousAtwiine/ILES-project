@@ -181,11 +181,7 @@ else:
 FRONTEND_URL = config('FRONTEND_URL', default='https://iles-grpo6front.onrender.com')
 
 
-CORS_ALLOWED_ORIGINS = [
-    'https://iles-grpo6front.onrender.com',
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-]
+
 
 CORS_ALLOW_CREDENTIALS = True
 
