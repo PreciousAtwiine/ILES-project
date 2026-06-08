@@ -82,7 +82,7 @@ export default function Login() {
 
       <div className="login-right">
         <form className="login-card" onSubmit={handleSubmit}>
-          <h2>Welcome Back</h2>
+          <h2>Welcome </h2>
           <p className="subtitle">Please login to continue</p>
 
           <input
