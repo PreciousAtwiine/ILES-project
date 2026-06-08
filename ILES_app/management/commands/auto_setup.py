@@ -13,36 +13,40 @@ class Command(BaseCommand):
         
         # Load departments only if empty
         if Department.objects.count() == 0:
-            self.stdout.write('📚 Loading departments...')
+            self.stdout.write(' Loading departments...')
             try:
                 call_command('loaddata', 'departments.json', verbosity=0)
-                self.stdout.write(self.style.SUCCESS(f'✅ Loaded {Department.objects.count()} departments'))
+                self.stdout.write(self.style.SUCCESS(f'Loaded {Department.objects.count()} departments'))
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f'❌ Error loading departments: {e}'))
+                self.stdout.write(self.style.ERROR(f' Error loading departments: {e}'))
         else:
-            self.stdout.write(self.style.WARNING(f'⚠️ Departments already exist ({Department.objects.count()} found), skipping...'))
+            self.stdout.write(self.style.WARNING(f' Departments already exist ({Department.objects.count()} found), skipping...'))
         
         # Load companies only if empty
         if Company.objects.count() == 0:
             self.stdout.write('🏢 Loading companies...')
             try:
                 call_command('loaddata', 'companies.json', verbosity=0)
-                self.stdout.write(self.style.SUCCESS(f'✅ Loaded {Company.objects.count()} companies'))
+                self.stdout.write(self.style.SUCCESS(f'Loaded {Company.objects.count()} companies'))
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f'❌ Error loading companies: {e}'))
+                self.stdout.write(self.style.ERROR(f'Error loading companies: {e}'))
         else:
-            self.stdout.write(self.style.WARNING(f'⚠️ Companies already exist ({Company.objects.count()} found), skipping...'))
+            self.stdout.write(self.style.WARNING(f' Companies already exist ({Company.objects.count()} found), skipping...'))
         
-        # Create superuser only if none exists
+        # Ensure a superuser exists (create if not present, or update password if needed)
         if not User.objects.filter(is_superuser=True).exists():
-            self.stdout.write('👑 Creating superuser...')
+            self.stdout.write(' Creating superuser...')
             User.objects.create_superuser(
                 username='admin',
                 email='admin@iles.com',
                 password='admin123'
             )
-            self.stdout.write(self.style.SUCCESS('✅ Superuser created: admin / admin123'))
+            self.stdout.write(self.style.SUCCESS('Superuser created: admin / admin123'))
         else:
-            self.stdout.write(self.style.WARNING('⚠️ Superuser already exists, skipping...'))
+            # Optional: reset password to a known value (comment out if you don't want this)
+            admin = User.objects.get(is_superuser=True, username='admin')
+            admin.set_password('admin123')
+            admin.save()
+            self.stdout.write(self.style.SUCCESS(' Superuser password reset to admin123'))
         
-        self.stdout.write(self.style.SUCCESS('🎉 Auto setup complete!'))
+        self.stdout.write(self.style.SUCCESS(' Auto setup complete!'))
