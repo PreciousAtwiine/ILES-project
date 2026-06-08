@@ -39,6 +39,7 @@ class Command(BaseCommand):
                 'is_superuser': True,
                 'is_staff': True,
                 'role': 'admin',
+                'is_approved': True,
             }
         )
         admin = User.objects.get(username='admin')
