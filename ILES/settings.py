@@ -200,7 +200,7 @@ CORS_ALLOW_METHODS = [
     'POST',
     'PUT',
 ]
-DEBUG = True
+
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
