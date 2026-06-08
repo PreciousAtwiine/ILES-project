@@ -17,14 +17,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-#Only for local dev
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-xvew#=vxe_740@(mg1-jc9-z2w@9!6))o_fm_h_vq-k3tpyp)f')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
+
 ALLOWED_HOSTS = [
-    'iles-project-test-deploymen.onrender.com',
+    'iles-project-test-deploymen.onrender.com',   # ← correct spelling
     'iles-project-group6.onrender.com',
     'localhost',
     '127.0.0.1',
@@ -48,7 +48,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',          # must be high
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -142,13 +142,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-#Not needed on render
-# STATICFILES_DIRS = [
-#     os.path.join(BASE_DIR, 'frontend/dist/assets'),
-# ]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-AUTH_USER_MODEL='ILES_app.User'
+AUTH_USER_MODEL = 'ILES_app.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -167,7 +163,7 @@ SIMPLE_JWT = {
 LOGIN_REDIRECT_URL = '/api/student/dashboard/'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT=BASE_DIR/'media'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -180,11 +176,9 @@ else:
     EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
     DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='ILES System <noreply@iles.com>')
 
-FRONTEND_URL = config('FRONTEND_URL', default='https://iles-grpo6front.onrender.com')
+FRONTEND_URL = config('FRONTEND_URL', default=''https://iles-project-g6.onrender.com'')
 
-
-
-
+# CORS settings
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_METHODS = [
@@ -208,14 +202,16 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
+
 CORS_ALLOWED_ORIGINS = [
     "https://iles-project-g6.onrender.com",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
     'https://*.vercel.app',
     'http://localhost:3000',
-    'https://iles-project-g6.onrender.com',  
+    'https://iles-project-g6.onrender.com',
 ]
