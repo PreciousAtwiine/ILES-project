@@ -169,7 +169,7 @@ else:
     EMAIL_USE_TLS = True
     EMAIL_HOST_USER = 'hiltonjolly@gmail.com'
     EMAIL_HOST_PASSWORD = 'tcufomcfcxeinclj' 
-    DEFAULT_FROM_EMAIL = 'ILES System <'hiltonjolly@gmail.com>'
+    DEFAULT_FROM_EMAIL = 'ILES System <hiltonjolly@gmail.com>'
 FRONTEND_URL = config('FRONTEND_URL', default='https://iles-project-group6.onrender.com')
 
 
