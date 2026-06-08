@@ -331,7 +331,7 @@ class AssignSupervisorsSerializer(serializers.Serializer):
 class WeeklyLogSerializer(serializers.ModelSerializer):
     student_name = serializers.CharField(source='placement.student.get_full_name', read_only=True)
     reviewer_name = serializers.CharField(source='reviewed_by.get_full_name', read_only=True, default=None)
-    
+    working_hours = serializers.DecimalField(decimal_places=4, max_digits=6, default=0, coerce_to_string=False)
     class Meta:
         model = WeeklyLog
         fields = ['id', 'placement', 'student_name', 'week_number', 'working_hours', 'attachment',

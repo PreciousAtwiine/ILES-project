@@ -6,7 +6,7 @@ import StudentLogs from "./StudentLogs";
 import ExceptionRequestModal from "./ExceptionRequestModal";
 import notifications from "../utils/notifications";
 import Notifications from "./Notifications";
-
+import API_URL from '../utils/api';
 export default function StudentDashboard() {
   const [user, setUser] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
@@ -19,7 +19,7 @@ export default function StudentDashboard() {
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
   const [newCompanyName, setNewCompanyName] = useState("");
 
-  const BASE_URL = "http://127.0.0.1:8000";
+ 
   const getToken = () => localStorage.getItem("access");
 
   const logout = () => {
@@ -37,19 +37,19 @@ export default function StudentDashboard() {
     }
 
     try {
-      const userRes = await axios.get(`${BASE_URL}/users/me/`, {
+      const userRes = await axios.get(`${API_URL}/users/me/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       setUser(userRes.data.user);
 
-      const studentRes = await axios.get(`${BASE_URL}/api/student/dashboard/`, {
+      const studentRes = await axios.get(`${API_URL}/api/student/dashboard/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       setDashboardData(studentRes.data);
 
-      const companiesRes = await axios.get(`${BASE_URL}/api/companies/approved/`);
+      const companiesRes = await axios.get(`${API_URL}/api/companies/approved/`);
       setApprovedCompanies(companiesRes.data);
 
     } catch (error) {
@@ -68,7 +68,7 @@ export default function StudentDashboard() {
     setConfirmingView(true);
     try {
       const token = getToken();
-      await axios.post(`${BASE_URL}/api/student/confirm-evaluation-view/`, {
+      await axios.post(`${API_URL}/api/student/confirm-evaluation-view/`, {
         placement_id: dashboardData?.placement?.id
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -103,7 +103,7 @@ export default function StudentDashboard() {
     try {
       const token = getToken();
 
-      await axios.post(`${BASE_URL}/api/placements/apply/`, {
+      await axios.post(`${API_URL}/api/placements/apply/`, {
         student_id,
         company_name,
         start_date,
@@ -114,7 +114,7 @@ export default function StudentDashboard() {
 
       notifications.notifySuccess("Placement application submitted successfully!");
 
-      const dashboardRes = await axios.get(`${BASE_URL}/api/student/dashboard/`, {
+      const dashboardRes = await axios.get(`${API_URL}/api/student/dashboard/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -157,7 +157,7 @@ export default function StudentDashboard() {
     try {
       const token = getToken();
 
-      await axios.post(`${BASE_URL}/api/student/logs/`, formData, {
+      await axios.post(`${API_URL}/api/student/logs/`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data"
@@ -166,7 +166,7 @@ export default function StudentDashboard() {
 
       notifications.notifySuccess("Weekly log submitted successfully! Your workplace supervisor will review it soon.");
 
-      const dashboardRes = await axios.get(`${BASE_URL}/api/student/dashboard/`, {
+      const dashboardRes = await axios.get(`${API_URL}/api/student/dashboard/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -240,7 +240,7 @@ export default function StudentDashboard() {
           <Notifications 
             role="student"
             getToken={getToken}
-            BASE_URL={BASE_URL}
+            
             onNotificationClick={(notification) => {
               if (notification.type === 'placement') setActiveTab('placement');
               else if (notification.type === 'review') setActiveTab('logs');

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import "./AssignSupervisorModal.css";
-
+import API_URL from '../utils/api';
 export default function AssignSupervisorModal({ placement, onClose, onAssign }) {
   const [workplaceId, setWorkplaceId] = useState("");
   const [academicId, setAcademicId] = useState("");
@@ -12,7 +12,6 @@ export default function AssignSupervisorModal({ placement, onClose, onAssign }) 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  const BASE_URL = "http://127.0.0.1:8000";
   const getToken = () => localStorage.getItem("access");
 
   useEffect(() => {
@@ -20,7 +19,7 @@ export default function AssignSupervisorModal({ placement, onClose, onAssign }) 
       try {
         const token = getToken();
         const response = await axios.get(
-          `${BASE_URL}/placements/${placement.id}/assign_supervisors/`,
+          `${API_URL}/placements/${placement.id}/assign_supervisors/`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setAvailableWorkplace(response.data.available_workplace || []);
@@ -55,7 +54,7 @@ export default function AssignSupervisorModal({ placement, onClose, onAssign }) 
       if (academicId) assignData.academic_id = parseInt(academicId);
 
       const response = await axios.post(
-        `${BASE_URL}/placements/${placement.id}/assign_supervisors/`,
+        `${API_URL}/placements/${placement.id}/assign_supervisors/`,
         assignData,
         { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
@@ -69,7 +68,7 @@ export default function AssignSupervisorModal({ placement, onClose, onAssign }) 
         alert("Workplace supervisor assigned. Please also assign an academic supervisor to approve the placement.");
         // Refresh the modal data to show updated current assignments
         const refreshResponse = await axios.get(
-          `${BASE_URL}/placements/${placement.id}/assign_supervisors/`,
+          `${API_URL}/placements/${placement.id}/assign_supervisors/`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setCurrentWorkplace(refreshResponse.data.current?.workplace || null);
@@ -79,7 +78,7 @@ export default function AssignSupervisorModal({ placement, onClose, onAssign }) 
         alert("Academic supervisor assigned. Please also assign a workplace supervisor to approve the placement.");
         // Refresh the modal data
         const refreshResponse = await axios.get(
-          `${BASE_URL}/placements/${placement.id}/assign_supervisors/`,
+          `${API_URL}/placements/${placement.id}/assign_supervisors/`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setCurrentWorkplace(refreshResponse.data.current?.workplace || null);

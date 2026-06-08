@@ -1,8 +1,45 @@
-// ReviewLogModal.jsx
 import { useState } from "react";
 import axios from "axios";
 import "./ReviewLogModal.css";
 import notifications from "../utils/notifications"; 
+import API_URL from '../utils/api';
+
+// Helper function to format date
+const formatDate = (dateString) => {
+  if (!dateString) return "Not submitted";
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "Invalid date";
+    return date.toLocaleDateString();
+  } catch (e) {
+    return "Invalid date";
+  }
+};
+
+// Helper function to format hours
+const formatHours = (hours) => {
+  // Handle null, undefined, or empty
+  if (hours === null || hours === undefined || hours === '') {
+    return "0";
+  }
+  
+  let numHours;
+  
+  // Handle different possible formats from backend
+  if (typeof hours === 'object' && hours !== null) {
+    numHours = parseFloat(hours.toString());
+  } else if (typeof hours === 'string') {
+    numHours = parseFloat(hours);
+  } else if (typeof hours === 'number') {
+    numHours = hours;
+  } else {
+    return "0";
+  }
+  
+  if (isNaN(numHours)) return "0";
+  if (numHours % 1 === 0) return numHours.toString();
+  return numHours.toFixed(2).replace(/\.?0+$/, '');
+};
 
 export default function ReviewLogModal({ log, onClose, onReviewComplete }) {
   const [score, setScore] = useState("");
@@ -10,7 +47,6 @@ export default function ReviewLogModal({ log, onClose, onReviewComplete }) {
   const [status, setStatus] = useState("approved");
   const [loading, setLoading] = useState(false);
 
-  const BASE_URL = "http://127.0.0.1:8000";
   const getToken = () => localStorage.getItem("access");
 
   const handleSubmit = async (e) => {
@@ -21,7 +57,7 @@ export default function ReviewLogModal({ log, onClose, onReviewComplete }) {
       const token = getToken();
       
       await axios.put(
-        `${BASE_URL}/logs/${log.id}/review/`,
+        `${API_URL}/logs/${log.id}/review/`,
         { status, score: parseInt(score), feedback },
         { 
           headers: { 
@@ -48,14 +84,23 @@ export default function ReviewLogModal({ log, onClose, onReviewComplete }) {
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <h2>Review Weekly Log</h2>
+        <h2>Review Weekly Log - Week {log.week_number}</h2>
         
         <div className="log-info">
-          <p><strong>Student:</strong> {log.student_name}</p>
+          <p><strong>Student:</strong> {log.student_name || log.placement?.student?.username || "Unknown"}</p>
           <p><strong>Week:</strong> {log.week_number}</p>
+          
+          {/* FIXED: Display Working Hours properly */}
+          <p><strong>Working Hours:</strong> {formatHours(log.working_hours)}h</p>
+          
+          {/* FIXED: Display Submission Date properly */}
+          <p><strong>Submitted:</strong> {formatDate(log.submission_date)}</p>
+          
+          <p><strong>Status:</strong> {log.status}</p>
+          
           <p><strong>Activities:</strong></p>
           <div className="activities-box">
-            {log.activities}
+            {log.activities || "No activities reported"}
           </div>
 
           {log.challenges && (

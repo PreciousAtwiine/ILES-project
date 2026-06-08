@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import "./Login.css";
 import notifications from "./utils/notifications"; 
-
+import API_URL from './utils/api';
 export default function Login() {
   const [data, setData] = useState({ username: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -17,7 +17,7 @@ export default function Login() {
 
     try {
       const res = await axios.post(
-        "http://127.0.0.1:8000/api/token/",
+        `${API_URL}/api/token/`,
         data
       );
 
@@ -26,7 +26,7 @@ export default function Login() {
       localStorage.setItem("refresh", res.data.refresh);
 
       const userRes = await axios.get(
-        "http://127.0.0.1:8000/users/me/",
+        `${API_URL}/users/me/`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

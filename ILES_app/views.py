@@ -1,7 +1,8 @@
 from logging import log
 from django.db.models import Q
 from rest_framework import viewsets,generics, status
-from rest_framework import viewsets, generics, status
+
+
 from django.core.mail import send_mail
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -227,8 +228,7 @@ class InternshipPlacementViewSet(viewsets.ModelViewSet):
         if request.method == 'GET':
             def get_available(role):
                 if role == 'workplace':
-                    # Workplace supervisors: Show ALL active supervisors from this company
-                    # Never mark as busy (they can have unlimited students)
+                    
                     supervisors = User.objects.filter(
                         role=role, 
                         is_active=True,
@@ -236,8 +236,12 @@ class InternshipPlacementViewSet(viewsets.ModelViewSet):
                     )
                     return supervisors
                 else: 
-                    # Academic supervisors: Show only those with less than 10 students
-                    all_academics = User.objects.filter(role=role, is_active=True)
+                    
+                    all_academics = User.objects.filter(
+                        role=role, 
+                        is_active=True,
+                        department_fk=placement.student.department_fk  #  ONLY SAME DEPRTMENT
+                    )
                     
                     available = []
                     for sup in all_academics:
@@ -245,7 +249,7 @@ class InternshipPlacementViewSet(viewsets.ModelViewSet):
                             academic_supervisor=sup,
                             status='approved'
                         ).count()
-                        if current_count < 10:  # Only show if under limit
+                        if current_count < 10:
                             available.append(sup)
                     
                     # Exclude current supervisor if already assigned
@@ -1030,13 +1034,13 @@ class AcademicDashboardView(generics.RetrieveAPIView):
             status='approved'
         )
         
-        # Get pending logs
+        #  pending logs
         pending_logs = WeeklyLog.objects.filter(
             placement__academic_supervisor=user,
             status='submitted'
         )
         
-        # Get reviewed logs
+        # reviewed logs
         reviewed_logs = WeeklyLog.objects.filter(
             placement__academic_supervisor=user,
             status__in=['approved', 'rejected']
@@ -1078,6 +1082,7 @@ class AcademicDashboardView(generics.RetrieveAPIView):
                     'id': log.id,
                     'student_name': f"{log.placement.student.first_name} {log.placement.student.last_name}",
                     'week_number': log.week_number,
+                    'working_hours': str(log.working_hours),
                     'status': log.status,
                     'score': log.score,
                     'feedback': log.feedback,

@@ -13,7 +13,7 @@ import StudentPlacement from "./StudentPlacement";
 import StudentLogs from "./StudentLogs";
 import SupervisorStudents from "./SupervisorStudents";
 import SupervisorPendingLogs from "./SupervisorPendingLogs";
-
+import API_URL from '../utils/api';
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
@@ -39,7 +39,7 @@ export default function Dashboard() {
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
   const [newCompanyName, setNewCompanyName] = useState("");
 
-  const BASE_URL = "http://127.0.0.1:8000";
+  
   const getToken = () => localStorage.getItem("access");
 
   const openAssignModal = (placement) => {
@@ -65,7 +65,7 @@ export default function Dashboard() {
     setLoadingCompanies(true);
     try {
       const token = getToken();
-      const response = await axios.get(`${BASE_URL}/api/admin/pending-companies/`, {
+      const response = await axios.get(`${API_URL}/api/admin/pending-companies/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPendingCompanies(response.data);
@@ -79,7 +79,7 @@ export default function Dashboard() {
   const approveCompany = async (companyId) => {
     try {
       const token = getToken();
-      await axios.post(`${BASE_URL}/api/admin/approve-company/${companyId}/`, 
+      await axios.post(`${API_URL}/api/admin/approve-company/${companyId}/`, 
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -97,7 +97,7 @@ export default function Dashboard() {
     
     try {
       const token = getToken();
-      await axios.post(`${BASE_URL}/api/admin/reject-company/${companyId}/`,
+      await axios.post(`${API_URL}/api/admin/reject-company/${companyId}/`,
         { reason: reason },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -113,7 +113,7 @@ export default function Dashboard() {
     setLoadingExceptions(true);
     try {
       const token = getToken();
-      const response = await axios.get(`${BASE_URL}/api/admin/pending-exceptions/`, {
+      const response = await axios.get(`${API_URL}/api/admin/pending-exceptions/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const mappedData = response.data.map(item => ({
@@ -140,7 +140,7 @@ export default function Dashboard() {
   const approveExceptionRequest = async (requestId) => {
     try {
       const token = getToken();
-      await axios.post(`${BASE_URL}/api/admin/approve-exception/${requestId}/`, 
+      await axios.post(`${API_URL}/api/admin/approve-exception/${requestId}/`, 
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -158,7 +158,7 @@ export default function Dashboard() {
     
     try {
       const token = getToken();
-      await axios.post(`${BASE_URL}/api/admin/reject-exception/${requestId}/`,
+      await axios.post(`${API_URL}/api/admin/reject-exception/${requestId}/`,
         { reason: reason },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -177,7 +177,7 @@ export default function Dashboard() {
     
     try {
       const token = getToken();
-      const response = await axios.get(`${BASE_URL}/logs/?placement__student=${studentId}`, {
+      const response = await axios.get(`${API_URL}/logs/?placement__student=${studentId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStudentLogs(response.data);
@@ -220,7 +220,7 @@ export default function Dashboard() {
     try {
       const token = getToken();
       const response = await axios.post(
-        `${BASE_URL}/api/placements/apply/`,
+        `${API_URL}/api/placements/apply/`,
         {
           student_id: student_id,
           company_name: company_name,
@@ -232,7 +232,7 @@ export default function Dashboard() {
       
       if (response.status === 201 || response.status === 200) {
         alert("Placement application submtted successfully!");
-        const dashboardRes = await axios.get(`${BASE_URL}/api/student/dashboard/`, {
+        const dashboardRes = await axios.get(`${API_URL}/api/student/dashboard/`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setDashboardData(dashboardRes.data);
@@ -282,7 +282,7 @@ export default function Dashboard() {
     try {
       const token = getToken();
       const response = await axios.post(
-        `${BASE_URL}/api/student/logs/`,
+        `${API_URL}/api/student/logs/`,
         formData,
         { 
           headers: { 
@@ -294,7 +294,7 @@ export default function Dashboard() {
       
       if (response.status === 201 || response.status === 200) {
         alert("Weekly log submitted successfully!");
-        const dashboardRes = await axios.get(`${BASE_URL}/api/student/dashboard/`, {
+        const dashboardRes = await axios.get(`${API_URL}/api/student/dashboard/`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setDashboardData(dashboardRes.data);
@@ -337,7 +337,7 @@ export default function Dashboard() {
       }
 
       try {
-        const userRes = await axios.get(`${BASE_URL}/users/me/`, {
+        const userRes = await axios.get(`${API_URL}/users/me/`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUser(userRes.data.user);
@@ -345,29 +345,29 @@ export default function Dashboard() {
         const role = userRes.data.user.role;
         
         if (role === "admin") {
-          const adminRes = await axios.get(`${BASE_URL}/api/admin/dashboard/`, {
+          const adminRes = await axios.get(`${API_URL}/api/admin/dashboard/`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setDashboardData(adminRes.data);
           
-          const staffRes = await axios.get(`${BASE_URL}/users/pending_staff/`, {
+          const staffRes = await axios.get(`${API_URL}/users/pending_staff/`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setPendingStaff(staffRes.data);
           
-          const appsRes = await axios.get(`${BASE_URL}/placements/pending/`, {
+          const appsRes = await axios.get(`${API_URL}/placements/pending/`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setPendingApplications(appsRes.data);
           
         } else if (role === "student") {
-          const studentRes = await axios.get(`${BASE_URL}/api/student/dashboard/`, {
+          const studentRes = await axios.get(`${API_URL}/api/student/dashboard/`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setDashboardData(studentRes.data);
           
         } else if (role === "workplace" || role === "academic") {
-          const supervisorRes = await axios.get(`${BASE_URL}/api/supervisor/dashboard/`, {
+          const supervisorRes = await axios.get(`${API_URL}/api/supervisor/dashboard/`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setDashboardData(supervisorRes.data);
@@ -386,7 +386,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchApprovedCompanies = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/api/companies/approved/`);
+        const response = await axios.get(`${API_URL}/api/companies/approved/`);
         setApprovedCompanies(response.data);
       } catch (error) {
         console.error("Error fetching approved companies:", error);
@@ -405,11 +405,11 @@ export default function Dashboard() {
     }
     
     try {
-      await axios.post(`${BASE_URL}/users/approve_staff/`, 
+      await axios.post(`${API_URL}/users/approve_staff/`, 
         { user_id: userId, approve: true },
         { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
-      const staffRes = await axios.get(`${BASE_URL}/users/pending_staff/`, {
+      const staffRes = await axios.get(`${API_URL}/users/pending_staff/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPendingStaff(staffRes.data);
@@ -430,11 +430,11 @@ export default function Dashboard() {
     }
     
     try {
-      await axios.post(`${BASE_URL}/users/approve_staff/`, 
+      await axios.post(`${API_URL}/users/approve_staff/`, 
         { user_id: userId, approve: false },
         { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
-      const staffRes = await axios.get(`${BASE_URL}/users/pending_staff/`, {
+      const staffRes = await axios.get(`${API_URL}/users/pending_staff/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPendingStaff(staffRes.data);
@@ -872,7 +872,7 @@ export default function Dashboard() {
           onAssign={() => {
             const refreshApplications = async () => {
               const token = getToken();
-              const appsRes = await axios.get(`${BASE_URL}/placements/pending/`, {
+              const appsRes = await axios.get(`${API_URL}/placements/pending/`, {
                 headers: { Authorization: `Bearer ${token}` }
               });
               setPendingApplications(appsRes.data);
@@ -890,7 +890,7 @@ export default function Dashboard() {
           onReviewComplete={() => {
             const refreshDashboard = async () => {
               const token = getToken();
-              const supervisorRes = await axios.get(`${BASE_URL}/api/supervisor/dashboard/`, {
+              const supervisorRes = await axios.get(`${API_URL}/api/supervisor/dashboard/`, {
                 headers: { Authorization: `Bearer ${token}` }
               });
               setDashboardData(supervisorRes.data);
@@ -909,7 +909,7 @@ export default function Dashboard() {
           onComplete={() => {
             const refreshDashboard = async () => {
               const token = getToken();
-              const supervisorRes = await axios.get(`${BASE_URL}/api/supervisor/dashboard/`, {
+              const supervisorRes = await axios.get(`${API_URL}/api/supervisor/dashboard/`, {
                 headers: { Authorization: `Bearer ${token}` }
               });
               setDashboardData(supervisorRes.data);
@@ -926,7 +926,7 @@ export default function Dashboard() {
           onComplete={() => {
             const refreshDashboard = async () => {
               const token = getToken();
-              const dashboardRes = await axios.get(`${BASE_URL}/api/student/dashboard/`, {
+              const dashboardRes = await axios.get(`${API_URL}/api/student/dashboard/`, {
                 headers: { Authorization: `Bearer ${token}` }
               });
               setDashboardData(dashboardRes.data);

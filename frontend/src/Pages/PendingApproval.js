@@ -1,7 +1,7 @@
 import React from 'react';
 import "./PendingApproval.css";
 import pendingIcon from '../assets/gif/download.png';
-
+import API_URL from '../utils/api';
 export default function PendingApproval({ role, userName }) {
   const getMessageByRole = () => {
     switch(role) {

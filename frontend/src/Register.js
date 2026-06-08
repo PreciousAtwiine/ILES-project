@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import "./Auth.css";
 import notifications from "./utils/notifications"; // Changed to default import
-
+import API_URL from './utils/api';
 function Register() {
   const [data, setData] = useState({
     username: "",
@@ -26,14 +26,12 @@ function Register() {
   const [companySearch, setCompanySearch] = useState("");
   const [passwordMatchError, setPasswordMatchError] = useState("");
 
-  const BASE_URL = "http://127.0.0.1:8000";
-
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [deptRes, companyRes] = await Promise.all([
-          axios.get(`${BASE_URL}/api/departments/`),
-          axios.get(`${BASE_URL}/api/companies/`),
+          axios.get(`${API_URL}/api/departments/`),
+          axios.get(`${API_URL}/api/companies/`),
         ]);
         setDepartments(deptRes.data);
         const approvedCompanies = companyRes.data.filter(c => c.is_approved === true);
@@ -144,7 +142,7 @@ function Register() {
     }
 
     try {
-      await axios.post(`${BASE_URL}/users/register/`, submitData);
+      await axios.post(`${API_URL}/users/register/`, submitData);
       notifications.notifySuccess("Registration successful! Please login."); // Changed
       setTimeout(() => {
         window.location.href = "/login";

@@ -2,12 +2,12 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import "./SupervisorDashboard.css";
-
+import API_URL from '../utils/api';
 export default function StudentsPage() {
   const [students, setStudents] = useState([]);
 
   useEffect(() => {
-    axios.get("http://127.0.0.1:8000/supervisor/students/")
+    axios.get(`${API_URL}/supervisor/students/`)
       .then(res => setStudents(res.data))
       .catch(err => console.log(err));
   }, []);

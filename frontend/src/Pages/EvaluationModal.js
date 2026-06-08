@@ -2,13 +2,12 @@
 import { useState } from "react";
 import axios from "axios";
 import "./EvaluationModal.css";
-
+import API_URL from '../utils/api';
 export default function EvaluationModal({ student, role, onClose, onComplete }) {
   const [score, setScore] = useState("");
   const [comments, setComments] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const BASE_URL = "http://127.0.0.1:8000";
   const getToken = () => localStorage.getItem("access");
 
   const isWorkplace = role === "workplace";
@@ -23,7 +22,7 @@ export default function EvaluationModal({ student, role, onClose, onComplete }) 
     try {
       const token = getToken();
       await axios.post(
-        `${BASE_URL}${endpoint}`,
+        `${API_URL}${endpoint}`,
         {
           placement_id: student.id,
           workplace_score: isWorkplace ? parseInt(score) : undefined,
