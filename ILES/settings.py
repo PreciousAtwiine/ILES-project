@@ -24,7 +24,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-xvew#=vxe_740@(mg1-jc
 DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = [
-    'iles-backend-g6.onrender.com',
+    'iles-project-test-deploymen.onrender.com',
     'iles-project-group6.onrender.com',
     'localhost',
     '127.0.0.1',
