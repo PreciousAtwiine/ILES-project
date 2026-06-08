@@ -33,7 +33,7 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.WARNING(f' Companies already exist ({Company.objects.count()} found), skipping...'))
         
-        # Ensure a superuser exists (create if not present, or update password if needed)
+        # Ensure a superuser exists 
         if not User.objects.filter(is_superuser=True).exists():
             self.stdout.write(' Creating superuser...')
             User.objects.create_superuser(
@@ -43,7 +43,7 @@ class Command(BaseCommand):
             )
             self.stdout.write(self.style.SUCCESS('Superuser created: admin / admin123'))
         else:
-            # Optional: reset password to a known value (comment out if you don't want this)
+            
             admin = User.objects.get(is_superuser=True, username='admin')
             admin.set_password('admin123')
             admin.save()
