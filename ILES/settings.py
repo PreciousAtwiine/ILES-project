@@ -23,12 +23,6 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-xvew#=vxe_740@(mg1-jc
 DEBUG = config('DEBUG', default=False, cast=bool)
 
 
-ALLOWED_HOSTS = [
-    'iles-project-test-deploymen.onrender.com',   # ← correct spelling
-    'iles-project-group6.onrender.com',
-    'localhost',
-    '127.0.0.1',
-]
 
 
 # Application definition
@@ -179,9 +173,25 @@ else:
 FRONTEND_URL = config('FRONTEND_URL', default='https://iles-project-group6.onrender.com')
 
 
-# CORS settings
+
+
+ALLOWED_HOSTS = [
+    'iles-project-test-deploymen.onrender.com',   
+    'iles-project-group6.onrender.com',          
+    'localhost',
+    '127.0.0.1',
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "https://iles-project-group6.onrender.com",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+
 CORS_ALLOW_CREDENTIALS = True
 
+# These are fine as they are
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
@@ -203,16 +213,9 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOWED_ORIGINS = [
-    "https://iles-project-g6.onrender.com",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
 
 CSRF_TRUSTED_ORIGINS = [
+    'https://iles-project-group6.onrender.com',
     'https://*.onrender.com',
-    'https://*.vercel.app',
     'http://localhost:3000',
-    'https://iles-project-g6.onrender.com',
 ]
