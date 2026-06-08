@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import axios from "axios";
 import StudentDashboard from "./StudentDashboard";
-
+import API_URL from '../utils/api';
 // Mock axios and sub-components
 jest.mock("axios");
 jest.mock("./StudentPlacement", () => () => <div data-testid="placement-comp">Placement Form</div>);

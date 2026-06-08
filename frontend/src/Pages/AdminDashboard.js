@@ -4,7 +4,7 @@ import "./AdminDashboard.css";
 import notifications from "../utils/notifications";
 import PendingApproval from "./PendingApproval";
 import Notifications from "./Notifications";
-
+import API_URL from '../utils/api';
 import StaffApprovals from "./StaffApprovals";
 import Applications from "./Applications";
 import PendingCompanies from "./PendingCompanies";
@@ -30,7 +30,6 @@ export default function AdminDashboard({ user }) {
   const [supervisorSearch, setSupervisorSearch] = useState("");
   const [studentFilter, setStudentFilter] = useState("all");
 
-  const BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
   const getToken = () => localStorage.getItem("access");
 
   const handleLogout = () => {
@@ -49,7 +48,7 @@ export default function AdminDashboard({ user }) {
           return;
         }
 
-        const userRes = await axios.get(`${BASE_URL}/users/me/`, {
+        const userRes = await axios.get(`${API_URL}/users/me/`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -86,19 +85,19 @@ export default function AdminDashboard({ user }) {
 
       const [dashboardRes, staffRes, applicationsRes, companiesRes, exceptionsRes] =
         await Promise.all([
-          axios.get(`${BASE_URL}/api/admin/dashboard/`, {
+          axios.get(`${API_URL}/api/admin/dashboard/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get(`${BASE_URL}/users/pending_staff/`, {
+          axios.get(`${API_URL}/users/pending_staff/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get(`${BASE_URL}/placements/pending/`, {
+          axios.get(`${API_URL}/placements/pending/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get(`${BASE_URL}/api/admin/pending-companies/`, {
+          axios.get(`${API_URL}/api/admin/pending-companies/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get(`${BASE_URL}/api/admin/pending-exceptions/`, {
+          axios.get(`${API_URL}/api/admin/pending-exceptions/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -119,7 +118,7 @@ export default function AdminDashboard({ user }) {
   const fetchDepartmentStudents = async () => {
     try {
       const token = getToken();
-      const response = await axios.get(`${BASE_URL}/api/admin/department-students/`, {
+      const response = await axios.get(`${API_URL}/api/admin/department-students/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDepartmentStudents(response.data);
@@ -132,7 +131,7 @@ export default function AdminDashboard({ user }) {
   const fetchDepartmentSupervisors = async () => {
     try {
       const token = getToken();
-      const response = await axios.get(`${BASE_URL}/api/admin/department-supervisors/`, {
+      const response = await axios.get(`${API_URL}/api/admin/department-supervisors/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDepartmentSupervisors(response.data);
@@ -146,7 +145,7 @@ export default function AdminDashboard({ user }) {
     try {
       const token = getToken();
       await axios.post(
-        `${BASE_URL}/api/approve-staff/`,
+        `${API_URL}/api/approve-staff/`,
         { user_id: staff.id, approve: true },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -166,7 +165,7 @@ export default function AdminDashboard({ user }) {
     try {
       const token = getToken();
       await axios.post(
-        `${BASE_URL}/api/approve-staff/`,
+        `${API_URL}/api/approve-staff/`,
         { user_id: staff.id, approve: false },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -186,7 +185,7 @@ export default function AdminDashboard({ user }) {
     try {
       const token = getToken();
       await axios.post(
-        `${BASE_URL}/api/admin/approve-company/${id}/`,
+        `${API_URL}/api/admin/approve-company/${id}/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -206,7 +205,7 @@ export default function AdminDashboard({ user }) {
     try {
       const token = getToken();
       await axios.post(
-        `${BASE_URL}/api/admin/reject-company/${id}/`,
+        `${API_URL}/api/admin/reject-company/${id}/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -226,7 +225,7 @@ export default function AdminDashboard({ user }) {
     try {
       const token = getToken();
       await axios.post(
-        `${BASE_URL}/api/admin/approve-exception/${id}/`,
+        `${API_URL}/api/admin/approve-exception/${id}/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -246,7 +245,7 @@ export default function AdminDashboard({ user }) {
     try {
       const token = getToken();
       await axios.post(
-        `${BASE_URL}/api/admin/reject-exception/${id}/`,
+        `${API_URL}/api/admin/reject-exception/${id}/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -324,7 +323,7 @@ export default function AdminDashboard({ user }) {
           <Notifications 
             role="admin"
             getToken={getToken}
-            BASE_URL={BASE_URL}
+            
             onNotificationClick={(notification) => {
               if (notification.type === 'staff') setActiveTab('staff');
               else if (notification.type === 'application') setActiveTab('applications');

@@ -8,6 +8,59 @@ import "./SupervisorDashboard.css";
 import notifications from "../utils/notifications";
 import PendingApproval from "./PendingApproval";
 import Notifications from "./Notifications";
+import API_URL from '../utils/api';
+import { LuFileText, 
+  LuCheck, 
+  LuX, LuClock, LuArrowLeft, 
+  LuUsers, LuClipboardList, LuLayoutDashboard, LuLogOut
+} from 'react-icons/lu';
+
+// Helper function to format date safely
+const formatDate = (dateString) => {
+  if (!dateString) return "Not submitted";
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "Invalid date";
+    return date.toLocaleDateString();
+  } catch (e) {
+    return "Invalid date";
+  }
+};
+
+// Helper function to format hours properly
+const formatHours = (hours) => {
+  // Handle null, undefined, or empty
+  if (hours === null || hours === undefined || hours === '') {
+    return "0";
+  }
+  
+  let numHours;
+  
+  // Handle different possible formats from backend
+  if (typeof hours === 'object' && hours !== null) {
+    // If it's a Decimal object or has toString method
+    numHours = parseFloat(hours.toString());
+  } else if (typeof hours === 'string') {
+    numHours = parseFloat(hours);
+  } else if (typeof hours === 'number') {
+    numHours = hours;
+  } else {
+    return "0";
+  }
+  
+  // Check if it's a valid number
+  if (isNaN(numHours)) {
+    return "0";
+  }
+  
+  // Format: remove .0000 for whole numbers
+  if (numHours % 1 === 0) {
+    return numHours.toString();
+  } else {
+    // Show up to 2 decimal places, remove trailing zeros
+    return numHours.toFixed(2).replace(/\.?0+$/, '');
+  }
+};
 
 export default function SupervisorDashboard() {
   const [user, setUser] = useState(null);
@@ -26,7 +79,6 @@ export default function SupervisorDashboard() {
   const [studentLogs, setStudentLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
 
-  const BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
   const getToken = () => localStorage.getItem("access");
 
   const handleLogout = () => {
@@ -54,10 +106,32 @@ export default function SupervisorDashboard() {
     try {
       const token = getToken();
       const res = await axios.get(
-        `${BASE_URL}/logs/?placement__student=${studentId}`,
+        `${API_URL}/logs/?placement__student=${studentId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setStudentLogs(res.data);
+      
+      // Transform logs to ensure consistent data format
+      const formattedLogs = res.data.map(log => {
+        // Parse working_hours properly from Decimal or string
+        let workingHours = 0;
+        if (log.working_hours !== null && log.working_hours !== undefined) {
+          // If it's a Decimal object or regular number/string
+          if (typeof log.working_hours === 'object' && log.working_hours !== null) {
+            workingHours = parseFloat(log.working_hours.toString());
+          } else {
+            workingHours = parseFloat(log.working_hours);
+          }
+        }
+        
+        return {
+          ...log,
+          submission_date: log.submission_date ? new Date(log.submission_date) : null,
+          formatted_date: formatDate(log.submission_date),
+          working_hours: isNaN(workingHours) ? 0 : workingHours
+        };
+      });
+      
+      setStudentLogs(formattedLogs);
       notifications.notifySuccess(`Loaded logs for ${studentName}`);
     } catch (err) {
       console.error(err);
@@ -72,9 +146,18 @@ export default function SupervisorDashboard() {
     try {
       const token = getToken();
       const dashboardRes = await axios.get(
-        `${BASE_URL}/api/supervisor/dashboard/`,
+        `${API_URL}/api/supervisor/dashboard/`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      
+      // Format pending reviews if they exist
+      if (dashboardRes.data?.pending_reviews) {
+        dashboardRes.data.pending_reviews = dashboardRes.data.pending_reviews.map(log => ({
+          ...log,
+          formatted_hours: formatHours(log.working_hours)
+        }));
+      }
+      
       setDashboardData(dashboardRes.data);
       
       if (dashboardRes.data?.pending_late_requests && dashboardRes.data.pending_late_requests.length > 0) {
@@ -85,11 +168,10 @@ export default function SupervisorDashboard() {
     }
   };
 
-  // Handle workplace decision on late submission
   const handleLateDecision = async (request, decision, reason) => {
     try {
       const token = getToken();
-      await axios.post(`${BASE_URL}/api/workplace/late-decision/${request.id}/`, {
+      await axios.post(`${API_URL}/api/workplace/late-decision/${request.id}/`, {
         decision: decision,
         reason: reason || ""
       }, {
@@ -112,7 +194,7 @@ export default function SupervisorDashboard() {
       }
 
       try {
-        const userRes = await axios.get(`${BASE_URL}/users/me/`, {
+        const userRes = await axios.get(`${API_URL}/users/me/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const userData = userRes.data.user || userRes.data;
@@ -123,9 +205,18 @@ export default function SupervisorDashboard() {
         
         if (approved) {
           const dashboardRes = await axios.get(
-            `${BASE_URL}/api/supervisor/dashboard/`,
+            `${API_URL}/api/supervisor/dashboard/`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
+          
+          // Format pending reviews
+          if (dashboardRes.data?.pending_reviews) {
+            dashboardRes.data.pending_reviews = dashboardRes.data.pending_reviews.map(log => ({
+              ...log,
+              formatted_hours: formatHours(log.working_hours)
+            }));
+          }
+          
           setDashboardData(dashboardRes.data);
 
           if (dashboardRes.data?.pending_reviews?.length > 0) {
@@ -167,11 +258,17 @@ export default function SupervisorDashboard() {
         </p>
         <p className="role-badge">Workplace Supervisor</p>
 
-        <button onClick={() => setActiveTab("dashboard")}>Dashboard</button>
-        <button onClick={() => setActiveTab("students")}>Students</button>
-        <button onClick={() => setActiveTab("pending")}>Pending Logs</button>
+        <button onClick={() => setActiveTab("dashboard")}>
+          <LuLayoutDashboard size={14} /> Dashboard
+        </button>
+        <button onClick={() => setActiveTab("students")}>
+          <LuUsers size={14} /> Students
+        </button>
+        <button onClick={() => setActiveTab("pending")}>
+          <LuClipboardList size={14} /> Pending Logs
+        </button>
         <button className="logout-btn" onClick={handleLogout}>
-          Logout
+          <LuLogOut size={14} /> Logout
         </button>
       </div>
 
@@ -180,7 +277,6 @@ export default function SupervisorDashboard() {
           <Notifications 
             role="workplace"
             getToken={getToken}
-            BASE_URL={BASE_URL}
             onNotificationClick={(notification) => {
               if (notification.type === 'log') setActiveTab('pending');
               else if (notification.type === 'late_submission') setActiveTab('dashboard');
@@ -190,24 +286,23 @@ export default function SupervisorDashboard() {
 
         {activeTab === "dashboard" && (
           <div>
-            <h1>Workplace Supervisor Dashboard</h1>
+            <h1><LuLayoutDashboard size={24} /> Workplace Supervisor Dashboard</h1>
 
             <div className="dashboard-cards">
               <div className="card">
-                <h3>Assigned Students</h3>
+                <h3><LuUsers size={16} /> Assigned Students</h3>
                 <p>{dashboardData?.assigned_students?.length || 0}</p>
               </div>
               <div className="card">
-                <h3>Pending Reviews</h3>
+                <h3><LuClipboardList size={16} /> Pending Reviews</h3>
                 <p>{dashboardData?.pending_reviews?.length || 0}</p>
               </div>
             </div>
 
-            {/* PENDING LATE SUBMISSION REQUESTS */}
             {dashboardData?.pending_late_requests && dashboardData.pending_late_requests.length > 0 && (
               <div style={{ marginTop: '24px' }}>
                 <div className="section-title">
-                  <h2>📝 Pending Late Submission Requests</h2>
+                  <h2><LuFileText size={20} /> Pending Late Submission Requests</h2>
                   <p>Students have requested to submit missing logs late. Please review and make a decision.</p>
                 </div>
                 
@@ -222,8 +317,8 @@ export default function SupervisorDashboard() {
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', marginBottom: '12px' }}>
                       <h3 style={{ margin: 0, color: '#1e293b' }}>{request.student_name}</h3>
-                      <span style={{ background: '#fef3c7', color: '#92400e', padding: '4px 12px', borderRadius: '20px', fontSize: '12px' }}>
-                        ⏳ Awaiting Your Decision
+                      <span style={{ background: '#fef3c7', color: '#92400e', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <LuClock size={12} /> Awaiting Your Decision
                       </span>
                     </div>
                     
@@ -247,9 +342,9 @@ export default function SupervisorDashboard() {
                           const reason = prompt("Optional: Add a reason for approval");
                           handleLateDecision(request, 'approve', reason);
                         }}
-                        style={{ background: '#10b981', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '6px', cursor: 'pointer' }}
+                        style={{ background: '#10b981', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                       >
-                        ✅ Approve Late Submission
+                        <LuCheck size={14} /> Approve Late Submission
                       </button>
                       <button 
                         onClick={() => {
@@ -257,9 +352,9 @@ export default function SupervisorDashboard() {
                           if (reason) handleLateDecision(request, 'reject', reason);
                           else alert("A reason is required for rejection");
                         }}
-                        style={{ background: '#ef4444', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '6px', cursor: 'pointer' }}
+                        style={{ background: '#ef4444', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                       >
-                        ❌ Reject
+                        <LuX size={14} /> Reject
                       </button>
                     </div>
                   </div>
@@ -311,9 +406,11 @@ export default function SupervisorDashboard() {
                 setActiveTab("students");
                 setViewLogsStudent(null);
               }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             >
-              ← Back to Students
+              <LuArrowLeft size={14} /> Back to Students
             </button>
+            
             {loadingLogs ? (
               <p>Loading logs...</p>
             ) : studentLogs.length > 0 ? (
@@ -327,18 +424,17 @@ export default function SupervisorDashboard() {
                       </span>
                       {log.is_late && <span className="status-badge late">Late</span>}
                       <span className="log-date">
-                        Submitted: {new Date(log.submission_date).toLocaleDateString()}
+                        Submitted: {log.formatted_date}
                       </span>
                     </div>
                     <p className="log-activities">
-                      <strong>Activities:</strong> {log.activities}
+                      <strong>Activities:</strong> {log.activities || "—"}
                     </p>
                     {log.challenges && (
                       <p><strong>Challenges:</strong> {log.challenges}</p>
                     )}
-                    {log.working_hours && (
-                      <p><strong>Hours:</strong> {log.working_hours}h</p>
-                    )}
+                    {/* UPDATED: Hours display with proper formatting */}
+                    <p><strong>Hours:</strong> {formatHours(log.working_hours)}h</p>
                     {log.attachment && (
                       <p>
                         <strong>Attachment:</strong>{" "}
@@ -370,7 +466,6 @@ export default function SupervisorDashboard() {
         )}
       </div>
 
-      {/* Review Log Modal */}
       {showReviewModal && selectedLog && (
         <ReviewLogModal
           log={selectedLog}
@@ -381,7 +476,6 @@ export default function SupervisorDashboard() {
         />
       )}
 
-      {/* Evaluation Modal */}
       {showEvaluationModal && selectedStudent && (
         <EvaluationModal
           student={selectedStudent}

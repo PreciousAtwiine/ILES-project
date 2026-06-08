@@ -1,4 +1,4 @@
-
+import API_URL from '../utils/api';
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +8,7 @@ export default function PendingLogsPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("http://127.0.0.1:8000/logs/pending/")
+    axios.get(`${API_URL}/logs/pending/`)
       .then(res => setLogs(res.data))
       .catch(err => console.log(err));
   }, []);

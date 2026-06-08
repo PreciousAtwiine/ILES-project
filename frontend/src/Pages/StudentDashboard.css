@@ -179,3 +179,30 @@
   color: #1f3c88;
   font-weight: 600;
 }
+.selected-company {
+  margin-top: 10px;
+  background: #e8f5e9;
+  border: 1px solid #4caf50;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.selected-company span {
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+.selected-company button {
+  background: none;
+  border: none;
+  color: #f44336;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.selected-company button:hover {
+  text-decoration: underline;
+}

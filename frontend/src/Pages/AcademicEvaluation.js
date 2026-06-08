@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./AcademicDashboard.css";
-
+import API_URL from '../utils/api';
 export default function AcademicEvaluation() {
   const [students, setStudents] = useState([]);
   const [selectedPlacement, setSelectedPlacement] = useState("");
@@ -13,7 +13,7 @@ export default function AcademicEvaluation() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+
   const getToken = () => localStorage.getItem("access");
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export default function AcademicEvaluation() {
   const fetchStudents = async () => {
     try {
       const res = await axios.get(
-        `${BASE_URL}/api/supervisor/academic/dashboard/`,
+        `${API_URL}/api/supervisor/academic/dashboard/`,
         { headers: { Authorization: `Bearer ${getToken()}` } }
       );
       setStudents(res.data.assigned_students || []);
@@ -51,7 +51,7 @@ export default function AcademicEvaluation() {
 
     try {
       await axios.post(
-        `${BASE_URL}/evaluations/academic/`,
+        `${API_URL}/evaluations/academic/`,
         {
           placement_id: selectedPlacement,
           academic_score: parseInt(score),

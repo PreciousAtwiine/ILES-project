@@ -55,8 +55,8 @@ class User(AbstractUser):
     ]
     
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')
-    student_id = models.CharField(max_length=50, blank=True, null=True)
-    staff_id = models.CharField(max_length=50, blank=True, null=True)
+    student_id = models.CharField(max_length=50, blank=True, null=True, unique=True)
+    staff_id = models.CharField(max_length=50, blank=True, null=True, unique=True)
     department = models.CharField(max_length=100, blank=True)
     email = models.EmailField(unique=True)
     ACADEMIC_RANK_CHOICES = [
