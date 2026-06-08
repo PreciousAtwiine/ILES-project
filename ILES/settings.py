@@ -196,7 +196,7 @@ CORS_ALLOW_METHODS = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    ',
+    
     'https://iles-project-group6.onrender.com',   
     'http://localhost:3000',
     'http://127.0.0.1:3000',
