@@ -3,6 +3,7 @@ import axios from "axios";
 import "./Login.css";
 import notifications from "./utils/notifications"; 
 import API_URL from './utils/api';
+
 export default function Login() {
   const [data, setData] = useState({ username: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -35,19 +36,16 @@ export default function Login() {
       const user = userRes.data.user;
       const role = user.role;
       
-      // Store user info including approval status
       localStorage.setItem("user_role", role);
       localStorage.setItem("user_id", user.id);
       localStorage.setItem("user_name", `${user.first_name || ""} ${user.last_name || ""}`);
       
-      // Students are auto-approved, others need approval
       const needsApproval = role !== "student" && user.is_approved === false;
       localStorage.setItem("needs_approval", needsApproval);
       localStorage.setItem("is_approved", user.is_approved !== false);
       
       notifications.notifySuccess(`Welcome back, ${user.first_name || user.username}!`);
 
-      // Redirect based on role
       if (role === "student") window.location.href = "/student";
       else if (role === "workplace") window.location.href = "/workplace-supervisor";
       else if (role === "academic") window.location.href = "/academic";
@@ -57,7 +55,6 @@ export default function Login() {
         setLoading(false);
       }
     } catch (err) {
-      // Only show invalid credentials for actual login failures
       if (err.response?.status === 401) {
         notifications.notifyError("Invalid username or password. Please check your credentials and try again.");
       } else if (err.code === "ERR_NETWORK") {
@@ -91,6 +88,7 @@ export default function Login() {
           <input
             name="username"
             placeholder="Username"
+            value={data.username}
             onChange={handleChange}
           />
 
@@ -98,6 +96,7 @@ export default function Login() {
             name="password"
             type="password"
             placeholder="Password"
+            value={data.password}
             onChange={handleChange}
           />
 
