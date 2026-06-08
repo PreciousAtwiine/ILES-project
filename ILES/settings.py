@@ -203,7 +203,7 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     "https://iles-project-g6.onrender.com",
     "http://localhost:3000",
