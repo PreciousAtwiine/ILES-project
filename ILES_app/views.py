@@ -151,33 +151,39 @@ class ApproveStaffAPIView(APIView):
 class ForgotPasswordView(APIView):
     permission_classes = [AllowAny]
     
-    def get(self, request):
-        return Response({
-            "message": "Use POST to request password reset",
-            "instructions": "Send a POST request with {'email': 'your@email.com'}"
-        })
-    
     def post(self, request):
         email = request.data.get('email')
+        
+        if not email:
+            return Response({"error": "Email is required"}, status=400)
         
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            return Response({"error": "No account with this email"}, status=404)
+            
+            return Response({"message": "If an account exists, a reset link has been sent."}, status=200)
+        
         
         PasswordReset.objects.filter(user=user).delete()
         reset = PasswordReset.objects.create(user=user)
+        reset_link = f"{settings.FRONTEND_URL}/reset-password?token={reset.token}"
         
-        reset_link = f"http://localhost:3000/reset-password?token={reset.token}"
-        send_mail(
-            'Reset Your Password',
-            f'Click: {reset_link}',
-            'noreply@iles.com',
-            [email],
-            fail_silently=False,
-        )
+       
+        try:
+            send_mail(
+                subject='Reset Your Password - ILES',
+                message=f'Hello,\n\nClick the link below to reset your password:\n{reset_link}\n\nThis link expires in 1 hour.\n\nIf you did not request this, ignore this email.\n\n- ILES Team',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                fail_silently=False,
+            )
+        except Exception as e:
+            
+            print(f"Email error for {email}: {str(e)}")
+            
+            return Response({"message": "If an account exists, a reset link has been sent."}, status=200)
         
-        return Response({"message": "Reset link sent to your email"})
+        return Response({"message": "If an account exists, a reset link has been sent."}, status=200)
 
 
 class ResetPasswordView(APIView):
