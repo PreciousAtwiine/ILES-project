@@ -137,6 +137,7 @@ else:
         "BREVO_API_KEY": os.environ.get("BREVO_API_KEY"),
     }
     DEFAULT_FROM_EMAIL = 'hiltonjolly@gmail.com'   
+    print(f"Brevo API key loaded: {'✅ Found (starts with xkeysib)' if os.environ.get('BREVO_API_KEY', '').startswith('xkeysib') else '❌ Missing or wrong type'}")
 
 # CORS
 CORS_ALLOWED_ORIGINS = [
