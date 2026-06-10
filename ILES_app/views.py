@@ -1,12 +1,9 @@
-from logging import log
 from django.db.models import Q
-from rest_framework import viewsets,generics, status
-
-
+from rest_framework import viewsets, generics, status
 from django.core.mail import send_mail
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.views import APIView 
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -148,44 +145,40 @@ class ApproveStaffAPIView(APIView):
         else:
             staff_user.delete()
             return Response({"message": f"Staff registration rejected and deleted"}, status=status.HTTP_200_OK)
+
 class ForgotPasswordView(APIView):
     permission_classes = [AllowAny]
     
     def post(self, request):
         email = request.data.get('email')
         
+        safe_message = {"message": "If an account exists, a reset link has been sent."}
+        
         if not email:
-            return Response({"error": "Email is required"}, status=400)
+            return Response(safe_message, status=200)
         
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            
-            return Response({"message": "If an account exists, a reset link has been sent."}, status=200)
-        
+            return Response(safe_message, status=200)
         
         PasswordReset.objects.filter(user=user).delete()
         reset = PasswordReset.objects.create(user=user)
         reset_link = f"{settings.FRONTEND_URL}/reset-password?token={reset.token}"
         
-       
         try:
             send_mail(
                 subject='Reset Your Password - ILES',
-                message=f'Hello,\n\nClick the link below to reset your password:\n{reset_link}\n\nThis link expires in 1 hour.\n\nIf you did not request this, ignore this email.\n\n- ILES Team',
+                message=f'Click to reset: {reset_link}',
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[email],
                 fail_silently=False,
             )
         except Exception as e:
-            
-            print(f"Email error for {email}: {str(e)}")
-            
-            return Response({"message": "If an account exists, a reset link has been sent."}, status=200)
+            print(f"Email error: {e}")   
+            return Response(safe_message, status=200)
         
-        return Response({"message": "If an account exists, a reset link has been sent."}, status=200)
-
-
+        return Response(safe_message, status=200)
 class ResetPasswordView(APIView):
     permission_classes = [AllowAny]
     
