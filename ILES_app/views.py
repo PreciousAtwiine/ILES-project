@@ -47,18 +47,21 @@ class IsSupervisor(IsAuthenticated):
         return super().has_permission(request, view) and request.user.role in ['workplace', 'academic']
 
 
+resend.api_key = settings.RESEND_API_KEY
+
 def send_email(to_email, subject, message):
-    """Simple email sender"""
+    if settings.DEBUG:
+        print(f"\n--- EMAIL ---\nTo: {to_email}\nSubject: {subject}\n{message}\n-------------")
+        return
     try:
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[to_email],
-            fail_silently=False,
-        )
-    except:
-        pass
+        resend.Emails.send({
+            "from": settings.DEFAULT_FROM_EMAIL,
+            "to": to_email,
+            "subject": subject,
+            "text": message,
+        })
+    except Exception as e:
+        print(f"Email error: {e}")
 
 from .models import Department, Company
 
