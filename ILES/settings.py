@@ -72,6 +72,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ILES.wsgi.application'
 
+RESEND_API_KEY = config('RESEND_API_KEY', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@yourdomain.com')
+FRONTEND_URL = config('FRONTEND_URL', default='https://iles-project-group6.onrender.com')
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
