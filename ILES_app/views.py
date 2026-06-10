@@ -12,7 +12,8 @@ from .serializers import *
 from django.contrib.auth import logout
 from django.conf import settings
 from datetime import timedelta
-
+import resend
+from django.conf import settings
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
