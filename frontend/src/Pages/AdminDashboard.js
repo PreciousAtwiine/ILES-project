@@ -30,6 +30,11 @@ export default function AdminDashboard({ user }) {
   const [supervisorSearch, setSupervisorSearch] = useState("");
   const [studentFilter, setStudentFilter] = useState("all");
 
+  // State for Reports
+  const [reportEvaluations, setReportEvaluations] = useState([]);
+  const [reportPlacements, setReportPlacements] = useState([]);
+  const [reportLoading, setReportLoading] = useState(false);
+
   const getToken = () => localStorage.getItem("access");
 
   const handleLogout = () => {
@@ -141,6 +146,82 @@ export default function AdminDashboard({ user }) {
     }
   };
 
+  // Fetch data for Reports tab
+  const fetchReportData = async () => {
+    setReportLoading(true);
+    try {
+      const token = getToken();
+      const [evaluationsRes, placementsRes] = await Promise.all([
+        axios.get(`${API_URL}/evaluations/`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_URL}/placements/`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      setReportEvaluations(evaluationsRes.data);
+      setReportPlacements(placementsRes.data);
+    } catch (error) {
+      console.error("Error fetching report data:", error);
+      notifications.notifyError("Failed to load report data");
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+
+  const handleReportsTab = () => {
+    setActiveTab("reports");
+    if (reportEvaluations.length === 0 && reportPlacements.length === 0) {
+      fetchReportData();
+    }
+  };
+
+ 
+  const getGradeDistribution = () => {
+    const grades = { A: 0, 'B+': 0, B: 0, 'C+': 0, C: 0, D: 0, F: 0 };
+    reportEvaluations.forEach(evalItem => {
+      const grade = evalItem.grade;
+      if (grades.hasOwnProperty(grade)) grades[grade]++;
+      else if (grade === 'B+') grades['B+']++;
+      else if (grade === 'C+') grades['C+']++;
+    });
+    return grades;
+  };
+
+ )
+  const getRecentPlacements = () => {
+    return [...reportPlacements].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
+  };
+
+  
+  const getGradeForPlacement = (placementId) => {
+    const evaluation = reportEvaluations.find(e => e.placement === placementId);
+    return evaluation ? evaluation.grade : 'Not graded';
+  };
+
+  
+  const exportToCSV = () => {
+    const placements = getRecentPlacements();
+    const csvRows = [
+      ["Student Name", "Student ID", "Company", "Start Date", "End Date", "Status", "Grade"],
+      ...placements.map(p => [
+        p.student_name || "",
+        p.student_id || "",
+        p.company_name || "",
+        p.start_date || "",
+        p.end_date || "",
+        p.status || "",
+        getGradeForPlacement(p.id)
+      ])
+    ];
+    const csvContent = csvRows.map(row => row.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "iles_reports.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    notifications.notifySuccess("Report exported as CSV");
+  };
+
   const approveStaff = async (staff) => {
     try {
       const token = getToken();
@@ -150,11 +231,8 @@ export default function AdminDashboard({ user }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       notifications.notifySuccess(`Staff ${staff.username} approved`);
-      
-      // Remove from list and refresh data
       setPendingStaff(prev => prev.filter(s => s.id !== staff.id));
       await fetchAllAdminData();
-      
     } catch (error) {
       console.error(error);
       notifications.notifyError(error.response?.data?.error || "Failed to approve staff");
@@ -170,11 +248,8 @@ export default function AdminDashboard({ user }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       notifications.notifyInfo(`Staff ${staff.username} rejected`);
-      
-      // Remove from list and refresh data
       setPendingStaff(prev => prev.filter(s => s.id !== staff.id));
       await fetchAllAdminData();
-      
     } catch (error) {
       console.error(error);
       notifications.notifyError(error.response?.data?.error || "Failed to reject staff");
@@ -190,11 +265,8 @@ export default function AdminDashboard({ user }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       notifications.notifySuccess("Company approved");
-      
-      // Remove from list and refresh data
       setPendingCompanies(prev => prev.filter(c => c.id !== id));
       await fetchAllAdminData();
-      
     } catch (error) {
       console.error(error);
       notifications.notifyError("Failed to approve company");
@@ -210,11 +282,8 @@ export default function AdminDashboard({ user }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       notifications.notifyInfo("Company rejected");
-      
-      // Remove from list and refresh data
       setPendingCompanies(prev => prev.filter(c => c.id !== id));
       await fetchAllAdminData();
-      
     } catch (error) {
       console.error(error);
       notifications.notifyError("Failed to reject company");
@@ -230,11 +299,8 @@ export default function AdminDashboard({ user }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       notifications.notifySuccess("Exception request approved");
-      
-      // Remove from list and refresh data
       setExceptionRequests(prev => prev.filter(e => e.id !== id));
       await fetchAllAdminData();
-      
     } catch (error) {
       console.error(error);
       notifications.notifyError("Failed to approve exception");
@@ -250,11 +316,8 @@ export default function AdminDashboard({ user }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       notifications.notifyInfo("Exception request rejected");
-      
-      // Remove from list and refresh data
       setExceptionRequests(prev => prev.filter(e => e.id !== id));
       await fetchAllAdminData();
-      
     } catch (error) {
       console.error(error);
       notifications.notifyError("Failed to reject exception");
@@ -275,7 +338,6 @@ export default function AdminDashboard({ user }) {
   const filteredStudents = departmentStudents.filter(student => {
     const matchesSearch = student.name?.toLowerCase().includes(studentSearch.toLowerCase()) ||
                           student.student_id?.toLowerCase().includes(studentSearch.toLowerCase());
-    
     if (studentFilter === "active") {
       return matchesSearch && student.has_active_placement;
     } else if (studentFilter === "inactive") {
@@ -296,6 +358,8 @@ export default function AdminDashboard({ user }) {
     return <PendingApproval role="admin" userName={userName} />;
   }
 
+  const gradeDist = getGradeDistribution();
+
   return (
     <div className="dashboard-container">
       <div className="sidebar">
@@ -312,6 +376,7 @@ export default function AdminDashboard({ user }) {
         <button onClick={() => setActiveTab("exceptions")}>Exception Requests</button>
         <button onClick={() => setActiveTab("students")}>Department Students</button>
         <button onClick={() => setActiveTab("supervisors")}>Department Supervisors</button>
+        <button onClick={handleReportsTab}> Reports</button>
         
         <button className="logout-btn" onClick={handleLogout}>
           Logout
@@ -323,7 +388,6 @@ export default function AdminDashboard({ user }) {
           <Notifications 
             role="admin"
             getToken={getToken}
-            
             onNotificationClick={(notification) => {
               if (notification.type === 'staff') setActiveTab('staff');
               else if (notification.type === 'application') setActiveTab('applications');
@@ -388,7 +452,6 @@ export default function AdminDashboard({ user }) {
         {activeTab === "students" && (
           <div className="department-students">
             <h2>Department Students</h2>
-            
             <div className="filter-bar">
               <input
                 type="text"
@@ -407,7 +470,6 @@ export default function AdminDashboard({ user }) {
                 <option value="inactive">No Active Internship</option>
               </select>
             </div>
-
             <div className="students-table">
               <table>
                 <thead>
@@ -462,7 +524,6 @@ export default function AdminDashboard({ user }) {
         {activeTab === "supervisors" && (
           <div className="department-supervisors">
             <h2>Department Supervisors</h2>
-            
             <div className="filter-bar">
               <input
                 type="text"
@@ -472,7 +533,6 @@ export default function AdminDashboard({ user }) {
                 className="search-input"
               />
             </div>
-
             <div className="supervisors-table">
               <table>
                 <thead>
@@ -519,6 +579,95 @@ export default function AdminDashboard({ user }) {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* PROFESSIONAL REPORTS TAB */}
+        {activeTab === "reports" && (
+          <div className="reports-section">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h1>System Reports</h1>
+              <button onClick={exportToCSV} className="export-btn" style={{ background: '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>
+                📊 Export to CSV
+              </button>
+            </div>
+
+            {/* Summary Cards */}
+            <div className="dashboard-cards">
+              <div className="card">
+                <h3>Total Students</h3>
+                <p>{dashboardData.total_students || 0}</p>
+              </div>
+              <div className="card">
+                <h3>Total Supervisors</h3>
+                <p>{dashboardData.total_supervisors || 0}</p>
+              </div>
+              <div className="card">
+                <h3>Pending Applications</h3>
+                <p>{dashboardData.pending_applications || 0}</p>
+              </div>
+              <div className="card">
+                <h3>Active Internships</h3>
+                <p>{dashboardData.active_internships || 0}</p>
+              </div>
+            </div>
+
+            {/* Grade Distribution (Bar chart style) */}
+            <div className="report-section">
+              <h2>Grade Distribution</h2>
+              {reportLoading ? <p>Loading grade data...</p> : (
+                <div className="grade-bars">
+                  {Object.entries(gradeDist).map(([grade, count]) => (
+                    <div key={grade} className="grade-row">
+                      <span className="grade-label">{grade}</span>
+                      <div className="bar-container">
+                        <div className="bar" style={{ width: `${(count / Math.max(1, reportEvaluations.length)) * 100}%`, backgroundColor: '#3b82f6' }}></div>
+                        <span className="count">{count}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Recent Placements Table */}
+            <div className="report-section" style={{ marginTop: '30px' }}>
+              <h2>Recent Placements (Last 10)</h2>
+              {reportLoading ? <p>Loading placements...</p> : (
+                <div className="table-responsive">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Student</th>
+                        <th>Company</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Status</th>
+                        <th>Grade</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {getRecentPlacements().length === 0 ? (
+                        <tr><td colSpan="6">No placements found</td></tr>
+                      ) : (
+                        getRecentPlacements().map(placement => (
+                          <tr key={placement.id}>
+                            <td>{placement.student_name}</td>
+                            <td>{placement.company_name}</td>
+                            <td>{placement.start_date}</td>
+                            <td>{placement.end_date}</td>
+                            <td><span className={`status-badge ${placement.status}`}>{placement.status}</span></td>
+                            <td><strong>{getGradeForPlacement(placement.id)}</strong></td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+     
           </div>
         )}
       </div>
