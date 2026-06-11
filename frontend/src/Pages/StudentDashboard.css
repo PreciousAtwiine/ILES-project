@@ -467,93 +467,99 @@
 .exception-status.rejected { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; }
 .exception-status.pending  { background: #eff6ff; border: 1px solid #93c5fd; color: #1e40af; }
 
-/* FINAL EVALUATION CARD */
+/*EVALUATION CARD */
 .evaluation-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 20px;
+  background: linear-gradient(135deg, #1a2035 0%, #2d3a5a 100%);
+  border-radius: 16px;
   padding: 24px;
   color: white;
-  margin-top: 24px;
+  margin-top: 16px;
 }
-
+ 
 .evaluation-scores {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
 }
-
+ 
 .score-item {
   text-align: center;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
 }
-
+ 
 .score-item span {
   display: block;
-  font-size: 12px;
-  opacity: 0.9;
+  font-size: 0.7rem;
+  opacity: 0.75;
   margin-bottom: 8px;
 }
-
+ 
 .score-item strong {
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 700;
   display: block;
 }
-
+ 
 .score-item.total {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.15);
 }
-
-.score-item.total strong {
-  font-size: 28px;
-}
-
+ 
+.score-item.total strong { font-size: 1.75rem; }
+ 
 .score-item.grade strong {
-  font-size: 32px;
+  font-size: 2rem;
   background: #fbbf24;
   color: #1e293b;
   padding: 4px 16px;
   border-radius: 40px;
   display: inline-block;
 }
-
-/* LOG FEEDBACK STYLES */
-.log-feedback {
-  background: #f0fdf4;
-  padding: 10px 12px;
-  border-radius: 10px;
+ 
+/*SELECTED COMPANY  */
+.selected-company {
   margin-top: 10px;
-  font-size: 13px;
-  color: #166534;
-}
-
-.late-reason {
-  margin-top: 8px;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 8px;
   padding: 8px 12px;
-  background: #fffbeb;
-  border-left: 3px solid #f59e0b;
-  border-radius: 6px;
-  font-size: 12px;
-  color: #92400e;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-
-.status-badge.late {
-  background: #f59e0b;
+ 
+.selected-company span {
+  color: #166534;
+  font-weight: 500;
+  font-size: 0.82rem;
 }
-
-/* LOG HEADER */
-.log-header {
+ 
+.selected-company button {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+ 
+/* LOADING */
+.loading-container {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
+  justify-content: center;
+  height: 100vh;
+  font-size: 1rem;
+  color: #6b7280;
+  background: #f8fafc;
 }
-
-.log-date {
-  font-size: 11px;
-  color: #888;
-  margin-left: auto;
+ 
+/*RESPONSIVE*/
+@media (max-width: 768px) {
+  .dashboard-container { flex-direction: column; }
+  .sidebar { width: 100%; height: auto; position: relative; }
+  .main-content { padding: 20px; }
+  .dashboard-cards { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
 }
+ 
