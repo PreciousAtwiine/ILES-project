@@ -127,6 +127,45 @@
   color: #1a2035;
   margin-bottom: 24px;
 }
+ 
+/* DASHBOARD CARDS  */
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 28px;
+}
+ 
+.card {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+ 
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+ 
+.card h3 {
+  color: #6b7280;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+ 
+.card p {
+  color: #1a2035;
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  word-break: break-word;
+}
 /* EXCEPTION REQUEST STYLES */
 .exception-request {
   background: #e6e5e1;
