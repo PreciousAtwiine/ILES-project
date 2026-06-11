@@ -165,61 +165,11 @@ export default function AdminDashboard({ user }) {
     }
   };
 
-
   const handleReportsTab = () => {
     setActiveTab("reports");
     if (reportEvaluations.length === 0 && reportPlacements.length === 0) {
       fetchReportData();
     }
-  };
-
- 
-  const getGradeDistribution = () => {
-    const grades = { A: 0, 'B+': 0, B: 0, 'C+': 0, C: 0, D: 0, F: 0 };
-    reportEvaluations.forEach(evalItem => {
-      const grade = evalItem.grade;
-      if (grades.hasOwnProperty(grade)) grades[grade]++;
-      else if (grade === 'B+') grades['B+']++;
-      else if (grade === 'C+') grades['C+']++;
-    });
-    return grades;
-  };
-
- )
-  const getRecentPlacements = () => {
-    return [...reportPlacements].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
-  };
-
-  
-  const getGradeForPlacement = (placementId) => {
-    const evaluation = reportEvaluations.find(e => e.placement === placementId);
-    return evaluation ? evaluation.grade : 'Not graded';
-  };
-
-  
-  const exportToCSV = () => {
-    const placements = getRecentPlacements();
-    const csvRows = [
-      ["Student Name", "Student ID", "Company", "Start Date", "End Date", "Status", "Grade"],
-      ...placements.map(p => [
-        p.student_name || "",
-        p.student_id || "",
-        p.company_name || "",
-        p.start_date || "",
-        p.end_date || "",
-        p.status || "",
-        getGradeForPlacement(p.id)
-      ])
-    ];
-    const csvContent = csvRows.map(row => row.join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "iles_reports.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-    notifications.notifySuccess("Report exported as CSV");
   };
 
   const approveStaff = async (staff) => {
@@ -350,6 +300,56 @@ export default function AdminDashboard({ user }) {
     supervisor.name?.toLowerCase().includes(supervisorSearch.toLowerCase()) ||
     supervisor.staff_id?.toLowerCase().includes(supervisorSearch.toLowerCase())
   );
+
+  // Grade distribution helper
+  const getGradeDistribution = () => {
+    const grades = { A: 0, 'B+': 0, B: 0, 'C+': 0, C: 0, D: 0, F: 0 };
+    reportEvaluations.forEach(evalItem => {
+      const grade = evalItem.grade;
+      if (grade === 'A') grades.A++;
+      else if (grade === 'B+') grades['B+']++;
+      else if (grade === 'B') grades.B++;
+      else if (grade === 'C+') grades['C+']++;
+      else if (grade === 'C') grades.C++;
+      else if (grade === 'D') grades.D++;
+      else if (grade === 'F') grades.F++;
+    });
+    return grades;
+  };
+
+  const getRecentPlacements = () => {
+    return [...reportPlacements].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
+  };
+
+  const getGradeForPlacement = (placementId) => {
+    const evaluation = reportEvaluations.find(e => e.placement === placementId);
+    return evaluation ? evaluation.grade : 'Not graded';
+  };
+
+  const exportToCSV = () => {
+    const placements = getRecentPlacements();
+    const csvRows = [
+      ["Student Name", "Student ID", "Company", "Start Date", "End Date", "Status", "Grade"],
+      ...placements.map(p => [
+        p.student_name || "",
+        p.student_id || "",
+        p.company_name || "",
+        p.start_date || "",
+        p.end_date || "",
+        p.status || "",
+        getGradeForPlacement(p.id)
+      ])
+    ];
+    const csvContent = csvRows.map(row => row.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "iles_reports.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    notifications.notifySuccess("Report exported as CSV");
+  };
 
   if (loading) return <div className="loading-state">Loading Admin Dashboard...</div>;
   
@@ -582,7 +582,6 @@ export default function AdminDashboard({ user }) {
           </div>
         )}
 
-        {/* PROFESSIONAL REPORTS TAB */}
         {activeTab === "reports" && (
           <div className="reports-section">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -592,7 +591,6 @@ export default function AdminDashboard({ user }) {
               </button>
             </div>
 
-            {/* Summary Cards */}
             <div className="dashboard-cards">
               <div className="card">
                 <h3>Total Students</h3>
@@ -612,17 +610,16 @@ export default function AdminDashboard({ user }) {
               </div>
             </div>
 
-            {/* Grade Distribution (Bar chart style) */}
-            <div className="report-section">
-              <h2>Grade Distribution</h2>
+            <div className="report-section" style={{ background: 'white', borderRadius: '16px', padding: '24px', marginBottom: '24px', border: '1px solid #e2e8f0' }}>
+              <h2 style={{ fontSize: '18px', marginBottom: '16px' }}>Grade Distribution</h2>
               {reportLoading ? <p>Loading grade data...</p> : (
-                <div className="grade-bars">
+                <div className="grade-bars" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {Object.entries(gradeDist).map(([grade, count]) => (
-                    <div key={grade} className="grade-row">
-                      <span className="grade-label">{grade}</span>
-                      <div className="bar-container">
-                        <div className="bar" style={{ width: `${(count / Math.max(1, reportEvaluations.length)) * 100}%`, backgroundColor: '#3b82f6' }}></div>
-                        <span className="count">{count}</span>
+                    <div key={grade} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ width: '40px', fontWeight: 600 }}>{grade}</span>
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ height: '24px', borderRadius: '12px', width: `${(count / Math.max(1, reportEvaluations.length)) * 100}%`, backgroundColor: '#3b82f6' }}></div>
+                        <span style={{ minWidth: '30px' }}>{count}</span>
                       </div>
                     </div>
                   ))}
@@ -630,9 +627,8 @@ export default function AdminDashboard({ user }) {
               )}
             </div>
 
-            {/* Recent Placements Table */}
-            <div className="report-section" style={{ marginTop: '30px' }}>
-              <h2>Recent Placements (Last 10)</h2>
+            <div className="report-section" style={{ background: 'white', borderRadius: '16px', padding: '24px', marginBottom: '24px', border: '1px solid #e2e8f0' }}>
+              <h2 style={{ fontSize: '18px', marginBottom: '16px' }}>Recent Placements (Last 10)</h2>
               {reportLoading ? <p>Loading placements...</p> : (
                 <div className="table-responsive">
                   <table className="data-table">
@@ -666,8 +662,6 @@ export default function AdminDashboard({ user }) {
                 </div>
               )}
             </div>
-
-     
           </div>
         )}
       </div>
