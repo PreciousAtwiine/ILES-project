@@ -239,6 +239,87 @@
 .empty-placement button:hover {
   background: #2d3a5a;
 }
+
+/*  SECTION TITLE */
+.section-title {
+  margin-top: 28px;
+  margin-bottom: 14px;
+}
+ 
+.section-title h2 {
+  font-size: 1rem;
+  color: #1a2035;
+  font-weight: 600;
+}
+ 
+/* LOGS LIST*/
+.logs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+ 
+.log-item {
+  background: white;
+  border-radius: 12px;
+  padding: 16px 20px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+ 
+.log-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+ 
+.log-header strong {
+  color: #1a2035;
+  font-size: 0.875rem;
+}
+ 
+.log-date {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  margin-left: auto;
+}
+ 
+.log-activities {
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+ 
+.log-score {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1a2035;
+  margin-top: 8px;
+}
+ 
+.log-feedback {
+  background: #f0fdf4;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+ 
+.late-reason {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #fffbeb;
+  border-left: 3px solid #f59e0b;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  color: #92400e;
+}
+
 /* EXCEPTION REQUEST STYLES */
 .exception-request {
   background: #e6e5e1;
