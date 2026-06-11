@@ -425,60 +425,47 @@
   color: #92400e;
 }
 
-/* EXCEPTION REQUEST STYLES */
+/*EXCEPTION STYLES */
 .exception-request {
-  background: #e6e5e1;
-  border: 1px solid #030113;
-  border-radius: 11px;
-  padding: 15px;
-  margin-top: 20px;
-}
-
-.exception-request p {
-  color: #92400e;
-  margin-bottom: 12px;
-}
-
-.exception-btn {
-  background: #f59e0b !important;
-  color: white !important;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background 0.3s;
-}
-
-.exception-btn:hover {
-  background: #d97706 !important;
-}
-
-/* EXCEPTION STATUS STYLES */
-.exception-status {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
   border-radius: 12px;
   padding: 16px 20px;
   margin-top: 20px;
 }
-
-.exception-status.approved {
-  background: #dcfce7;
-  border: 1px solid #86efac;
-  color: #15803d;
+ 
+.exception-request p {
+  color: #92400e;
+  margin-bottom: 12px;
+  font-size: 0.875rem;
 }
-
-.exception-status.rejected {
-  background: #fee2e2;
-  border: 1px solid #fca5a5;
-  color: #b91c1c;
+ 
+.exception-btn {
+  background: #f59e0b !important;
+  color: white !important;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: background 0.2s;
 }
-
-.exception-status.pending {
-  background: #eff6ff;
-  border: 1px solid #3b82f6;
-  color: #1e40af;
+ 
+.exception-btn:hover {
+  background: #d97706 !important;
 }
+ 
+.exception-status {
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-top: 16px;
+  font-size: 0.875rem;
+}
+ 
+.exception-status.approved { background: #dcfce7; border: 1px solid #86efac; color: #15803d; }
+.exception-status.rejected { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; }
+.exception-status.pending  { background: #eff6ff; border: 1px solid #93c5fd; color: #1e40af; }
 
 /* FINAL EVALUATION CARD */
 .evaluation-card {
@@ -569,67 +556,4 @@
   font-size: 11px;
   color: #888;
   margin-left: auto;
-}
-
-/* EMPTY PLACEMENT STATE */
-.empty-placement {
-  background: white;
-  border-radius: 12px;
-  padding: 30px;
-  text-align: center;
-  color: #666;
-  border: 1px dashed #ccc;
-}
-
-.empty-placement button {
-  background: #1f3c88;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-left: 10px;
-}
-
-.empty-placement button:hover {
-  background: #162d66;
-}
-
-/* SECTION TITLE */
-.section-title {
-  margin-top: 30px;
-  margin-bottom: 15px;
-}
-
-.section-title h2 {
-  font-size: 18px;
-  color: #1f3c88;
-  font-weight: 600;
-}
-.selected-company {
-  margin-top: 10px;
-  background: #e8f5e9;
-  border: 1px solid #4caf50;
-  border-radius: 8px;
-  padding: 8px 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.selected-company span {
-  color: #2e7d32;
-  font-weight: 500;
-}
-
-.selected-company button {
-  background: none;
-  border: none;
-  color: #f44336;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.selected-company button:hover {
-  text-decoration: underline;
 }
