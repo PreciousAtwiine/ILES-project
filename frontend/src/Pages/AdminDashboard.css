@@ -216,3 +216,14 @@ td {
     position: relative;
   }
 }
+
+.dashboard-cards {
+    justify-content: flex-start !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    text-align: left !important;
+}
+
+.card {
+    text-align: left !important;
+}
