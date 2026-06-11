@@ -585,9 +585,9 @@ export default function AdminDashboard({ user }) {
         {activeTab === "reports" && (
           <div className="reports-section">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h1>System Reports</h1>
+              <h1>ILES system Reports</h1>
               <button onClick={exportToCSV} className="export-btn" style={{ background: '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>
-                📊 Export to CSV
+                Export to CSV
               </button>
             </div>
 
