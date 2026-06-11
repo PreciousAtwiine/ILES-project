@@ -9,13 +9,12 @@ import notifications from "../utils/notifications";
 import PendingApproval from "./PendingApproval";
 import Notifications from "./Notifications";
 import API_URL from '../utils/api';
-import { LuFileText, 
-  LuCheck, 
-  LuX, LuClock, LuArrowLeft, 
-  LuUsers, LuClipboardList, LuLayoutDashboard, LuLogOut
+import { 
+  LuFileText, LuCheck, LuX, LuClock, LuArrowLeft, 
+  LuUsers, LuClipboardList, LuLayoutDashboard, LuLogOut,
+  LuInfo, LuBookOpen, LuAward
 } from 'react-icons/lu';
 
-// Helper function to format date safely
 const formatDate = (dateString) => {
   if (!dateString) return "Not submitted";
   try {
@@ -27,18 +26,10 @@ const formatDate = (dateString) => {
   }
 };
 
-// Helper function to format hours properly
 const formatHours = (hours) => {
-  // Handle null, undefined, or empty
-  if (hours === null || hours === undefined || hours === '') {
-    return "0";
-  }
-  
+  if (hours === null || hours === undefined || hours === '') return "0";
   let numHours;
-  
-  // Handle different possible formats from backend
   if (typeof hours === 'object' && hours !== null) {
-    // If it's a Decimal object or has toString method
     numHours = parseFloat(hours.toString());
   } else if (typeof hours === 'string') {
     numHours = parseFloat(hours);
@@ -47,19 +38,9 @@ const formatHours = (hours) => {
   } else {
     return "0";
   }
-  
-  // Check if it's a valid number
-  if (isNaN(numHours)) {
-    return "0";
-  }
-  
-  // Format: remove .0000 for whole numbers
-  if (numHours % 1 === 0) {
-    return numHours.toString();
-  } else {
-    // Show up to 2 decimal places, remove trailing zeros
-    return numHours.toFixed(2).replace(/\.?0+$/, '');
-  }
+  if (isNaN(numHours)) return "0";
+  if (numHours % 1 === 0) return numHours.toString();
+  return numHours.toFixed(2).replace(/\.?0+$/, '');
 };
 
 export default function SupervisorDashboard() {
@@ -109,20 +90,15 @@ export default function SupervisorDashboard() {
         `${API_URL}/logs/?placement__student=${studentId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
-      // Transform logs to ensure consistent data format
       const formattedLogs = res.data.map(log => {
-        // Parse working_hours properly from Decimal or string
         let workingHours = 0;
         if (log.working_hours !== null && log.working_hours !== undefined) {
-          // If it's a Decimal object or regular number/string
           if (typeof log.working_hours === 'object' && log.working_hours !== null) {
             workingHours = parseFloat(log.working_hours.toString());
           } else {
             workingHours = parseFloat(log.working_hours);
           }
         }
-        
         return {
           ...log,
           submission_date: log.submission_date ? new Date(log.submission_date) : null,
@@ -130,7 +106,6 @@ export default function SupervisorDashboard() {
           working_hours: isNaN(workingHours) ? 0 : workingHours
         };
       });
-      
       setStudentLogs(formattedLogs);
       notifications.notifySuccess(`Loaded logs for ${studentName}`);
     } catch (err) {
@@ -149,17 +124,13 @@ export default function SupervisorDashboard() {
         `${API_URL}/api/supervisor/dashboard/`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
-      // Format pending reviews if they exist
       if (dashboardRes.data?.pending_reviews) {
         dashboardRes.data.pending_reviews = dashboardRes.data.pending_reviews.map(log => ({
           ...log,
           formatted_hours: formatHours(log.working_hours)
         }));
       }
-      
       setDashboardData(dashboardRes.data);
-      
       if (dashboardRes.data?.pending_late_requests && dashboardRes.data.pending_late_requests.length > 0) {
         notifications.notifyInfo(`You have ${dashboardRes.data.pending_late_requests.length} late submission request(s) to review`);
       }
@@ -208,21 +179,15 @@ export default function SupervisorDashboard() {
             `${API_URL}/api/supervisor/dashboard/`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
-          
-          // Format pending reviews
           if (dashboardRes.data?.pending_reviews) {
             dashboardRes.data.pending_reviews = dashboardRes.data.pending_reviews.map(log => ({
               ...log,
               formatted_hours: formatHours(log.working_hours)
             }));
           }
-          
           setDashboardData(dashboardRes.data);
-
           if (dashboardRes.data?.pending_reviews?.length > 0) {
-            notifications.notifyInfo(
-              `You have ${dashboardRes.data.pending_reviews.length} pending logs to review`
-            );
+            notifications.notifyInfo(`You have ${dashboardRes.data.pending_reviews.length} pending logs to review`);
           }
         }
       } catch (err) {
@@ -249,13 +214,16 @@ export default function SupervisorDashboard() {
     return <PendingApproval role="workplace" userName={userName} />;
   }
 
+  // Helper to check if any data exists
+  const hasAssignedStudents = dashboardData?.assigned_students && dashboardData.assigned_students.length > 0;
+  const hasCompletedStudents = dashboardData?.completed_students && dashboardData.completed_students.length > 0;
+  const hasPendingReviews = dashboardData?.pending_reviews && dashboardData.pending_reviews.length > 0;
+
   return (
     <div className="dashboard-container">
       <div className="sidebar">
         <h2>Workplace Supervisor Panel</h2>
-        <p>
-          {user?.first_name} {user?.last_name}
-        </p>
+        <p>{user?.first_name} {user?.last_name}</p>
         <p className="role-badge">Workplace Supervisor</p>
 
         <button onClick={() => setActiveTab("dashboard")}>
@@ -287,25 +255,69 @@ export default function SupervisorDashboard() {
         {activeTab === "dashboard" && (
           <div>
             <h1><LuLayoutDashboard size={24} /> Workplace Supervisor Dashboard</h1>
+            
+            {/* Welcome and info section */}
+            <div className="welcome-card" style={{ background: '#f0f9ff', borderRadius: '16px', padding: '20px', marginBottom: '24px', borderLeft: '4px solid #3b82f6' }}>
+              <h3 style={{ margin: '0 0 8px 0' }}>Welcome, {user?.first_name} {user?.last_name}!</h3>
+              <p style={{ margin: 0, color: '#475569' }}>
+                As a workplace supervisor, you can review intern's weekly logs, provide scores and feedback, and submit the final evaluation.
+              </p>
+            </div>
 
             <div className="dashboard-cards">
               <div className="card">
                 <h3><LuUsers size={16} /> Assigned Students</h3>
                 <p>{dashboardData?.assigned_students?.length || 0}</p>
+                {!hasAssignedStudents && <small style={{ color: '#64748b' }}>No active interns assigned yet.</small>}
               </div>
               <div className="card">
                 <h3><LuClipboardList size={16} /> Pending Reviews</h3>
                 <p>{dashboardData?.pending_reviews?.length || 0}</p>
+                {!hasPendingReviews && <small style={{ color: '#64748b' }}>No logs waiting for review.</small>}
               </div>
+              {hasCompletedStudents && (
+                <div className="card">
+                  <h3><LuAward size={16} /> Completed Evaluations</h3>
+                  <p>{dashboardData?.completed_students?.length || 0}</p>
+                </div>
+              )}
             </div>
 
+            {/* Helpful placeholder when no assigned students */}
+            {!hasAssignedStudents && !hasCompletedStudents && (
+              <div className="empty-placeholder" style={{ background: 'white', borderRadius: '16px', padding: '40px', textAlign: 'center', border: '1px dashed #cbd5e1', marginTop: '20px' }}>
+                <LuInfo size={48} style={{ color: '#94a3b8', marginBottom: '16px' }} />
+                <h3 style={{ color: '#1e293b', marginBottom: '8px' }}>No students assigned yet</h3>
+                <p style={{ color: '#64748b', maxWidth: '500px', margin: '0 auto' }}>
+                  Students will appear here once the admin assigns them to you. 
+                  You can then review their logs and submit evaluations.
+                </p>
+                <button 
+                  onClick={() => setActiveTab("students")} 
+                  style={{ marginTop: '20px', background: '#3b82f6', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer' }}
+                >
+                  View Students
+                </button>
+              </div>
+            )}
+
+            {/* Helpful tip when assigned but no pending logs */}
+            {hasAssignedStudents && !hasPendingReviews && !hasCompletedStudents && (
+              <div className="info-card" style={{ background: '#fefce8', borderRadius: '16px', padding: '20px', marginTop: '20px', borderLeft: '4px solid #eab308' }}>
+                <h3 style={{ margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '8px' }}><LuBookOpen size={18} /> Waiting for student submissions</h3>
+                <p style={{ margin: 0, color: '#475569' }}>
+                  Your assigned students have not yet submitted any weekly logs. Once they submit, logs will appear in the "Pending Logs" tab for you to review.
+                </p>
+              </div>
+            )}
+
+            {/* Late submission requests section (existing) */}
             {dashboardData?.pending_late_requests && dashboardData.pending_late_requests.length > 0 && (
               <div style={{ marginTop: '24px' }}>
                 <div className="section-title">
                   <h2><LuFileText size={20} /> Pending Late Submission Requests</h2>
                   <p>Students have requested to submit missing logs late. Please review and make a decision.</p>
                 </div>
-                
                 {dashboardData.pending_late_requests.map((request) => (
                   <div key={request.id} className="exception-card pending" style={{
                     background: 'white',
@@ -321,21 +333,17 @@ export default function SupervisorDashboard() {
                         <LuClock size={12} /> Awaiting Your Decision
                       </span>
                     </div>
-                    
                     <p style={{ margin: '5px 0', color: '#64748b', fontSize: '14px' }}>
                       <strong>Company:</strong> {request.company_name}
                     </p>
-                    
                     <div style={{ margin: '10px 0', padding: '12px', background: '#f8fafc', borderRadius: '8px' }}>
                       <strong>Student's Explanation:</strong>
                       <p style={{ marginTop: '8px', fontSize: '14px', color: '#334155' }}>{request.exception_reason}</p>
                     </div>
-                    
                     <div style={{ margin: '10px 0' }}>
                       <p><strong>Missing Weeks:</strong> Week {request.missing_weeks.join(', ')}</p>
                       <p><strong>Submitted Weeks:</strong> Week {request.submitted_weeks.join(', ')}</p>
                     </div>
-                    
                     <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
                       <button 
                         onClick={() => {
@@ -362,13 +370,16 @@ export default function SupervisorDashboard() {
               </div>
             )}
 
-            {dashboardData?.assigned_students?.length > 0 && (
-              <div className="recent-activity">
+            {/* Quick overview of assigned students (if any) */}
+            {hasAssignedStudents && (
+              <div className="recent-activity" style={{ marginTop: '24px' }}>
                 <h3>Assigned Students Overview</h3>
                 <div className="student-list">
                   {dashboardData.assigned_students.slice(0, 5).map((student) => (
-                    <div key={student.id} className="student-item">
-                      <strong>{student.student_name}</strong> - {student.company_name}
+                    <div key={student.id} className="student-item" style={{ background: 'white', padding: '12px', borderRadius: '8px', marginBottom: '8px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <strong>{student.student_name}</strong> - {student.company_name}
+                      </div>
                       <span className={`status-badge ${student.status}`}>
                         {student.status}
                       </span>
@@ -399,7 +410,6 @@ export default function SupervisorDashboard() {
         {activeTab === "viewLogs" && viewLogsStudent && (
           <div>
             <h1>Weekly Logs - {viewLogsStudent.name}</h1>
-
             <button
               className="back-btn"
               onClick={() => {
@@ -433,7 +443,6 @@ export default function SupervisorDashboard() {
                     {log.challenges && (
                       <p><strong>Challenges:</strong> {log.challenges}</p>
                     )}
-                    {/* UPDATED: Hours display with proper formatting */}
                     <p><strong>Hours:</strong> {formatHours(log.working_hours)}h</p>
                     {log.attachment && (
                       <p>
@@ -460,7 +469,10 @@ export default function SupervisorDashboard() {
                 ))}
               </div>
             ) : (
-              <p>No logs submitted yet.</p>
+              <div className="empty-placeholder" style={{ textAlign: 'center', padding: '40px', background: 'white', borderRadius: '16px' }}>
+                <LuFileText size={48} style={{ color: '#94a3b8' }} />
+                <p>No logs submitted yet by this student.</p>
+              </div>
             )}
           </div>
         )}
