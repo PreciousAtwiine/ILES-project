@@ -227,3 +227,58 @@ td {
 .card {
     text-align: left !important;
 }
+/* Reports section */
+.report-section {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid #e2e8f0;
+}
+
+.report-section h2 {
+    font-size: 18px;
+    margin-bottom: 16px;
+    color: #1e293b;
+}
+
+.grade-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.grade-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.grade-label {
+    width: 40px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.bar-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bar {
+    height: 24px;
+    border-radius: 12px;
+    transition: width 0.3s;
+}
+
+.count {
+    min-width: 30px;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.export-btn:hover {
+    background: #059669 !important;
+}
