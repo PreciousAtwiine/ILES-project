@@ -17,7 +17,7 @@
 .login-left {
   flex: 1;
   background: linear-gradient(135deg, #0f172a, #1e3c72, #2563eb);
-  color: white;
+  color: rgba(255, 255, 255, 0.951);
   display: flex;
   align-items: center;
   justify-content: center;

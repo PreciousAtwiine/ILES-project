@@ -1,12 +1,13 @@
 import React from 'react';
-
+import './StudentLogs.css';
 export default function StudentLogs({ recentLogs, onSubmit }) {
   return (
-    <div>
+    <div
+      className="student-logs-container"> 
       <h1>Weekly Logs</h1>
       
       <div className="form-card">
-        <h3>Submit Weekly <Logs></Logs></h3>
+        <h3>Submit Weekly</h3>
         <form onSubmit={onSubmit}>
         <div className="form-group">
             <label>Week Number from start of Internship *</label>
@@ -18,7 +19,7 @@ export default function StudentLogs({ recentLogs, onSubmit }) {
           </div>
           <div className="form-group">
             <label>Challenges Faced while Working in Week {log.week_number}</label>
-            <textarea id="challenges" rows="2" placeholder="Any challenges faced?"></textarea>
+            <textarea id="Challenges or Hinderances " rows="2" placeholder="Any challenges or hinderances faced?"></textarea>
           </div>
           <div className="form-group">
             <label>Hours Worked</label>
@@ -28,7 +29,7 @@ export default function StudentLogs({ recentLogs, onSubmit }) {
             <label>Attachment (Optional)</label>
             <input type="file" id="attachment" />
           </div>
-          <button type="submit" className="submit-button">Submit Log</button>
+          <button type="submit" className="submit-button">Submit Weekly Log</button>
         </form>
       </div>
 
@@ -60,7 +61,7 @@ export default function StudentLogs({ recentLogs, onSubmit }) {
           })}
         </div>
       ) : (
-        <p>No logs submitted yet.</p>
+        <p>No log Submissions yet.</p>
       )}
     </div>
   );
