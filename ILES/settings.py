@@ -127,14 +127,17 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 FRONTEND_URL = config('FRONTEND_URL', default='https://iles-project-group6.onrender.com')
 
+
+
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 else:
-    EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
+    EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
     ANYMAIL = {
-        "RESEND_API_KEY": os.environ.get("RESEND_API_KEY"),
+        "BREVO_API_KEY": os.environ.get("BREVO_API_KEY"),
     }
-    DEFAULT_FROM_EMAIL = "onboarding@resend.dev"   
+    DEFAULT_FROM_EMAIL = 'hiltonjolly@gmail.com'   
+    print(f"Brevo API key loaded: {'✅ Found (starts with xkeysib)' if os.environ.get('BREVO_API_KEY', '').startswith('xkeysib') else '❌ Missing or wrong type'}")
 
 # CORS
 CORS_ALLOWED_ORIGINS = [

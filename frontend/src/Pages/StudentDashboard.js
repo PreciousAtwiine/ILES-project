@@ -135,11 +135,11 @@ export default function StudentDashboard() {
       return;
     }
 
-    // ✅ FIX: Allow if status approved OR late_approved
     if (dashboardData?.placement?.status !== "approved" && dashboardData?.exception_status !== "late_approved") {
       notifications.notifyError("Your placement must be approved or you need late submission approval.");
       return;
     }
+    
 
     const formData = new FormData();
 
