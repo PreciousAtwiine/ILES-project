@@ -166,6 +166,35 @@
   margin: 0;
   word-break: break-word;
 }
+
+/* PLACEMENT INFO */
+.placement-info {
+  background: white;
+  border-radius: 12px;
+  padding: 20px 24px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  margin-bottom: 20px;
+}
+ 
+.placement-info h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a2035;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+ 
+.placement-info p {
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin-bottom: 8px;
+}
+ 
+.placement-info p strong {
+  color: #1a2035;
+}
 /* EXCEPTION REQUEST STYLES */
 .exception-request {
   background: #e6e5e1;
