@@ -111,12 +111,12 @@ body {
 /* MAIN CONENT*/
 .main-content {
   flex: 1;
-  margin-left: 280px;
+  margin-left: 280px;       
   padding: 30px 40px;
   background: #f8fafc;
   min-height: 100vh;
+  width: calc(100% - 280px); 
 }
-
 .main-content h1 {
   font-size: 28px;
   font-weight: 600;
