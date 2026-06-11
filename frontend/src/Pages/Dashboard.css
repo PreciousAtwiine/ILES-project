@@ -131,8 +131,8 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 24px;
   margin-bottom: 32px;
+  justify-content: start;   
 }
-
 .card {
   background: white;
   padding: 24px;
