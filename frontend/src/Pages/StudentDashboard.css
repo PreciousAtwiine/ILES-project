@@ -195,6 +195,50 @@
 .placement-info p strong {
   color: #1a2035;
 }
+
+/*STATUS BADGES */
+.status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-left: 6px;
+}
+ 
+.status-badge.approved { background: #d1fae5; color: #065f46; }
+.status-badge.pending { background: #fef3c7; color: #92400e; }
+.status-badge.rejected { background: #fee2e2; color: #991b1b; }
+.status-badge.submitted { background: #dbeafe; color: #1e40af; }
+.status-badge.late { background: #fed7aa; color: #9a3412; }
+.status-badge.completed { background: #e0e7ff; color: #3730a3; }
+ 
+/* EMPTY PLACEMENT */
+.empty-placement {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  color: #6b7280;
+  border: 1px dashed #d1d5db;
+  margin-bottom: 20px;
+}
+ 
+.empty-placement button {
+  background: #1a2035;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-left: 10px;
+  font-size: 0.82rem;
+  transition: background 0.2s;
+}
+ 
+.empty-placement button:hover {
+  background: #2d3a5a;
+}
 /* EXCEPTION REQUEST STYLES */
 .exception-request {
   background: #e6e5e1;
