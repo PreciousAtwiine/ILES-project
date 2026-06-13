@@ -4,7 +4,7 @@ import "./AdminDashboard.css";
 import notifications from "../utils/notifications";
 import PendingApproval from "./PendingApproval";
 import Notifications from "./Notifications";
-
+import API_URL from '../utils/api';
 import StaffApprovals from "./StaffApprovals";
 import Applications from "./Applications";
 import PendingCompanies from "./PendingCompanies";
@@ -30,7 +30,11 @@ export default function AdminDashboard({ user }) {
   const [supervisorSearch, setSupervisorSearch] = useState("");
   const [studentFilter, setStudentFilter] = useState("all");
 
-  const BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+  // State for Reports
+  const [reportEvaluations, setReportEvaluations] = useState([]);
+  const [reportPlacements, setReportPlacements] = useState([]);
+  const [reportLoading, setReportLoading] = useState(false);
+
   const getToken = () => localStorage.getItem("access");
 
   const handleLogout = () => {
@@ -49,7 +53,7 @@ export default function AdminDashboard({ user }) {
           return;
         }
 
-        const userRes = await axios.get(`${BASE_URL}/users/me/`, {
+        const userRes = await axios.get(`${API_URL}/users/me/`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -86,19 +90,19 @@ export default function AdminDashboard({ user }) {
 
       const [dashboardRes, staffRes, applicationsRes, companiesRes, exceptionsRes] =
         await Promise.all([
-          axios.get(`${BASE_URL}/api/admin/dashboard/`, {
+          axios.get(`${API_URL}/api/admin/dashboard/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get(`${BASE_URL}/users/pending_staff/`, {
+          axios.get(`${API_URL}/users/pending_staff/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get(`${BASE_URL}/placements/pending/`, {
+          axios.get(`${API_URL}/placements/pending/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get(`${BASE_URL}/api/admin/pending-companies/`, {
+          axios.get(`${API_URL}/api/admin/pending-companies/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get(`${BASE_URL}/api/admin/pending-exceptions/`, {
+          axios.get(`${API_URL}/api/admin/pending-exceptions/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -119,7 +123,7 @@ export default function AdminDashboard({ user }) {
   const fetchDepartmentStudents = async () => {
     try {
       const token = getToken();
-      const response = await axios.get(`${BASE_URL}/api/admin/department-students/`, {
+      const response = await axios.get(`${API_URL}/api/admin/department-students/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDepartmentStudents(response.data);
@@ -132,7 +136,7 @@ export default function AdminDashboard({ user }) {
   const fetchDepartmentSupervisors = async () => {
     try {
       const token = getToken();
-      const response = await axios.get(`${BASE_URL}/api/admin/department-supervisors/`, {
+      const response = await axios.get(`${API_URL}/api/admin/department-supervisors/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDepartmentSupervisors(response.data);
@@ -142,20 +146,43 @@ export default function AdminDashboard({ user }) {
     }
   };
 
+  // Fetch data for Reports tab
+  const fetchReportData = async () => {
+    setReportLoading(true);
+    try {
+      const token = getToken();
+      const [evaluationsRes, placementsRes] = await Promise.all([
+        axios.get(`${API_URL}/evaluations/`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_URL}/placements/`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      setReportEvaluations(evaluationsRes.data);
+      setReportPlacements(placementsRes.data);
+    } catch (error) {
+      console.error("Error fetching report data:", error);
+      notifications.notifyError("Failed to load report data");
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  const handleReportsTab = () => {
+    setActiveTab("reports");
+    if (reportEvaluations.length === 0 && reportPlacements.length === 0) {
+      fetchReportData();
+    }
+  };
+
   const approveStaff = async (staff) => {
     try {
       const token = getToken();
       await axios.post(
-        `${BASE_URL}/api/approve-staff/`,
+        `${API_URL}/api/approve-staff/`,
         { user_id: staff.id, approve: true },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       notifications.notifySuccess(`Staff ${staff.username} approved`);
-      
-      // Remove from list and refresh data
       setPendingStaff(prev => prev.filter(s => s.id !== staff.id));
       await fetchAllAdminData();
-      
     } catch (error) {
       console.error(error);
       notifications.notifyError(error.response?.data?.error || "Failed to approve staff");
@@ -166,16 +193,13 @@ export default function AdminDashboard({ user }) {
     try {
       const token = getToken();
       await axios.post(
-        `${BASE_URL}/api/approve-staff/`,
+        `${API_URL}/api/approve-staff/`,
         { user_id: staff.id, approve: false },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       notifications.notifyInfo(`Staff ${staff.username} rejected`);
-      
-      // Remove from list and refresh data
       setPendingStaff(prev => prev.filter(s => s.id !== staff.id));
       await fetchAllAdminData();
-      
     } catch (error) {
       console.error(error);
       notifications.notifyError(error.response?.data?.error || "Failed to reject staff");
@@ -186,16 +210,13 @@ export default function AdminDashboard({ user }) {
     try {
       const token = getToken();
       await axios.post(
-        `${BASE_URL}/api/admin/approve-company/${id}/`,
+        `${API_URL}/api/admin/approve-company/${id}/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       notifications.notifySuccess("Company approved");
-      
-      // Remove from list and refresh data
       setPendingCompanies(prev => prev.filter(c => c.id !== id));
       await fetchAllAdminData();
-      
     } catch (error) {
       console.error(error);
       notifications.notifyError("Failed to approve company");
@@ -206,16 +227,13 @@ export default function AdminDashboard({ user }) {
     try {
       const token = getToken();
       await axios.post(
-        `${BASE_URL}/api/admin/reject-company/${id}/`,
+        `${API_URL}/api/admin/reject-company/${id}/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       notifications.notifyInfo("Company rejected");
-      
-      // Remove from list and refresh data
       setPendingCompanies(prev => prev.filter(c => c.id !== id));
       await fetchAllAdminData();
-      
     } catch (error) {
       console.error(error);
       notifications.notifyError("Failed to reject company");
@@ -226,16 +244,13 @@ export default function AdminDashboard({ user }) {
     try {
       const token = getToken();
       await axios.post(
-        `${BASE_URL}/api/admin/approve-exception/${id}/`,
+        `${API_URL}/api/admin/approve-exception/${id}/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       notifications.notifySuccess("Exception request approved");
-      
-      // Remove from list and refresh data
       setExceptionRequests(prev => prev.filter(e => e.id !== id));
       await fetchAllAdminData();
-      
     } catch (error) {
       console.error(error);
       notifications.notifyError("Failed to approve exception");
@@ -246,16 +261,13 @@ export default function AdminDashboard({ user }) {
     try {
       const token = getToken();
       await axios.post(
-        `${BASE_URL}/api/admin/reject-exception/${id}/`,
+        `${API_URL}/api/admin/reject-exception/${id}/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       notifications.notifyInfo("Exception request rejected");
-      
-      // Remove from list and refresh data
       setExceptionRequests(prev => prev.filter(e => e.id !== id));
       await fetchAllAdminData();
-      
     } catch (error) {
       console.error(error);
       notifications.notifyError("Failed to reject exception");
@@ -276,7 +288,6 @@ export default function AdminDashboard({ user }) {
   const filteredStudents = departmentStudents.filter(student => {
     const matchesSearch = student.name?.toLowerCase().includes(studentSearch.toLowerCase()) ||
                           student.student_id?.toLowerCase().includes(studentSearch.toLowerCase());
-    
     if (studentFilter === "active") {
       return matchesSearch && student.has_active_placement;
     } else if (studentFilter === "inactive") {
@@ -290,12 +301,64 @@ export default function AdminDashboard({ user }) {
     supervisor.staff_id?.toLowerCase().includes(supervisorSearch.toLowerCase())
   );
 
+  // Grade distribution helper
+  const getGradeDistribution = () => {
+    const grades = { A: 0, 'B+': 0, B: 0, 'C+': 0, C: 0, D: 0, F: 0 };
+    reportEvaluations.forEach(evalItem => {
+      const grade = evalItem.grade;
+      if (grade === 'A') grades.A++;
+      else if (grade === 'B+') grades['B+']++;
+      else if (grade === 'B') grades.B++;
+      else if (grade === 'C+') grades['C+']++;
+      else if (grade === 'C') grades.C++;
+      else if (grade === 'D') grades.D++;
+      else if (grade === 'F') grades.F++;
+    });
+    return grades;
+  };
+
+  const getRecentPlacements = () => {
+    return [...reportPlacements].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
+  };
+
+  const getGradeForPlacement = (placementId) => {
+    const evaluation = reportEvaluations.find(e => e.placement === placementId);
+    return evaluation ? evaluation.grade : 'Not graded';
+  };
+
+  const exportToCSV = () => {
+    const placements = getRecentPlacements();
+    const csvRows = [
+      ["Student Name", "Student ID", "Company", "Start Date", "End Date", "Status", "Grade"],
+      ...placements.map(p => [
+        p.student_name || "",
+        p.student_id || "",
+        p.company_name || "",
+        p.start_date || "",
+        p.end_date || "",
+        p.status || "",
+        getGradeForPlacement(p.id)
+      ])
+    ];
+    const csvContent = csvRows.map(row => row.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "iles_reports.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    notifications.notifySuccess("Report exported as CSV");
+  };
+
   if (loading) return <div className="loading-state">Loading Admin Dashboard...</div>;
   
   if (!isApproved && currentUser) {
     const userName = `${currentUser.first_name || ""} ${currentUser.last_name || ""}`;
     return <PendingApproval role="admin" userName={userName} />;
   }
+
+  const gradeDist = getGradeDistribution();
 
   return (
     <div className="dashboard-container">
@@ -313,6 +376,7 @@ export default function AdminDashboard({ user }) {
         <button onClick={() => setActiveTab("exceptions")}>Exception Requests</button>
         <button onClick={() => setActiveTab("students")}>Department Students</button>
         <button onClick={() => setActiveTab("supervisors")}>Department Supervisors</button>
+        <button onClick={handleReportsTab}> Reports</button>
         
         <button className="logout-btn" onClick={handleLogout}>
           Logout
@@ -324,7 +388,6 @@ export default function AdminDashboard({ user }) {
           <Notifications 
             role="admin"
             getToken={getToken}
-            BASE_URL={BASE_URL}
             onNotificationClick={(notification) => {
               if (notification.type === 'staff') setActiveTab('staff');
               else if (notification.type === 'application') setActiveTab('applications');
@@ -389,7 +452,6 @@ export default function AdminDashboard({ user }) {
         {activeTab === "students" && (
           <div className="department-students">
             <h2>Department Students</h2>
-            
             <div className="filter-bar">
               <input
                 type="text"
@@ -408,7 +470,6 @@ export default function AdminDashboard({ user }) {
                 <option value="inactive">No Active Internship</option>
               </select>
             </div>
-
             <div className="students-table">
               <table>
                 <thead>
@@ -463,7 +524,6 @@ export default function AdminDashboard({ user }) {
         {activeTab === "supervisors" && (
           <div className="department-supervisors">
             <h2>Department Supervisors</h2>
-            
             <div className="filter-bar">
               <input
                 type="text"
@@ -473,7 +533,6 @@ export default function AdminDashboard({ user }) {
                 className="search-input"
               />
             </div>
-
             <div className="supervisors-table">
               <table>
                 <thead>
@@ -519,6 +578,89 @@ export default function AdminDashboard({ user }) {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "reports" && (
+          <div className="reports-section">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h1>ILES system Reports</h1>
+              <button onClick={exportToCSV} className="export-btn" style={{ background: '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>
+                Export to CSV
+              </button>
+            </div>
+
+            <div className="dashboard-cards">
+              <div className="card">
+                <h3>Total Students</h3>
+                <p>{dashboardData.total_students || 0}</p>
+              </div>
+              <div className="card">
+                <h3>Total Supervisors</h3>
+                <p>{dashboardData.total_supervisors || 0}</p>
+              </div>
+              <div className="card">
+                <h3>Pending Applications</h3>
+                <p>{dashboardData.pending_applications || 0}</p>
+              </div>
+              <div className="card">
+                <h3>Active Internships</h3>
+                <p>{dashboardData.active_internships || 0}</p>
+              </div>
+            </div>
+
+            <div className="report-section" style={{ background: 'white', borderRadius: '16px', padding: '24px', marginBottom: '24px', border: '1px solid #e2e8f0' }}>
+              <h2 style={{ fontSize: '18px', marginBottom: '16px' }}>Grade Distribution</h2>
+              {reportLoading ? <p>Loading grade data...</p> : (
+                <div className="grade-bars" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {Object.entries(gradeDist).map(([grade, count]) => (
+                    <div key={grade} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ width: '40px', fontWeight: 600 }}>{grade}</span>
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ height: '24px', borderRadius: '12px', width: `${(count / Math.max(1, reportEvaluations.length)) * 100}%`, backgroundColor: '#3b82f6' }}></div>
+                        <span style={{ minWidth: '30px' }}>{count}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="report-section" style={{ background: 'white', borderRadius: '16px', padding: '24px', marginBottom: '24px', border: '1px solid #e2e8f0' }}>
+              <h2 style={{ fontSize: '18px', marginBottom: '16px' }}>Recent Placements (Last 10)</h2>
+              {reportLoading ? <p>Loading placements...</p> : (
+                <div className="table-responsive">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Student</th>
+                        <th>Company</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Status</th>
+                        <th>Grade</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {getRecentPlacements().length === 0 ? (
+                        <tr><td colSpan="6">No placements found</td></tr>
+                      ) : (
+                        getRecentPlacements().map(placement => (
+                          <tr key={placement.id}>
+                            <td>{placement.student_name}</td>
+                            <td>{placement.company_name}</td>
+                            <td>{placement.start_date}</td>
+                            <td>{placement.end_date}</td>
+                            <td><span className={`status-badge ${placement.status}`}>{placement.status}</span></td>
+                            <td><strong>{getGradeForPlacement(placement.id)}</strong></td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         )}

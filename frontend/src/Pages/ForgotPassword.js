@@ -1,11 +1,9 @@
-
+// frontend/src/Pages/ForgotPassword.js
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../Login.css";
-
-const BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
-
+import API_URL from '../utils/api';
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -20,14 +18,14 @@ export default function ForgotPassword() {
     setMessage("");
 
     try {
-      await axios.post(`${BASE_URL}/api/token/forgot-password/`, {
+      await axios.post(`${API_URL}/api/token/forgot-password/`, {
         email: email
       });
-      setMessage("✅ Password reset link has been sent to your email!");
+      setMessage(" Password reset link has been sent to your email!");
       setTimeout(() => navigate("/login"), 3000);
     } catch (err) {
       if (err.response?.status === 404) {
-        setError("No account linked to this email address.");
+        setError("No account found with this email address.");
       } else {
         setError(err.response?.data?.error || "Failed to send reset link. Please try again.");
       }
@@ -49,7 +47,7 @@ export default function ForgotPassword() {
       <div className="login-right">
         <form className="login-card" onSubmit={handleSubmit}>
           <h2>Forgot Password?</h2>
-          <p className="subtitle">You will receive a link to reset your password</p>
+          <p className="subtitle">We'll send you a link to reset your password</p>
 
           {message && <div className="success-message" style={{ 
             background: '#dcfce7', 

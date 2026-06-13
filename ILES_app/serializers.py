@@ -1,7 +1,11 @@
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
+marvin-frontend
 from rest_framework import serializers  # type: ignore[reportMissingImports]
+
+from rest_framework import serializers
+master
 from datetime import timedelta
 
 from .models import Evaluation, InternshipPlacement, User, WeeklyLog, Department, Company
@@ -56,7 +60,7 @@ class CompanySerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=8)
+    password = serializers.CharField(write_only=True, min_length=8, style={'input_type': 'password'})
     company_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
     
     class Meta:
@@ -331,7 +335,7 @@ class AssignSupervisorsSerializer(serializers.Serializer):
 class WeeklyLogSerializer(serializers.ModelSerializer):
     student_name = serializers.CharField(source='placement.student.get_full_name', read_only=True)
     reviewer_name = serializers.CharField(source='reviewed_by.get_full_name', read_only=True, default=None)
-    
+    working_hours = serializers.DecimalField(decimal_places=4, max_digits=6, default=0, coerce_to_string=False)
     class Meta:
         model = WeeklyLog
         fields = ['id', 'placement', 'student_name', 'week_number', 'working_hours', 'attachment',

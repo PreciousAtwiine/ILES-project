@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "../Login.css";
-
+import API_URL from '../utils/api';
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
@@ -39,7 +39,7 @@ export default function ResetPassword() {
     setMessage("");
 
     try {
-      await axios.post("http://127.0.0.1:8000/api/token/forgot-password/reset-password/", {
+      await axios.post(`${API_URL}/api/token/forgot-password/reset-password/`, {
         token: token,
         new_password: password,
         confirm_password: confirmPassword

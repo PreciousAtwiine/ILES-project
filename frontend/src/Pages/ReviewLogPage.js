@@ -1,14 +1,20 @@
-
+// ReviewLogPage.jsx - FIXED
+import API_URL from '../utils/api';
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import "./SupervisorDashboard.css";
+
 export default function ReviewLogPage() {
   const { id } = useParams();
 
-  const reviewLog = (status) => {
-    axios.put(`http://127.0.0.1:8000/logs/${id}/review/`, { status })
-      .then(() => alert(`Log ${status}`))
-      .catch(err => console.log(err));
+  const reviewLog = async (status) => {
+    try {
+      await axios.put(`${API_URL}/logs/${id}/review/`, { status });
+      alert(`Log ${status}`);
+    } catch (err) {
+      console.log(err);
+      alert("Failed to review log");
+    }
   };
 
   return (
