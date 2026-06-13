@@ -1,11 +1,7 @@
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
-marvin-frontend
 from rest_framework import serializers  # type: ignore[reportMissingImports]
-
-from rest_framework import serializers
-master
 from datetime import timedelta
 
 from .models import Evaluation, InternshipPlacement, User, WeeklyLog, Department, Company
