@@ -6,7 +6,7 @@
 .ac-brand { padding: 24px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.15); }
 .ac-brand h2 { color: #fff; font-size: 14px; font-weight: 600; }
 .ac-brand p { color: rgba(255,255,255,0.35); font-size: 11px; margin-top: 3px; }
-.ac-nav { padding: 12px 0; flex: 1; }
+.ac-nav { padding: 25px 0; flex: 1; }
 .ac-nav-item { display: block; width: 100%; padding: 10px 20px; font-size: 13px; color: rgba(255,255,255,0.5); background: none; border: none; border-left: 2px solid transparent; text-align: left; cursor: pointer; transition: all 0.15s; }
 .ac-nav-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
 .ac-nav-item.active { color: #fff; border-left-color: #3b82f6; background: rgba(59,130,246,0.1); }
