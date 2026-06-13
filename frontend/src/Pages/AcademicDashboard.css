@@ -807,3 +807,82 @@ body {
   margin-bottom: 0.75rem;
   font-size: 0.85rem;
 }
+.info-label {
+  width: 110px;
+  font-weight: 500;
+  color: #475569;
+  flex-shrink: 0;
+}
+
+.info-value {
+  color: #1e293b;
+}
+
+.reason-text {
+  background: #f8fafc;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #334155;
+  margin-top: 0.25rem;
+}
+
+.exception-card-footer {
+  padding: 0.75rem 1.25rem;
+  background: #fafbfc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.btn-approve {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.btn-approve:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.btn-reject {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.btn-reject:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.status-badge-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
