@@ -2,21 +2,21 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import "./Auth.css";
 import notifications from "./utils/notifications"; // Changed to default import
-
+import API_URL from './utils/api';
 function Register() {
   const [data, setData] = useState({
-    Username: "",
-    Email: "",
-    Password: "",
-    Input_Password_Again: "",
-    First_name: "",
-    Last_name: "",
-    Role: "student",
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    first_name: "",
+    last_name: "",
+    role: "student",
     student_id: "",
-    Staff_id: "",
-    Department_fk: "",
-    Company: "",
-    Company_name: ""
+    staff_id: "",
+    department_fk: "",
+    company: "",
+    company_name: ""
   });
 
   const [departments, setDepartments] = useState([]);
@@ -26,14 +26,12 @@ function Register() {
   const [companySearch, setCompanySearch] = useState("");
   const [passwordMatchError, setPasswordMatchError] = useState("");
 
-  const BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
-
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [deptRes, companyRes] = await Promise.all([
-          axios.get(`${BASE_URL}/api/departments/`),
-          axios.get(`${BASE_URL}/api/companies/`),
+          axios.get(`${API_URL}/api/departments/`),
+          axios.get(`${API_URL}/api/companies/`),
         ]);
         setDepartments(deptRes.data);
         const approvedCompanies = companyRes.data.filter(c => c.is_approved === true);
@@ -108,30 +106,30 @@ function Register() {
     setLoading(true);
 
     const submitData = {
-      username: data.Username,
-      email: data.Email,
-      password: data.Password,
-      first_name: data.First_name,
-      last_name: data.Last_name,
-      role: data.Role,
+      username: data.username,
+      email: data.email,
+      password: data.password,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      role: data.role,
     };
 
-    if (data.Role === "student") {
+    if (data.role === "student") {
       submitData.student_id = data.student_id;
-      submitData.department_fk = data.Department_fk;
+      submitData.department_fk = data.department_fk;
     } 
-    else if (data.Role === "academic") {
-      submitData.staff_id = data.Staff_id;
-      submitData.department_fk = data.Department_fk;
+    else if (data.role === "academic") {
+      submitData.staff_id = data.staff_id;
+      submitData.department_fk = data.department_fk;
     } 
-    else if (data.Role === "workplace") {
-      submitData.staff_id = data.Staff_id;
-      if (data.Company) {
+    else if (data.role === "workplace") {
+      submitData.staff_id = data.staff_id;
+      if (data.company) {
         let companyId;
-        if (typeof data.Company === 'object' && data.Company !== null) {
-          companyId = data.Company.id;
+        if (typeof data.company === 'object' && data.company !== null) {
+          companyId = data.company.id;
         } else {
-          companyId = parseInt(data.Company);
+          companyId = parseInt(data.company);
         }
         submitData.company = companyId;
       } else if (data.company_name) {
@@ -144,7 +142,7 @@ function Register() {
     }
 
     try {
-      await axios.post(`${BASE_URL}/users/register/`, submitData);
+      await axios.post(`${API_URL}/users/register/`, submitData);
       notifications.notifySuccess("Registration successful! Please login."); // Changed
       setTimeout(() => {
         window.location.href = "/login";

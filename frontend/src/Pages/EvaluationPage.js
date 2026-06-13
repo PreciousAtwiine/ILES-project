@@ -1,9 +1,7 @@
-
+// EvaluationPage.jsx
 import { useState } from "react";
 import axios from "axios";
-
-const BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
-
+import API_URL from '../utils/api';
 export default function EvaluationPage() {
   const [score, setScore] = useState("");
   const [comments, setComments] = useState("");
@@ -11,7 +9,7 @@ export default function EvaluationPage() {
   const submitEvaluation = (e) => {
     e.preventDefault();
 
-    axios.post(`${BASE_URL}/evaluations/workplace/`, {
+    axios.post("http://127.0.0.1:8000/evaluations/workplace/", {
       score,
       comments
     })

@@ -1,20 +1,22 @@
 // src/Pages/ExceptionRequests.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
+import API_URL from '../utils/api';
+import { LuChartBar, LuCheck, LuX, LuMail, LuClock, LuFileText } from 'react-icons/lu';
 
 export default function ExceptionRequests({ exceptionRequests, loadingExceptions, onApprove, onReject }) {
   const [processingId, setProcessingId] = useState(null);
-  const BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+  
   const getToken = () => localStorage.getItem("access");
 
   const handleApproveCountExisting = async (id) => {
     setProcessingId(id);
     try {
       const token = getToken();
-      await axios.post(`${BASE_URL}/api/admin/approve-count-existing/${id}/`, {}, {
+      await axios.post(`${API_URL}/api/admin/approve-count-existing/${id}/`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert("✅ Count existing request approved! Grade recalculated.");
+      alert("Count existing request approved! Grade recalculated.");
       onApprove(id);
     } catch (error) {
       console.error(error);
@@ -28,10 +30,10 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
     setProcessingId(id);
     try {
       const token = getToken();
-      await axios.post(`${BASE_URL}/api/admin/notify-workplace/${id}/`, {}, {
+      await axios.post(`${API_URL}/api/admin/notify-workplace/${id}/`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert("📧 Workplace supervisor notified! Waiting for their decision.");
+      alert("Workplace supervisor notified! Waiting for their decision.");
       onApprove(id);
     } catch (error) {
       console.error(error);
@@ -91,7 +93,8 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
         <>
           <div className="exception-tabs">
             <button className="exception-tab active">
-              📊 Count Existing Only
+              <LuChartBar size={14} style={{ marginRight: '6px' }} />
+              Count Existing Only
               <span className="badge">{countExistingPending.length}</span>
             </button>
           </div>
@@ -117,8 +120,9 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
                 </div>
                 <div className="info-row">
                   <span className="info-label">Request Type</span>
-                  <span className="info-value" style={{ background: '#fef3c7', padding: '2px 8px', borderRadius: '4px', display: 'inline-block' }}>
-                    📊 Count existing only
+                  <span className="info-value" style={{ background: '#fef3c7', padding: '2px 8px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <LuChartBar size={12} />
+                    Count existing only
                   </span>
                 </div>
                 <div className="info-row">
@@ -131,16 +135,19 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
                   className="btn-approve" 
                   onClick={() => handleApproveCountExisting(req.id)}
                   disabled={processingId === req.id}
-                  style={{ background: '#10b981' }}
+                  style={{ background: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}
                 >
-                  {processingId === req.id ? "Processing..." : "✅ Approve (Count Existing)"}
+                  <LuCheck size={14} />
+                  {processingId === req.id ? "Processing..." : "Approve (Count Existing)"}
                 </button>
                 <button 
                   className="btn-reject" 
                   onClick={() => onReject(req.id)}
                   disabled={processingId === req.id}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
                 >
-                  ❌ Reject
+                  <LuX size={14} />
+                  Reject
                 </button>
               </div>
             </div>
@@ -148,12 +155,13 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
         </>
       )}
 
-      {/* LATE SUBMISSION - PENDING ADMIN REVIEW (Before forwarding to workplace) */}
+      {/* LATE SUBMISSION - PENDING ADMIN REVIEW */}
       {lateSubmissionPending.length > 0 && (
         <>
           <div className="exception-tabs">
             <button className="exception-tab active">
-              📝 Late Submission (Admin Review)
+              <LuFileText size={14} style={{ marginRight: '6px' }} />
+              Late Submission (Admin Review)
               <span className="badge">{lateSubmissionPending.length}</span>
             </button>
           </div>
@@ -179,8 +187,9 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
                 </div>
                 <div className="info-row">
                   <span className="info-label">Request Type</span>
-                  <span className="info-value" style={{ background: '#e0f2fe', padding: '2px 8px', borderRadius: '4px', display: 'inline-block' }}>
-                    📝 Request late submission
+                  <span className="info-value" style={{ background: '#e0f2fe', padding: '2px 8px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <LuFileText size={12} />
+                    Request late submission
                   </span>
                 </div>
                 <div className="info-row">
@@ -197,16 +206,19 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
                   className="btn-approve" 
                   onClick={() => handleNotifyWorkplace(req.id)}
                   disabled={processingId === req.id}
-                  style={{ background: '#3b82f6' }}
+                  style={{ background: '#3b82f6', display: 'flex', alignItems: 'center', gap: '6px' }}
                 >
-                  {processingId === req.id ? "Processing..." : "📧 Notify Workplace Supervisor"}
+                  <LuMail size={14} />
+                  {processingId === req.id ? "Processing..." : "Notify Workplace Supervisor"}
                 </button>
                 <button 
                   className="btn-reject" 
                   onClick={() => onReject(req.id)}
                   disabled={processingId === req.id}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
                 >
-                  ❌ Reject Request
+                  <LuX size={14} />
+                  Reject Request
                 </button>
               </div>
             </div>
@@ -219,7 +231,8 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
         <>
           <div className="exception-tabs">
             <button className="exception-tab">
-              ⏳ Pending Workplace Decision
+              <LuClock size={14} style={{ marginRight: '6px' }} />
+              Pending Workplace Decision
               <span className="badge">{workplacePending.length}</span>
             </button>
           </div>
@@ -245,8 +258,9 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
                 </div>
                 <div className="info-row">
                   <span className="info-label">Status</span>
-                  <span className="info-value" style={{ background: '#dbeafe', padding: '2px 8px', borderRadius: '4px', display: 'inline-block' }}>
-                    ⏳ Waiting for workplace decision
+                  <span className="info-value" style={{ background: '#dbeafe', padding: '2px 8px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <LuClock size={12} />
+                    Waiting for workplace decision
                   </span>
                 </div>
                 <div className="info-row">
@@ -269,7 +283,8 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
         <>
           <div className="exception-tabs">
             <button className="exception-tab">
-              ✅ Approved
+              <LuCheck size={14} style={{ marginRight: '6px' }} />
+              Approved
               <span className="badge">{approvedRequests.length}</span>
             </button>
           </div>
@@ -279,8 +294,9 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
                 <div className="student-info">
                   <span className="student-name">{req.student_name}</span>
                   <span className="student-id">{req.student_id}</span>
-                  <span className="status-badge-sm approved">
-                    {req.exception_status === 'late_approved' ? '✓ Late Approved' : '✓ Approved'}
+                  <span className="status-badge-sm approved" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#d1fae5', color: '#065f46', padding: '2px 8px', borderRadius: '12px', fontSize: '11px' }}>
+                    <LuCheck size={12} />
+                    {req.exception_status === 'late_approved' ? 'Late Approved' : 'Approved'}
                   </span>
                 </div>
                 <span className="request-date">
@@ -295,7 +311,7 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
                 <div className="info-row">
                   <span className="info-label">Request Type</span>
                   <span className="info-value">
-                    {req.exception_request_type === 'count_existing' ? '📊 Count existing only' : '📝 Late submission'}
+                    {req.exception_request_type === 'count_existing' ? 'Count existing only' : 'Late submission'}
                   </span>
                 </div>
                 <div className="info-row">
@@ -313,7 +329,8 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
         <>
           <div className="exception-tabs">
             <button className="exception-tab">
-              ❌ Rejected
+              <LuX size={14} style={{ marginRight: '6px' }} />
+              Rejected
               <span className="badge">{rejectedRequests.length}</span>
             </button>
           </div>
@@ -323,8 +340,9 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
                 <div className="student-info">
                   <span className="student-name">{req.student_name}</span>
                   <span className="student-id">{req.student_id}</span>
-                  <span className="status-badge-sm rejected">
-                    {req.exception_status === 'late_rejected' ? '✗ Late Rejected' : '✗ Rejected'}
+                  <span className="status-badge-sm rejected" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: '12px', fontSize: '11px' }}>
+                    <LuX size={12} />
+                    {req.exception_status === 'late_rejected' ? 'Late Rejected' : 'Rejected'}
                   </span>
                 </div>
                 <span className="request-date">
@@ -339,7 +357,7 @@ export default function ExceptionRequests({ exceptionRequests, loadingExceptions
                 <div className="info-row">
                   <span className="info-label">Request Type</span>
                   <span className="info-value">
-                    {req.exception_request_type === 'count_existing' ? '📊 Count existing only' : '📝 Late submission'}
+                    {req.exception_request_type === 'count_existing' ? 'Count existing only' : 'Late submission'}
                   </span>
                 </div>
                 <div className="info-row">
